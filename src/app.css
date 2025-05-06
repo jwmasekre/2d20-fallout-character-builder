@@ -1,45 +1,47 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
 :root {
-    --capital-bg: #003300; /* Dark green */
-    --capital-text: #a7d800; /* Lime green */
-    
-    --mojave-bg: #3d1d00; /* Dark amber */
-    --mojave-text: #ffbf00; /* Amber text */
-    
-    --commonwealth-bg: #003366; /* Dark blue */
-    --commonwealth-text: #ffcc00; /* Yellow text */
+	--capital-bg: #003300; /* Dark green */
+	--capital-text: #a7d800; /* Lime green */
+
+	--mojave-bg: #3d1d00; /* Dark amber */
+	--mojave-text: #ffbf00; /* Amber text */
+
+	--commonwealth-bg: #003366; /* Dark blue */
+	--commonwealth-text: #ffcc00; /* Yellow text */
 }
 
 body {
-    font-family: sans-serif;
+	font-family: sans-serif;
 }
 
 .theme-capital {
-    background-color: var(--capital-bg);
-    color: var(--capital-text);
+	background-color: var(--capital-bg);
+	color: var(--capital-text);
 }
 
 .theme-mojave {
-    background-color: var(--mojave-bg);
-    color: var(--mojave-text);
+	background-color: var(--mojave-bg);
+	color: var(--mojave-text);
 }
 
 .theme-commonwealth {
-    background-color: var(--commonwealth-bg);
-    color: var(--commonwealth-text);
+	background-color: var(--commonwealth-bg);
+	color: var(--commonwealth-text);
 }
 .button-container {
-display: flex;
-gap: 15px;
-margin-top: 20px;
+	display: flex;
+	gap: 15px;
+	margin-top: 20px;
 }
 
 button {
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
+	padding: 10px 20px;
+	font-size: 16px;
+	cursor: pointer;
 }
 
 pre {
-    white-space: pre-wrap;
+	white-space: pre-wrap;
 }
-
