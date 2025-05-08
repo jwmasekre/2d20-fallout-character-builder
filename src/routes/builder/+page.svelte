@@ -1,87 +1,8 @@
 <script>
-    let charName = '';
-    let level = 1;
-    let selectedOrigin = 'brotherhood-initiate';
-    import {
-        PUBLIC_coreOrigins,
-        PUBLIC_settlerOrigins,
-        PUBLIC_atomOrigins,
-        PUBLIC_wandererOrigins,
-        PUBLIC_corePerks,
-        PUBLIC_settlerPerks,
-        PUBLIC_wandererPerks
-    } from '$env/static/public';
-    $: coreOrigins = JSON.parse(PUBLIC_coreOrigins);
-    $: settlerOrigins = JSON.parse(PUBLIC_settlerOrigins);
-    $: atomOrigins = JSON.parse(PUBLIC_atomOrigins);
-    $: wandererOrigins = JSON.parse(PUBLIC_wandererOrigins);
-    $: originData = { ...coreOrigins, ...settlerOrigins, ...atomOrigins, ...wandererOrigins };
-    let isGhoul = false;
-    let selectedTraits = [];
-    let traitDescriptions = [];
-    let isOriginValid = false;
-
-    let remainingSpecialPoints = 0;
-    let specialPoints = 40;
-    let specialStats = {
-        strength: 5,
-        perception: 5,
-        endurance: 5,
-        charisma: 5,
-        intelligence: 5,
-        agility: 5,
-        luck: 5
-    };
-    let selectedArray = 'Balanced';
-    let customStats = {
-        strength: 5,
-        perception: 5,
-        endurance: 5,
-        charisma: 5,
-        intelligence: 5,
-        agility: 5,
-        luck: 5
-    };
-    const arrays = {
-        Balanced: [6,6,6,6,6,5,5],
-        Focused: [8,7,6,6,5,4,4],
-        Specialized: [9,8,5,5,5,4,4]
-    };
-    let isSpecialValid = false;
-
-    let skillPoints = {};
-    let skillPointsRemaining = 9 + specialStats.intelligence - Object.values(skillPoints).reduce((acc, val) => acc + val, 0);
-    const skills = [
-        'Athletics', 'Barter', 'Big Guns', 'Energy Weapons', 'Explosives', 'Lockpick', 'Medicine', 'Melee Weapons', 'Pilot', 'Repair', 'Science', 'Small Guns', 'Sneak', 'Speech', 'Survival', 'Throwing', 'Unarmed'
-    ];
-    skills.forEach(skill => {
-        skillPoints[skill] = 0;
-    });
-    let tagSkills = {};
-    let isSkillsValid = false;
-
-    let ownedPerks = {};
-    let showOnlyAvailablePerks = true;
-    let perkPointsRemaining = level - Object.values(ownedPerks).reduce((acc, val) => acc + val, 0);
-    const corePerks = JSON.parse(PUBLIC_corePerks);
-    const settlerPerks = JSON.parse(PUBLIC_settlerPerks);
-    const wandererPerks = JSON.parse(PUBLIC_wandererPerks);
-    const perks = { ...corePerks, ...settlerPerks, ...wandererPerks }
-    let selectedSPECIAL = {
-        X: true,
-        S: true,
-        P: true,
-        E: true,
-        C: true,
-        I: true,
-        A: true,
-        L: true
-    };
-    let isPerksValid = false;
-    
-    let isEquipmentValid = false;
-
     let currentPage = 'origin';
+    
+    let isOriginValid = false;
+    let isSpecialValid = false;
 
     function navigateTo(page) {
         currentPage = page;
@@ -110,9 +31,7 @@
         navigateTo('skills')
     }
     function goToCharacterSheet() {
-        if (isEquipmentValid) {
-            navigateTo('skills')
-        }
+        navigateTo('skills')
     }
 
     function goBackOriginPage() {
@@ -133,116 +52,14 @@
     function goBackEquipmentPage() {
         navigateTo('special')
     }
-    
-    function handleTraitSelection(event) {
-        const selected = Array.from(event.target.selectedOptions).map(option => option.value);
 
-        if (selected.length <= 2) {
-            selectedTraits = selected;
-            traitDescriptions = selected.map(trait => getAllTraitsForOrigin(selectedOrigin)[trait]);
-        }
-    }
-
-    function getAllTraitsForOrigin(origin) {
-        let allTraits = { ...originData[origin].trait.traits };
-
-        if (originData[origin].trait.alternates) {
-            originData[origin].trait.alternates.forEach(alternate => {
-                const alternateTraits = originData[alternate]?.trait?.traits;
-                if (alternateTraits) {
-                    allTraits = { ...allTraits, ...alternateTraits };
-                }
-            });
-        }
-        return allTraits;
-    }
-    $: isOriginValid = charName && level && selectedOrigin && (selectedTraits.length === 2 || !originData[selectedOrigin].trait.description.includes('Choose 2, or 1 and a perk:'));
-
-    function updateArray() {
-        if (selectedArray === 'Custom') {
-            remainingSpecialPoints = specialPoints - Object.values(customStats).reduce((acc, val) => acc + val, 0);
-        } else {
-            const selected = arrays[selectedArray];
-            Object.keys(specialStats).forEach((key, index) => {
-                specialStats[key] = selected[index];
-            });
-
-            remainingSpecialPoints = specialPoints - selected.reduce((acc, val) => acc + val, 0);
-        }
-    }
-
-    function handleStatChange(stat, value) {
-        const parsedValue = parseInt(value);
-        if (!isNaN(parsedValue)) {
-            if (selectedArray === 'Custom') {
-                customStats[stat] = parsedValue;
-                remainingSpecialPoints = specialPoints - Object.values(customStats).reduce((acc, val) => acc + val, 0);
-            } else {
-                specialStats[stat] = parsedValue;
-                remainingSpecialPoints = specialPoints - Object.values(specialStats).reduce((acc, val) => acc + val, 0);
-            }
-        }
-    }
-
-    $: isSpecialValid = Object.values(customStats).every(val => val >= 4 && val <= 10) && remainingSpecialPoints === 0;
-    
-    function handleSkillPointChange(skill, value) {
-        const parsedValue = parseInt(value);
-        if (!isNaN(parsedValue)) {
-            let maxPoints = Math.min(level, 6);
-            if (tagSkills[skill]) {
-                maxPoints = 6;
-            }
-            if (parsedValue <= maxPoints) {
-                skillPoints[skill] = parsedValue;
-                skillPointsRemaining = 9 + specialStats.intelligence - Object.values(skillPoints).reduce((acc, val) => acc + val, 0);
-            }
-        }
-    }
-
-    function toggleTagSkill(skill) {
-        if (tagSkills[skill]) {
-            skillPoints[skill] += 2;
-        } else {
-            skillPoints[skill] -=2;
-        }
-        skillPointsRemaining = 9 + specialStats.intelligence - Object.values(skillPoints).reduce((acc, val) => acc + val, 0);
-    }
-
-    $: skillPointsRemaining = 9 + specialStats.intelligence - Object.values(skillPoints).reduce((acc, val) => acc + val, 0);
-
-
-    console.log(perks)
-
-
-    function isPerkAvailable(perk) {
-        let levelReqMet = level >= perk.minlevel;
-        let statReqMet = Object.keys(perk.statReq).every(stat => specialStats[stat] >= perk.statReq[stat]);
-        let alreadyPurchased = ownedPerks[perk.name] && ownedPerks[perk.name] >= perk.ranks;
-
-        return levelReqMet && statReqMet && !alreadyPurchased;
-    }
-
-    function handlePerkSelection(perk) {
-        if (isPerkAvailable(perk) && perkPointsRemaining > 0) {
-            if (!selectedPerks.includes(perk)) {
-                selectedPerk.push(perk);
-                ownedPerks[perk.name] = (ownedPerks[perk.name] || 0) + 1
-                perkPointsRemaining -= 1
-            }
-        }
-    }
-
-    function togglePerkDescription(perk) {
-        perk.showDescription = !perk.showDescription;
-    }
-
-    $: filteredPerks = Object.values(perks).filter(perk => {
-        let meetsSpecialReq = selectedSPECIAL[perk.specialreq] || perk.specialreq === 'X';
-        return meetsSpecialReq && (!showOnlyAvailablePerks || isPerkAvailable(perk));
-    });
-
-    //console.log(filteredPerks);
+    import Origin from '$lib/origin.svelte'
+    import Special from '$lib/special.svelte'
+    import Skills from '$lib/skills.svelte'
+    import Perks from '$lib/perks.svelte'
+    import Stats from '$lib/stats.svelte'
+    import Equipment from '$lib/equipment.svelte'
+    import Sheet from '$lib/sheet.svelte'
 </script>
 
 <style>
@@ -334,260 +151,45 @@
 </style>
 
 <!--ORIGIN-->
-
 <div class={`page ${currentPage === 'origin' ? 'page-origin' : 'page-leave'}`}>
-    <h1>Origin</h1>
-    <label for="char-name">Name: </label>
-    <input type="text" id="char-name" bind:value={charName} title="char-name">
-    <label for="level-select">Level: </label>
-    <input type="number" min="1" bind:value={level} id="level-select" title="level-select">
-    <label for="origin-select">Origin: </label>
-    <select name="origin-select" id="origin-select" bind:value={selectedOrigin} title="origin-select" class="origin-select">
-        <optgroup label="Core">
-            {#each Object.keys(coreOrigins) as origin}
-                <option value={origin}>{coreOrigins[origin].prettyname}</option>
-            {/each}
-        </optgroup>
-        <optgroup label="Settlers">
-            {#each Object.keys(settlerOrigins) as origin}
-                <option value={origin}>{settlerOrigins[origin].prettyname}</option>
-            {/each}
-        </optgroup>
-        <optgroup label="Winter of Atom">
-            {#each Object.keys(atomOrigins) as origin}
-                <option value={origin}>{atomOrigins[origin].prettyname}</option>
-            {/each}
-        </optgroup>
-        <optgroup label="Wanderers">
-            {#each Object.keys(wandererOrigins) as origin}
-                <option value={origin}>{wandererOrigins[origin].prettyname}</option>
-            {/each}
-        </optgroup>
-    </select>
-
-    <pre>{originData[selectedOrigin].description}</pre>
-
-    {#if originData[selectedOrigin].trait.canGhoul === true}
-        <label for="is-ghoul">Ghoul: </label>
-        <input type="checkbox" id="is-ghoul" name="is-ghoul" bind:checked={isGhoul}>
-    {/if}
-
-    <h3>Trait:</h3>
-
-    {#if isGhoul === true}
-        <p>{originData['ghoul'].trait.name}</p>
-        <pre>{originData['ghoul'].trait.description}</pre>
-    {:else}
-        <p>{originData[selectedOrigin].trait.name}</p>
-        <pre>{originData[selectedOrigin].trait.description}</pre>
-
-        <div style="display:inline-block">
-            {#if originData[selectedOrigin].trait.description === 'Choose 2, or 1 and a perk:'}
-                <select multiple on:change={handleTraitSelection} style="height:11.5em">
-                    {#each Object.keys(getAllTraitsForOrigin(selectedOrigin)) as trait}
-                        <option value={trait}>{trait}</option>
-                    {/each}
-                </select>
-            {/if}
-        </div>
-    {/if}
-
-    {#if selectedTraits.length > 0}
-        <div style="display:inline-block">
-            {#each selectedTraits as trait, index}
-                <div key={index}>
-                    <h4>{trait}</h4>
-                    <pre>{traitDescriptions[index]}</pre>
-                </div>
-            {/each}
-        </div>
-    {/if}
-
+    <Origin />
     <button disabled={!isOriginValid} on:click={goToSpecialPage}>Special</button>
 </div>
 
-
 <!--SPECIAL-->
-
 <div class={`page ${currentPage === 'special' ? 'page-special' : 'page-leave'}`}>
     <button on:click={goBackOriginPage}>Origin</button>
-
-    <h1>SPECIAL</h1>
-    <label for="array-select">Array:</label>
-    <select id="array-select" bind:value={selectedArray} on:change={updateArray}>
-        <option value="Balanced">Balanced (6,6,6,6,6,5,5)</option>
-        <option value="Focused">Focused (8,7,6,6,5,4,4)</option>
-        <option value="Specialized">Specialized (9,8,5,5,5,4,4)</option>
-        <option value="Custom">Custom</option>
-    </select>
-
-    {#if selectedArray === 'Custom'}
-        <p>Remaining Points: {remainingSpecialPoints}</p>
-        {#each Object.keys(customStats) as stat}
-            <label for={stat}>{stat.toUpperCase()}: </label>
-            <input
-                type="number"
-                id={stat}
-                bind:value={customStats[stat]}
-                min="4"
-                max="10"
-                on:input={(e) => handleStatChange(stat, e.target.value)}
-            />
-        {/each}
-    {:else}
-        <div>
-            <p>Remaining Points: {remainingSpecialPoints}</p>
-            {#each Object.keys(specialStats) as stat}
-                <div>
-                    <label for={stat}>{stat.toUpperCase()}:</label>
-                    <select
-                        bind:value={specialStats[stat]}
-                        on:change={(e) => handleStatChange(stat, e.target.value)}
-                    >
-                        {#each arrays[selectedArray] as value, index}
-                            <option value={value}>{value}</option>
-                        {/each}
-                    </select>
-                </div>
-            {/each}
-        </div>
-    {/if}
-
+    <Special />
     <button disabled={!isSpecialValid} on:click={goToSkillsPage}>Skills</button>
 </div>
 
 <!--SKILLS-->
-
 <div class={`page ${currentPage === 'skills' ? 'page-skills' : 'page-leave'}`}>
     <button on:click={goBackSpecialPage}>Special</button>
-
-    <h1>Skills</h1>
-    <p>Remaining Skill Points: {skillPointsRemaining}</p>
-
-    <div class="skill-list">
-        {#each skills as skill, index}
-            <div class="skill-item" key={index}>
-                <div>{skill}</div>
-                <input
-                    type="number"
-                    class="skill-input"
-                    bind:value={skillPoints[skill]}
-                    min="0"
-                    max={level < 3 ? 3 : Math.min(level, 6)}
-                    on:input={(e) => handleSkillPointChange(skill, e.target.value)}
-                />
-                <input
-                    type="checkbox"
-                    class="tag-skill-checkbox"
-                    bind:checked={tagSkills[skill]}
-                    on:change={() => toggleTagSkill(skill)}
-                    disabled={Object.values(tagSkills).filter(value => value === true).length >= 3 && tagSkills[skill] === false}
-                />
-                <span>Tag Skill</span>
-            </div>
-        {/each}
-    </div>
+    <Skills />
     <button disabled={skillPointsRemaining !== 0} on:click={goToPerksPage}>Perks</button>
 </div>
 
 <!---PERKS-->
-
 <div class={`page ${currentPage === 'perks' ? 'page-perks' : 'page-leave'}`}>
     <button on:click={goBackSkillsPage}>Skills</button>
-    <h1>Perks</h1>
-    <p>Remaining Perks: {perkPointsRemaining}</p>
-
-    <label>
-        <input
-            type="checkbox"
-            bind:checked={showOnlyAvailablePerks}
-        />
-        Show only perks I can take
-    </label>
-
-    <div>
-        {#each ['X', 'S', 'P', 'E', 'C', 'I', 'A', 'L'] as special}
-        <label>
-            <input
-                type="checkbox"
-                bind:checked={selectedSPECIAL[special]}
-            />
-            {special}
-        </label>
-        {/each}
-    </div>
-
-    <div class="perk-list">
-        {#each filteredPerks as perk, index}
-            <div class="perk-item" key={index}>
-                <div>
-                    <label>
-                        <input type="checkbox" 
-                            class="perk-checkbox"
-                            disabled={!isPerkAvailable(perk) || perkPointsRemaining <= 0}
-                            on:change={() => handlePerkSelection(perk)}
-                        />
-                        {perk.name}
-                    </label>
-                </div>
-                <button on:click={() => togglePerkDescription(perk)}>Show Description</button>
-            </div>
-
-            {#if perk.showDescription}
-                <div class="perk-description-box show">
-                    <p><strong>Level Requirement:</strong> {perk.minLevel}</p>
-                    <p><strong>Ranks:</strong> {perk.ranks}</p>
-                    <p><strong>Stat Requirements:</strong> {JSON.stringify(perk.statReq)}</p>
-                    <p><strong>Description:</strong> {perk.description}</p>
-                </div>
-            {/if}
-        {/each}
-    </div>
-
+    <Perks />
     <button disabled={perkPointsRemaining !== 0} on:click={goToStatsPage}>Stats</button>
 </div>
 
 <!--STATS-->
-
 <div class={`page ${currentPage === 'stats' ? 'page-stats' : 'page-leave'}`}>
     <button on:click={goBackPerksPage}>Perks</button>
-    <h1>Stats</h1>
-
-    <p><strong>Carry Weight</strong>: {150 + 10 * specialStats.strength}</p>
-    <p><strong>Damage Resistance</strong>: 0</p>
-    <p><strong>Defense</strong>: {specialStats.agility >= 9 ? 2 : 1}</p>
-    <p><strong>Initiative</strong>: {specialStats.perception + specialStats.agility}</p>
-    <p><strong>Health</strong>: {specialStats.endurance + specialStats.luck}</p>
-    <p><strong>Melee Damage</strong>
-        {#if specialStats.strength < 7}: +0cd
-        {:else if specialStats.strength <= 8}: +1cd
-        {:else if specialStats.strength <= 10}: +2cd
-        {:else}: +3cd
-        {/if}    
-    </p>
-
-    <div class="special-stats-row">
-        {#each ['strength', 'perception', 'endurance', 'charisma', 'intelligence', 'agility', 'luck'] as stat}
-            <div>
-                <strong>{stat.toUpperCase()}</strong>: {specialStats[stat]}
-            </div>
-        {/each}
-    </div>
-    
-    <h2>Skills</h2>
-    <ul>
-        {#each Object.keys(skillPoints) as skill}
-            {#if skillPoints[skill] > 0}
-                <li>
-                    {skill} {tagSkills[skill] ? '(Tag)' : ''}
-                </li>
-            {/if}
-        {/each}
-    </ul>
-    <ul>
-        {#each Object.values(ownedPerks) as perk}
-            <li>{perk.name}</li>
-        {/each}
-    </ul>
+    <Stats />
     <button on:click={goToEquipmentPage}>Stats</button>
+</div>
+
+<!--EQUIPMENT-->
+<div class={`page ${currentPage === 'equipment' ? 'page-equipment' : 'page-leave'}`}>
+    <Equipment />
+</div>
+
+<!--SHEET-->
+<div class={`page ${currentPage === 'sheet' ? 'page-equipment' : 'page-leave'}`}>
+    <Sheet />
 </div>
