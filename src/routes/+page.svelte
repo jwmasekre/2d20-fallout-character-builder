@@ -10,3 +10,4 @@
     <button on:click={() => goto('./login')}>Login</button>
     <button on:click={() => goto('./register')}>Register</button>
 </div>
+
