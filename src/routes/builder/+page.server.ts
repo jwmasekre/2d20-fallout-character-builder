@@ -1,0 +1,1 @@
+import '$lib/scripts/seed.server.js'

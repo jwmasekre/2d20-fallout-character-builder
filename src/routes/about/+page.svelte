@@ -2,7 +2,7 @@
 <p>development:</p>
 <ul>
     <li>
-        <a href="https://github.com/ashtrian" target="_blank" rel="noopener noreferrer">brian</a>
+        <a href="https://github.com/ashtryian" target="_blank" rel="noopener noreferrer">brian</a>
     </li>
     <li>
         <a href="https://github.com/jwmasekre" target="_blank" rel="noopener noreferrer">josh</a>
