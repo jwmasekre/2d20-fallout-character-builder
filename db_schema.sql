@@ -4,9 +4,6 @@ CREATE TABLE "characters" (
   "character_name" text,
   "xp" int,
   "origin" smallint,
-  "special" json,
-  "skills" json,
-  "tags" json,
   "luck_points" smallint,
   "current_health" smallint,
   "head_hp" smallint,
@@ -27,6 +24,130 @@ CREATE TABLE "characters" (
   "sleep" smallint,
   "exposure" smallint,
   "party" smallint
+);
+
+CREATE TABLE "character_special" (
+  "id" smallserial PRIMARY KEY,
+  "character_id" smallint,
+  "strength" smallint,
+  "perception" smallint,
+  "endurance" smallint,
+  "charisma" smallint,
+  "intelligence" smallint,
+  "agility" smallint,
+  "luck" smallint
+);
+
+CREATE TABLE "npc_character_special" (
+  "id" smallserial PRIMARY KEY,
+  "npc_character_id" smallint,
+  "strength" smallint,
+  "perception" smallint,
+  "endurance" smallint,
+  "charisma" smallint,
+  "intelligence" smallint,
+  "agility" smallint,
+  "luck" smallint
+);
+
+CREATE TABLE "active_npc_character_special" (
+  "id" smallserial PRIMARY KEY,
+  "npc_character_id" smallint,
+  "strength" smallint,
+  "perception" smallint,
+  "endurance" smallint,
+  "charisma" smallint,
+  "intelligence" smallint,
+  "agility" smallint,
+  "luck" smallint
+);
+
+CREATE TABLE "character_skills" (
+  "id" smallserial PRIMARY KEY,
+  "character_id" smallint,
+  "athletics" smallint,
+  "barter" smallint,
+  "bigGuns" smallint,
+  "energyWeapons" smallint,
+  "explosives" smallint,
+  "lockpick" smallint,
+  "medicine" smallint,
+  "meleeWeapons" smallint,
+  "pilot" smallint,
+  "repair" smallint,
+  "science" smallint,
+  "smallGuns" smallint,
+  "sneak" smallint,
+  "speech" smallint,
+  "survival" smallint,
+  "throwing" smallint,
+  "unarmed" smallint
+);
+
+CREATE TABLE "npc_character_skills" (
+  "id" smallserial PRIMARY KEY,
+  "npc_character_id" smallint,
+  "athletics" smallint,
+  "barter" smallint,
+  "bigGuns" smallint,
+  "energyWeapons" smallint,
+  "explosives" smallint,
+  "lockpick" smallint,
+  "medicine" smallint,
+  "meleeWeapons" smallint,
+  "pilot" smallint,
+  "repair" smallint,
+  "science" smallint,
+  "smallGuns" smallint,
+  "sneak" smallint,
+  "speech" smallint,
+  "survival" smallint,
+  "throwing" smallint,
+  "unarmed" smallint
+);
+
+CREATE TABLE "active_npc_character_skills" (
+  "id" smallserial PRIMARY KEY,
+  "npc_character_id" smallint,
+  "athletics" smallint,
+  "barter" smallint,
+  "bigGuns" smallint,
+  "energyWeapons" smallint,
+  "explosives" smallint,
+  "lockpick" smallint,
+  "medicine" smallint,
+  "meleeWeapons" smallint,
+  "pilot" smallint,
+  "repair" smallint,
+  "science" smallint,
+  "smallGuns" smallint,
+  "sneak" smallint,
+  "speech" smallint,
+  "survival" smallint,
+  "throwing" smallint,
+  "unarmed" smallint
+);
+
+CREATE TABLE "character_tags" (
+  "id" smallserial PRIMARY KEY,
+  "character_id" smallint,
+  "athletics" boolean,
+  "barter" boolean,
+  "bigGuns" boolean,
+  "energyWeapons" boolean,
+  "explosives" boolean,
+  "lockpick" boolean,
+  "medicine" boolean,
+  "meleeWeapons" boolean,
+  "pilot" boolean,
+  "repair" boolean,
+  "science" boolean,
+  "smallGuns" boolean,
+  "sneak" boolean,
+  "speech" boolean,
+  "survival" boolean,
+  "throwing" boolean,
+  "unarmed" boolean
 );
 
 CREATE TABLE "character_perks" (
@@ -595,8 +716,6 @@ CREATE TABLE "npc_characters" (
   "lvl" smallint,
   "type" smallint,
   "keywords" text[],
-  "special" json,
-  "skills" json,
   "rads_dr" smallint,
   "poison_dr" smallint,
   "head_hp" smallint,
@@ -677,8 +796,6 @@ CREATE TABLE "active_npc_characters" (
   "character" smallint,
   "name" text,
   "lvl" smallint,
-  "special" json,
-  "skills" json,
   "current_health" smallint,
   "rads_dr" smallint,
   "poison_dr" smallint,
@@ -811,6 +928,20 @@ CREATE TABLE "settlement_npc_characters" (
   "settlement_id" smallint,
   "character_id" smallint
 );
+
+ALTER TABLE "character_special" ADD FOREIGN KEY ("character_id") REFERENCES "characters" ("id");
+
+ALTER TABLE "npc_character_special" ADD FOREIGN KEY ("npc_character_id") REFERENCES "npc_characters" ("id");
+
+ALTER TABLE "active_npc_character_special" ADD FOREIGN KEY ("npc_character_id") REFERENCES "active_npc_characters" ("id");
+
+ALTER TABLE "character_skills" ADD FOREIGN KEY ("character_id") REFERENCES "characters" ("id");
+
+ALTER TABLE "npc_character_skills" ADD FOREIGN KEY ("npc_character_id") REFERENCES "npc_characters" ("id");
+
+ALTER TABLE "active_npc_character_skills" ADD FOREIGN KEY ("npc_character_id") REFERENCES "active_npc_characters" ("id");
+
+ALTER TABLE "character_tags" ADD FOREIGN KEY ("character_id") REFERENCES "characters" ("id");
 
 ALTER TABLE "character_perks" ADD FOREIGN KEY ("character_id") REFERENCES "characters" ("id");
 
