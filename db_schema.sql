@@ -225,7 +225,7 @@ CREATE TABLE "players" (
 CREATE TABLE "party_membership" (
   "id" smallserial PRIMARY KEY,
   "party_id" smallint,
-  "player_id" smallint
+  "character_id" smallint
 );
 
 CREATE TABLE "origins" (
@@ -497,6 +497,7 @@ CREATE TABLE "character_weapon_mods" (
 
 CREATE TABLE "character_ammo" (
   "id" smallserial PRIMARY KEY,
+  "ammo_id" smallint,
   "quantity" smallint,
   "character_id" smallint
 );
@@ -516,12 +517,14 @@ CREATE TABLE "character_apparel_mods" (
 
 CREATE TABLE "character_consumables" (
   "id" smallserial PRIMARY KEY,
+  "consumable_id" smallint,
   "quantity" smallint,
   "character_id" smallint
 );
 
 CREATE TABLE "character_gear" (
   "id" smallserial PRIMARY KEY,
+  "gear_id" smallint,
   "quantity" smallint,
   "character_id" smallint
 );
@@ -989,7 +992,9 @@ ALTER TABLE "character_weapon_recipes" ADD FOREIGN KEY ("weapon_recipe_id") REFE
 
 ALTER TABLE "characters" ADD FOREIGN KEY ("player_id") REFERENCES "players" ("id");
 
-ALTER TABLE "party_membership" ADD FOREIGN KEY ("player_id") REFERENCES "players" ("id");
+ALTER TABLE "party_membership" ADD FOREIGN KEY ("character_id") REFERENCES "characters" ("id");
+
+ALTER TABLE "party_membership" ADD FOREIGN KEY ("party_id") REFERENCES "parties" ("id");
 
 ALTER TABLE "characters" ADD FOREIGN KEY ("origin") REFERENCES "origins" ("id");
 
@@ -1069,6 +1074,8 @@ ALTER TABLE "character_weapon_mods" ADD FOREIGN KEY ("character_weapon_id") REFE
 
 ALTER TABLE "character_weapon_mods" ADD FOREIGN KEY ("mod_id") REFERENCES "weapon_mods" ("id");
 
+ALTER TABLE "character_ammo" ADD FOREIGN KEY ("ammo_id") REFERENCES "ammo" ("id");
+
 ALTER TABLE "character_ammo" ADD FOREIGN KEY ("character_id") REFERENCES "characters" ("id");
 
 ALTER TABLE "character_apparel" ADD FOREIGN KEY ("apparel_id") REFERENCES "apparel" ("id");
@@ -1079,7 +1086,11 @@ ALTER TABLE "character_apparel_mods" ADD FOREIGN KEY ("character_apparel_id") RE
 
 ALTER TABLE "character_apparel_mods" ADD FOREIGN KEY ("mod_id") REFERENCES "apparel_mods" ("id");
 
+ALTER TABLE "character_consumables" ADD FOREIGN KEY ("consumable_id") REFERENCES "consumables" ("id");
+
 ALTER TABLE "character_consumables" ADD FOREIGN KEY ("character_id") REFERENCES "characters" ("id");
+
+ALTER TABLE "character_gear" ADD FOREIGN KEY ("gear_id") REFERENCES "gear" ("id");
 
 ALTER TABLE "character_gear" ADD FOREIGN KEY ("character_id") REFERENCES "characters" ("id");
 
@@ -1108,6 +1119,14 @@ ALTER TABLE "character_powerarmor_piece_mods" ADD FOREIGN KEY ("mod_id") REFEREN
 ALTER TABLE "character_robot_modules" ADD FOREIGN KEY ("module_id") REFERENCES "robot_modules" ("id");
 
 ALTER TABLE "character_robot_modules" ADD FOREIGN KEY ("character_id") REFERENCES "characters" ("id");
+
+ALTER TABLE "weapons" ADD FOREIGN KEY ("rarity") REFERENCES "repair_materials" ("rarity");
+
+ALTER TABLE "apparel" ADD FOREIGN KEY ("rarity") REFERENCES "repair_materials" ("rarity");
+
+ALTER TABLE "gear" ADD FOREIGN KEY ("rarity") REFERENCES "repair_materials" ("rarity");
+
+ALTER TABLE "robot_modules" ADD FOREIGN KEY ("rarity") REFERENCES "repair_materials" ("rarity");
 
 ALTER TABLE "apparel_recipes" ADD FOREIGN KEY ("complexity") REFERENCES "recipe_materials" ("complexity");
 
