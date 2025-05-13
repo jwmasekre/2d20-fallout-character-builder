@@ -1,3 +1,8 @@
+CREATE TABLE "sourcebooks" (
+  "id" smallserial PRIMARY KEY,
+  "name" text
+);
+
 CREATE TABLE "characters" (
   "id" smallserial PRIMARY KEY,
   "player_id" smallint,
@@ -232,7 +237,8 @@ CREATE TABLE "origins" (
   "id" smallserial PRIMARY KEY,
   "name" text,
   "description" text,
-  "can_ghoul" boolean
+  "can_ghoul" boolean,
+  "sourcebook_id" smallint
 );
 
 CREATE TABLE "origin_traits" (
@@ -252,7 +258,8 @@ CREATE TABLE "weapons" (
   "wgt" smallint,
   "cost" smallint,
   "rarity" smallint,
-  "ammo" smallint
+  "ammo" smallint,
+  "sourcebook_id" smallint
 );
 
 CREATE TABLE "weapon_effects" (
@@ -324,7 +331,8 @@ CREATE TABLE "ammo" (
   "roll_quantity" text,
   "wgt" smallint,
   "cost" smallint,
-  "rarity" smallint
+  "rarity" smallint,
+  "sourcebook_id" smallint
 );
 
 CREATE TABLE "apparel" (
@@ -338,7 +346,8 @@ CREATE TABLE "apparel" (
   "wgt" smallint,
   "cost" smallint,
   "rarity" smallint,
-  "base_health" smallint
+  "base_health" smallint,
+  "sourcebook_id" smallint
 );
 
 CREATE TABLE "apparel_types" (
@@ -405,7 +414,8 @@ CREATE TABLE "consumables" (
   "cost" smallint,
   "rarity" smallint,
   "duration" text,
-  "addiction" text
+  "addiction" text,
+  "sourcebook_id" smallint
 );
 
 CREATE TABLE "consumable_types" (
@@ -419,7 +429,8 @@ CREATE TABLE "gear" (
   "eff" text[],
   "wgt" smallint,
   "cost" smallint,
-  "rarity" smallint
+  "rarity" smallint,
+  "sourcebook_id" smallint
 );
 
 CREATE TABLE "robot_modules" (
@@ -428,7 +439,8 @@ CREATE TABLE "robot_modules" (
   "eff" text[],
   "wgt" smallint,
   "cost" smallint,
-  "rarity" smallint
+  "rarity" smallint,
+  "sourcebook_id" smallint
 );
 
 CREATE TABLE "robot_module_perks" (
@@ -452,7 +464,8 @@ CREATE TABLE "perks" (
   "rank_range" smallint,
   "reqs" text[],
   "effects" text[],
-  "limits" text[]
+  "limits" text[],
+  "sourcebook_id" smallint
 );
 
 CREATE TABLE "parties" (
@@ -480,7 +493,8 @@ CREATE TABLE "diseases" (
   "id" smallserial PRIMARY KEY,
   "name" text,
   "eff" text[],
-  "duration" text
+  "duration" text,
+  "sourcebook_id" smallint
 );
 
 CREATE TABLE "character_weapons" (
@@ -996,9 +1010,13 @@ ALTER TABLE "party_membership" ADD FOREIGN KEY ("character_id") REFERENCES "char
 
 ALTER TABLE "party_membership" ADD FOREIGN KEY ("party_id") REFERENCES "parties" ("id");
 
+ALTER TABLE "origins" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks" ("id");
+
 ALTER TABLE "characters" ADD FOREIGN KEY ("origin") REFERENCES "origins" ("id");
 
 ALTER TABLE "origin_traits" ADD FOREIGN KEY ("origin_id") REFERENCES "origins" ("id");
+
+ALTER TABLE "weapons" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks" ("id");
 
 ALTER TABLE "weapon_effects" ADD FOREIGN KEY ("weapon_id") REFERENCES "weapons" ("id");
 
@@ -1026,7 +1044,11 @@ ALTER TABLE "weapon_quals" ADD FOREIGN KEY ("qual_id") REFERENCES "qualities" ("
 
 ALTER TABLE "qualities" ADD FOREIGN KEY ("opposed_to") REFERENCES "qualities" ("id");
 
+ALTER TABLE "ammo" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks" ("id");
+
 ALTER TABLE "weapons" ADD FOREIGN KEY ("ammo") REFERENCES "ammo" ("id");
+
+ALTER TABLE "apparel" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks" ("id");
 
 ALTER TABLE "apparel" ADD FOREIGN KEY ("type") REFERENCES "apparel_types" ("id");
 
@@ -1046,11 +1068,19 @@ ALTER TABLE "apparel_mods" ADD FOREIGN KEY ("slot") REFERENCES "apparel_slots" (
 
 ALTER TABLE "apparel_mod_perks" ADD FOREIGN KEY ("mod_id") REFERENCES "apparel_mods" ("id");
 
+ALTER TABLE "consumables" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks" ("id");
+
 ALTER TABLE "consumables" ADD FOREIGN KEY ("type") REFERENCES "consumable_types" ("id");
+
+ALTER TABLE "gear" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks" ("id");
+
+ALTER TABLE "robot_modules" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks" ("id");
 
 ALTER TABLE "robot_module_perks" ADD FOREIGN KEY ("robot_module_id") REFERENCES "robot_modules" ("id");
 
 ALTER TABLE "origin_traits" ADD FOREIGN KEY ("trait_id") REFERENCES "traits" ("id");
+
+ALTER TABLE "perks" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks" ("id");
 
 ALTER TABLE "weapon_mod_perks" ADD FOREIGN KEY ("perk_id") REFERENCES "perks" ("id");
 
@@ -1065,6 +1095,8 @@ ALTER TABLE "weapons" ADD FOREIGN KEY ("type") REFERENCES "skills" ("id");
 ALTER TABLE "apparel_mods" ADD FOREIGN KEY ("skill") REFERENCES "skills" ("id");
 
 ALTER TABLE "skills" ADD FOREIGN KEY ("special") REFERENCES "special" ("id");
+
+ALTER TABLE "diseases" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks" ("id");
 
 ALTER TABLE "character_weapons" ADD FOREIGN KEY ("weapon_id") REFERENCES "weapons" ("id");
 
