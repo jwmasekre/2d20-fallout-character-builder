@@ -14,7 +14,14 @@ INSERT INTO qualities (name, description) VALUES
 ('Suppressed', 'Not detected unless targeted by attack or PER+Survival(2)'),
 ('Thrown', 'AGI+Throwing to throw weapon'),
 ('Two-Handed', 'One-handed use increases difficulty by 2'),
-('Unreliable', 'Complication range of attack +1');
+('Unreliable', 'Complication range of attack +1'),
+('Slow Load', 'Minor action to reload before next shot'),
+('Ammo-Hungry (X)', 'Spend X ammo when fired or ammo is spent'),
+('Bombard', 'Spend 2 ammo to target additional adjacent zones'),
+('Delay (X)', 'Detonates at the start of the Xth round after thrown or placed'),
+('Placed', 'PER+Explosives(1) (or 3 if attacked since last turn) to place'),
+('Recoil (X)', 'Attack difficulty +1 if STR<X'),
+('Surge', 'Vicious against Robots, Power Armor, and mechanical/electronic targets');
 
 UPDATE qualities SET opposed_to = '7' WHERE name = 'Accurate';
 UPDATE qualities SET opposed_to = '1' WHERE name = 'Inaccurate';
