@@ -221,6 +221,12 @@ CREATE TABLE "character_weapon_recipes" (
   "weapon_recipe_id" smallint
 );
 
+CREATE TABLE "character_publications_read" (
+  "id" smallserial PRIMARY KEY,
+  "character_id" smallint,
+  "publication_id" smallint
+);
+
 CREATE TABLE "players" (
   "id" smallserial PRIMARY KEY,
   "username" text,
@@ -335,6 +341,12 @@ CREATE TABLE "ammo" (
   "sourcebook_id" smallint
 );
 
+CREATE TABLE "ammo_variants" (
+  "id" smallserial PRIMARY KEY,
+  "variant" smallint,
+  "base" smallint
+);
+
 CREATE TABLE "apparel" (
   "id" smallserial PRIMARY KEY,
   "name" text,
@@ -413,7 +425,7 @@ CREATE TABLE "consumables" (
   "wgt" smallint,
   "cost" smallint,
   "rarity" smallint,
-  "duration" text,
+  "duration" char,
   "addiction" text,
   "sourcebook_id" smallint
 );
@@ -452,8 +464,7 @@ CREATE TABLE "robot_module_perks" (
 CREATE TABLE "traits" (
   "id" smallserial PRIMARY KEY,
   "name" text,
-  "description" text,
-  "effects" text[]
+  "description" text
 );
 
 CREATE TABLE "perks" (
@@ -462,8 +473,8 @@ CREATE TABLE "perks" (
   "description" text,
   "ranks" smallint,
   "rank_range" smallint,
+  "level_req" smallint,
   "reqs" text[],
-  "effects" text[],
   "limits" text[],
   "sourcebook_id" smallint
 );
@@ -492,7 +503,7 @@ CREATE TABLE "special" (
 CREATE TABLE "diseases" (
   "id" smallserial PRIMARY KEY,
   "name" text,
-  "eff" text[],
+  "eff" text,
   "duration" text,
   "sourcebook_id" smallint
 );
@@ -874,15 +885,8 @@ CREATE TABLE "store_inventory" (
   "other_data" text
 );
 
-CREATE TABLE "loot_tables" (
-  "id" smallserial PRIMARY KEY,
-  "type" text,
-  "d20s" smallint,
-  "die_value" smallint,
-  "source_table" text,
-  "source_id" smallint,
-  "quantity" smallint,
-  "other_data" text
+CREATE TABLE "core_ammo_loot" (
+  "roll_value" smallint PRIMARY KEY
 );
 
 CREATE TABLE "extended_tests" (
@@ -1004,6 +1008,10 @@ ALTER TABLE "character_weapon_recipes" ADD FOREIGN KEY ("character_id") REFERENC
 
 ALTER TABLE "character_weapon_recipes" ADD FOREIGN KEY ("weapon_recipe_id") REFERENCES "weapon_recipes" ("id");
 
+ALTER TABLE "character_publications_read" ADD FOREIGN KEY ("character_id") REFERENCES "characters" ("id");
+
+ALTER TABLE "character_publications_read" ADD FOREIGN KEY ("publication_id") REFERENCES "consumables" ("id");
+
 ALTER TABLE "characters" ADD FOREIGN KEY ("player_id") REFERENCES "players" ("id");
 
 ALTER TABLE "party_membership" ADD FOREIGN KEY ("character_id") REFERENCES "characters" ("id");
@@ -1047,6 +1055,10 @@ ALTER TABLE "qualities" ADD FOREIGN KEY ("opposed_to") REFERENCES "qualities" ("
 ALTER TABLE "ammo" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks" ("id");
 
 ALTER TABLE "weapons" ADD FOREIGN KEY ("ammo") REFERENCES "ammo" ("id");
+
+ALTER TABLE "ammo_variants" ADD FOREIGN KEY ("variant") REFERENCES "ammo" ("id");
+
+ALTER TABLE "ammo_variants" ADD FOREIGN KEY ("base") REFERENCES "ammo" ("id");
 
 ALTER TABLE "apparel" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks" ("id");
 
