@@ -21,7 +21,8 @@ INSERT INTO qualities (name, description) VALUES
 ('Delay (X)', 'Detonates at the start of the Xth round after thrown or placed'),
 ('Placed', 'PER+Explosives(1) (or 3 if attacked since last turn) to place'),
 ('Recoil (X)', 'Attack difficulty +1 if STR<X'),
-('Surge', 'Vicious against Robots, Power Armor, and mechanical/electronic targets');
+('Surge', 'Vicious against Robots, Power Armor, and mechanical/electronic targets'),
+('Grappling', 'STR+Athletics/Body+Other(2) by enemy to resist being pulled 1 zone closer');
 
 UPDATE qualities SET opposed_to = '7' WHERE name = 'Accurate';
 UPDATE qualities SET opposed_to = '1' WHERE name = 'Inaccurate';
