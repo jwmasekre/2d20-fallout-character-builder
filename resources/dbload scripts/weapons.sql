@@ -160,4 +160,5 @@ INSERT INTO weapons (name,type,dam,dtype,rate,range,wgt,cost,rarity,ammo,sourceb
 ('Grappling Gun','12','5','Ph','0','M','9','55','2','0','5',''),
 ('Staff of Atom','8','6','Ph','0','R','15','200','4','0','5',''),
 ('Tear Gas Launcher','3','4','Poi','0','M','18','254','3','34','5',''),
-('The Magnumnomicon','12','8','All','1','C','6','0','6','21','5','');
+('The Magnumnomicon','12','8','All','1','C','6','0','6','21','5',''),
+('Biomechanical Bladed Tendrils','8','10','Ph','0','R','0','0','9','0','5','');
