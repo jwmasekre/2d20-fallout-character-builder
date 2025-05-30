@@ -167,4 +167,14 @@ INSERT INTO apparel_mods (name,slot,phys_dr,enrg_dr,rads_dr,health,effects,wgt,c
 ('Fiberglass Scout','3','2','2','0','0','{}','0','18','10'),
 ('Polymer Scout','3','3','3','0','0','{}','1','30','10'),
 ('Shrouded','3','0','0','0','0','{“shadowed”}','1','10','10'),
-('Biomechanical Bladed Tendrils','6','0','0','0','0','{“Add Biomechanical Bladed Tendrils weapon”}','8','200','11');
+('Biomechanical Bladed Tendrils','6','0','0','0','0','{“Add Biomechanical Bladed Tendrils weapon”}','8','200','11'),
+('Ballistic Weave','1','2','2','0','0','{}','0','20','10'),
+('Ballistic Weave Mk II','1','3','3','0','0','{}','0','30','10'),
+('Ballistic Weave Mk III','1','4','4','0','0','{}','0','40','10'),
+('Ballistic Weave Mk IV','1','5','5','0','0','{}','0','50','10'),
+('Ballistic Weave Mk V','1','6','6','0','0','{}','0','60','10'),
+('Insulated Jumpsuit Lining','2','0','1','0','0','{}','0','10','10'),
+('Treated Jumpsuit Lining','2','0','1','1','0','{}','1','20','10'),
+('Resistant Jumpsuit Lining','2','0','2','1','0','{}','1','30','10'),
+('Protective Jumpsuit Lining','2','0','2','2','0','{}','1','40','10'),
+('Shielded Jumpsuit Lining','2','0','3','3','0','{}','1','50','10');

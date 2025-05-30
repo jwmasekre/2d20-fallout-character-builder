@@ -145,4 +145,5 @@ INSERT INTO weapon_effects (weapon_id,effect_id,effect_val) VALUES
 ('163','4','1'),
 ('163','8',''),
 ('163','2',''),
-('163','10','');
+('163','10',''),
+('101','4','1');
