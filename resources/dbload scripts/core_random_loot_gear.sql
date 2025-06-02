@@ -1,0 +1,1 @@
+INSERT INTO core_random_loot_gear (roll_value,gear_id) VALUES

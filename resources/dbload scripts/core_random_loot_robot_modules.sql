@@ -1,0 +1,1 @@
+INSERT INTO core_random_loot_robot_modules (roll_value,robot_module_id) VALUES

@@ -1,0 +1,1 @@
+INSERT INTO core_melee_loot (roll_value,weapon_id) VALUES
