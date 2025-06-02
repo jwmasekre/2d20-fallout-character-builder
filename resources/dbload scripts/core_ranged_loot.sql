@@ -1,0 +1,1 @@
+INSERT INTO core_ranged_loot (roll_value,weapon_id,mod_id) VALUES
