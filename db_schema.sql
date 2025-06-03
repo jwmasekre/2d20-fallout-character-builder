@@ -158,7 +158,8 @@ CREATE TABLE "character_tags" (
 CREATE TABLE "character_perks" (
   "id" smallserial PRIMARY KEY,
   "character_id" smallint,
-  "perk_id" smallint
+  "perk_id" smallint,
+  "rank" smallint
 );
 
 CREATE TABLE "character_traits" (
@@ -247,6 +248,66 @@ CREATE TABLE "origins" (
   "sourcebook_id" smallint
 );
 
+CREATE TABLE "backgrounds" (
+  "id" smallserial PRIMARY KEY,
+  "name" text,
+  "origin_id" smallint,
+  "caps" smallint,
+  "trinket" smallint,
+  "food" smallint,
+  "forage" smallint,
+  "bev" smallint,
+  "chem" smallint,
+  "ammo" smallint,
+  "aid" smallint,
+  "odd" smallint,
+  "outcast" smallint,
+  "junk" smallint,
+  "sourcebook_id" smallint
+);
+
+CREATE TABLE "background_weapons" (
+  "id" smallserial PRIMARY KEY,
+  "background_id" smallint,
+  "weapon_id" smallint,
+  "mod_id" smallint,
+  "alt_id" smallint
+);
+
+CREATE TABLE "background_ammo" (
+  "id" smallserial PRIMARY KEY,
+  "ammo_id" smallint,
+  "quantity" text,
+  "bg_weapon_id" smallint
+);
+
+CREATE TABLE "background_apparel" (
+  "id" smallserial PRIMARY KEY,
+  "background_id" smallint,
+  "apparel_id" smallint,
+  "alt_id" smallint
+);
+
+CREATE TABLE "background_consumables" (
+  "id" smallserial PRIMARY KEY,
+  "background_id" smallint,
+  "consumable_id" smallint,
+  "alt_id" smallint
+);
+
+CREATE TABLE "background_gear" (
+  "id" smallserial PRIMARY KEY,
+  "background_id" smallint,
+  "gear_id" smallint
+);
+
+CREATE TABLE "background_robot_modules" (
+  "id" smallserial PRIMARY KEY,
+  "background_id" smallint,
+  "robot_module_id" smallint,
+  "alt_id" smallint
+);
+
 CREATE TABLE "origin_traits" (
   "id" smallserial PRIMARY KEY,
   "origin_id" smallint,
@@ -271,13 +332,15 @@ CREATE TABLE "weapons" (
 CREATE TABLE "weapon_effects" (
   "id" smallserial PRIMARY KEY,
   "weapon_id" smallint,
-  "effect_id" smallint
+  "effect_id" smallint,
+  "effect_val" smallint
 );
 
 CREATE TABLE "weapon_quals" (
   "id" smallserial PRIMARY KEY,
   "weapon_id" smallint,
-  "qual_id" smallint
+  "qual_id" smallint,
+  "qual_val" smallint
 );
 
 CREATE TABLE "weapon_mod_available" (
@@ -296,21 +359,17 @@ CREATE TABLE "weapon_mods" (
   "id" smallserial PRIMARY KEY,
   "name" text,
   "prefix" text,
+  "effects" text[],
   "slot" smallint,
   "wgt" smallint,
   "cost" smallint
 );
 
-CREATE TABLE "weapon_mod_effects" (
-  "id" smallserial PRIMARY KEY,
-  "mod_id" smallint,
-  "effect_id" smallint
-);
-
 CREATE TABLE "weapon_mod_perks" (
   "id" smallserial PRIMARY KEY,
   "mod_id" smallint,
-  "perk_id" smallint
+  "perk_id" smallint,
+  "rank" smallint
 );
 
 CREATE TABLE "weapon_slots" (
@@ -351,10 +410,11 @@ CREATE TABLE "apparel" (
   "id" smallserial PRIMARY KEY,
   "name" text,
   "type" smallint,
-  "species" text,
+  "dog" boolean,
   "phys_dr" smallint,
   "enrg_dr" smallint,
   "rads_dr" smallint,
+  "eff" text[],
   "wgt" smallint,
   "cost" smallint,
   "rarity" smallint,
@@ -398,6 +458,7 @@ CREATE TABLE "apparel_mods" (
   "phys_dr" smallint,
   "enrg_dr" smallint,
   "rads_dr" smallint,
+  "health" smallint,
   "effects" text[],
   "wgt" smallint,
   "cost" smallint,
@@ -412,7 +473,8 @@ CREATE TABLE "apparel_slots" (
 CREATE TABLE "apparel_mod_perks" (
   "id" smallserial PRIMARY KEY,
   "mod_id" smallint,
-  "perk_id" smallint
+  "perk_id" smallint,
+  "rank" smallint
 );
 
 CREATE TABLE "consumables" (
@@ -458,7 +520,8 @@ CREATE TABLE "robot_modules" (
 CREATE TABLE "robot_module_perks" (
   "id" smallserial PRIMARY KEY,
   "robot_module_id" smallint,
-  "perk_id" smallint
+  "perk_id" smallint,
+  "rank" smallint
 );
 
 CREATE TABLE "traits" (
@@ -520,6 +583,24 @@ CREATE TABLE "character_weapon_mods" (
   "mod_id" smallint
 );
 
+CREATE TABLE "character_weapon_legendary" (
+  "id" smallserial PRIMARY KEY,
+  "character_weapon_id" smallint,
+  "legendary_id" smallint
+);
+
+CREATE TABLE "weapon_legendary" (
+  "id" smallserial PRIMARY KEY,
+  "roll_table" smallint,
+  "name" text,
+  "eff" text,
+  "sg_roll" smallint,
+  "ew_roll" smallint,
+  "bg_roll" smallint,
+  "mw_roll" smallint,
+  "u_roll" smallint
+);
+
 CREATE TABLE "character_ammo" (
   "id" smallserial PRIMARY KEY,
   "ammo_id" smallint,
@@ -531,13 +612,30 @@ CREATE TABLE "character_apparel" (
   "id" smallserial PRIMARY KEY,
   "apparel_id" smallint,
   "character_id" smallint,
-  "equipped" boolean
+  "equipped" boolean,
+  "legendary" boolean
 );
 
 CREATE TABLE "character_apparel_mods" (
   "id" smallserial PRIMARY KEY,
   "character_apparel_id" smallint,
   "mod_id" smallint
+);
+
+CREATE TABLE "character_armor_legendary" (
+  "id" smallserial PRIMARY KEY,
+  "character_apparel_id" smallint,
+  "legendary_id" smallint
+);
+
+CREATE TABLE "armor_legendary" (
+  "id" smallserial PRIMARY KEY,
+  "name" text,
+  "eff" text,
+  "head_roll" smallint,
+  "arm_roll" smallint,
+  "torso_roll" smallint,
+  "leg_roll" smallint
 );
 
 CREATE TABLE "character_consumables" (
@@ -625,7 +723,8 @@ CREATE TABLE "chem_recipe_consumables" (
 CREATE TABLE "chem_recipe_perks" (
   "id" smallserial PRIMARY KEY,
   "chem_id" smallint,
-  "perk_id" smallint
+  "perk_id" smallint,
+  "rank" smallint
 );
 
 CREATE TABLE "chem_recipe_skills" (
@@ -671,7 +770,8 @@ CREATE TABLE "robot_armor_recipes" (
 CREATE TABLE "robot_armor_recipe_perks" (
   "id" smallserial PRIMARY KEY,
   "robot_armor_id" smallint,
-  "perk_id" smallint
+  "perk_id" smallint,
+  "rank" smallint
 );
 
 CREATE TABLE "robot_armor_recipe_skills" (
@@ -886,7 +986,97 @@ CREATE TABLE "store_inventory" (
 );
 
 CREATE TABLE "core_ammo_loot" (
-  "roll_value" smallint PRIMARY KEY
+  "roll_value" smallint PRIMARY KEY,
+  "ammo_id" smallint,
+  "other" text
+);
+
+CREATE TABLE "core_armor_loot" (
+  "id" smallint PRIMARY KEY,
+  "roll_value" smallint,
+  "apparel_id" smallint
+);
+
+CREATE TABLE "core_clothing_loot" (
+  "roll_value" smallint PRIMARY KEY,
+  "apparel_id" smallint
+);
+
+CREATE TABLE "core_food_loot" (
+  "roll_value" smallint PRIMARY KEY,
+  "consumable_id" smallint
+);
+
+CREATE TABLE "core_foraging_loot" (
+  "roll_value" smallint PRIMARY KEY,
+  "consumable_id" smallint
+);
+
+CREATE TABLE "core_beverage_loot" (
+  "roll_value" smallint PRIMARY KEY,
+  "consumable_id" smallint
+);
+
+CREATE TABLE "core_nuka_loot" (
+  "id" smallint PRIMARY KEY,
+  "roll_value" smallint,
+  "consumable_id" smallint,
+  "empties" text
+);
+
+CREATE TABLE "core_chem_loot" (
+  "roll_value" smallint PRIMARY KEY,
+  "consumable_id" smallint
+);
+
+CREATE TABLE "core_ranged_loot" (
+  "id" smallint PRIMARY KEY,
+  "roll_value" smallint,
+  "weapon_id" smallint,
+  "mod_id" smallint
+);
+
+CREATE TABLE "core_melee_loot" (
+  "roll_value" smallint PRIMARY KEY,
+  "weapon_id" smallint
+);
+
+CREATE TABLE "core_thrown_loot" (
+  "roll_value" smallint PRIMARY KEY,
+  "weapon_id" smallint,
+  "quantity" text
+);
+
+CREATE TABLE "core_publications_loot" (
+  "id" smallint PRIMARY KEY,
+  "roll_value" smallint,
+  "consumable_id" smallint
+);
+
+CREATE TABLE "wanderer_publications_loot" (
+  "roll_value" smallint,
+  "consumable_id" smallint
+);
+
+CREATE TABLE "core_random_loot_robot_modules" (
+  "roll_value" smallint PRIMARY KEY,
+  "robot_module_id" smallint
+);
+
+CREATE TABLE "core_random_loot_gear" (
+  "roll_value" smallint PRIMARY KEY,
+  "gear_id" smallint
+);
+
+CREATE TABLE "core_random_loot_money" (
+  "roll_value" smallint PRIMARY KEY,
+  "prewar" boolean,
+  "2d20s" smallint
+);
+
+CREATE TABLE "core_random_loot_misc" (
+  "roll_value" smallint PRIMARY KEY,
+  "item" text
 );
 
 CREATE TABLE "extended_tests" (
@@ -1022,6 +1212,42 @@ ALTER TABLE "origins" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks"
 
 ALTER TABLE "characters" ADD FOREIGN KEY ("origin") REFERENCES "origins" ("id");
 
+ALTER TABLE "backgrounds" ADD FOREIGN KEY ("origin_id") REFERENCES "origins" ("id");
+
+ALTER TABLE "backgrounds" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks" ("id");
+
+ALTER TABLE "background_weapons" ADD FOREIGN KEY ("background_id") REFERENCES "backgrounds" ("id");
+
+ALTER TABLE "background_weapons" ADD FOREIGN KEY ("weapon_id") REFERENCES "weapons" ("id");
+
+ALTER TABLE "background_weapons" ADD FOREIGN KEY ("alt_id") REFERENCES "background_weapons" ("id");
+
+ALTER TABLE "background_ammo" ADD FOREIGN KEY ("ammo_id") REFERENCES "ammo" ("id");
+
+ALTER TABLE "background_ammo" ADD FOREIGN KEY ("bg_weapon_id") REFERENCES "background_weapons" ("id");
+
+ALTER TABLE "background_apparel" ADD FOREIGN KEY ("background_id") REFERENCES "backgrounds" ("id");
+
+ALTER TABLE "background_apparel" ADD FOREIGN KEY ("apparel_id") REFERENCES "apparel" ("id");
+
+ALTER TABLE "background_apparel" ADD FOREIGN KEY ("alt_id") REFERENCES "background_apparel" ("id");
+
+ALTER TABLE "background_consumables" ADD FOREIGN KEY ("background_id") REFERENCES "backgrounds" ("id");
+
+ALTER TABLE "background_consumables" ADD FOREIGN KEY ("consumable_id") REFERENCES "consumables" ("id");
+
+ALTER TABLE "background_consumables" ADD FOREIGN KEY ("alt_id") REFERENCES "background_consumables" ("id");
+
+ALTER TABLE "background_gear" ADD FOREIGN KEY ("background_id") REFERENCES "backgrounds" ("id");
+
+ALTER TABLE "background_gear" ADD FOREIGN KEY ("gear_id") REFERENCES "gear" ("id");
+
+ALTER TABLE "background_robot_modules" ADD FOREIGN KEY ("background_id") REFERENCES "backgrounds" ("id");
+
+ALTER TABLE "background_robot_modules" ADD FOREIGN KEY ("robot_module_id") REFERENCES "robot_modules" ("id");
+
+ALTER TABLE "background_robot_modules" ADD FOREIGN KEY ("alt_id") REFERENCES "background_robot_modules" ("id");
+
 ALTER TABLE "origin_traits" ADD FOREIGN KEY ("origin_id") REFERENCES "origins" ("id");
 
 ALTER TABLE "weapons" ADD FOREIGN KEY ("sourcebook_id") REFERENCES "sourcebooks" ("id");
@@ -1036,8 +1262,6 @@ ALTER TABLE "weapon_slot_available" ADD FOREIGN KEY ("weapon_id") REFERENCES "we
 
 ALTER TABLE "weapon_mod_available" ADD FOREIGN KEY ("mod_id") REFERENCES "weapon_mods" ("id");
 
-ALTER TABLE "weapon_mod_effects" ADD FOREIGN KEY ("mod_id") REFERENCES "weapon_mods" ("id");
-
 ALTER TABLE "weapon_mod_perks" ADD FOREIGN KEY ("mod_id") REFERENCES "weapon_mods" ("id");
 
 ALTER TABLE "weapon_slot_available" ADD FOREIGN KEY ("slot_id") REFERENCES "weapon_slots" ("id");
@@ -1045,8 +1269,6 @@ ALTER TABLE "weapon_slot_available" ADD FOREIGN KEY ("slot_id") REFERENCES "weap
 ALTER TABLE "weapon_mods" ADD FOREIGN KEY ("slot") REFERENCES "weapon_slots" ("id");
 
 ALTER TABLE "weapon_effects" ADD FOREIGN KEY ("effect_id") REFERENCES "dam_effects" ("id");
-
-ALTER TABLE "weapon_mod_effects" ADD FOREIGN KEY ("effect_id") REFERENCES "dam_effects" ("id");
 
 ALTER TABLE "weapon_quals" ADD FOREIGN KEY ("qual_id") REFERENCES "qualities" ("id");
 
@@ -1118,6 +1340,10 @@ ALTER TABLE "character_weapon_mods" ADD FOREIGN KEY ("character_weapon_id") REFE
 
 ALTER TABLE "character_weapon_mods" ADD FOREIGN KEY ("mod_id") REFERENCES "weapon_mods" ("id");
 
+ALTER TABLE "character_weapon_legendary" ADD FOREIGN KEY ("character_weapon_id") REFERENCES "character_weapons" ("id");
+
+ALTER TABLE "character_weapon_legendary" ADD FOREIGN KEY ("legendary_id") REFERENCES "weapon_legendary" ("id");
+
 ALTER TABLE "character_ammo" ADD FOREIGN KEY ("ammo_id") REFERENCES "ammo" ("id");
 
 ALTER TABLE "character_ammo" ADD FOREIGN KEY ("character_id") REFERENCES "characters" ("id");
@@ -1129,6 +1355,10 @@ ALTER TABLE "character_apparel" ADD FOREIGN KEY ("character_id") REFERENCES "pla
 ALTER TABLE "character_apparel_mods" ADD FOREIGN KEY ("character_apparel_id") REFERENCES "character_apparel" ("id");
 
 ALTER TABLE "character_apparel_mods" ADD FOREIGN KEY ("mod_id") REFERENCES "apparel_mods" ("id");
+
+ALTER TABLE "character_armor_legendary" ADD FOREIGN KEY ("character_apparel_id") REFERENCES "character_apparel" ("id");
+
+ALTER TABLE "character_armor_legendary" ADD FOREIGN KEY ("legendary_id") REFERENCES "armor_legendary" ("id");
 
 ALTER TABLE "character_consumables" ADD FOREIGN KEY ("consumable_id") REFERENCES "consumables" ("id");
 
@@ -1259,6 +1489,38 @@ ALTER TABLE "storefronts" ADD FOREIGN KEY ("party_id") REFERENCES "parties" ("id
 ALTER TABLE "storefronts" ADD FOREIGN KEY ("owning_npc") REFERENCES "npc_characters" ("id");
 
 ALTER TABLE "storefronts" ADD FOREIGN KEY ("inventory") REFERENCES "store_inventory" ("id");
+
+ALTER TABLE "core_ammo_loot" ADD FOREIGN KEY ("ammo_id") REFERENCES "ammo" ("id");
+
+ALTER TABLE "core_armor_loot" ADD FOREIGN KEY ("apparel_id") REFERENCES "apparel" ("id");
+
+ALTER TABLE "core_clothing_loot" ADD FOREIGN KEY ("apparel_id") REFERENCES "apparel" ("id");
+
+ALTER TABLE "core_food_loot" ADD FOREIGN KEY ("consumable_id") REFERENCES "consumables" ("id");
+
+ALTER TABLE "core_foraging_loot" ADD FOREIGN KEY ("consumable_id") REFERENCES "consumables" ("id");
+
+ALTER TABLE "core_beverage_loot" ADD FOREIGN KEY ("consumable_id") REFERENCES "consumables" ("id");
+
+ALTER TABLE "core_nuka_loot" ADD FOREIGN KEY ("consumable_id") REFERENCES "consumables" ("id");
+
+ALTER TABLE "core_chem_loot" ADD FOREIGN KEY ("consumable_id") REFERENCES "consumables" ("id");
+
+ALTER TABLE "core_ranged_loot" ADD FOREIGN KEY ("weapon_id") REFERENCES "weapons" ("id");
+
+ALTER TABLE "core_ranged_loot" ADD FOREIGN KEY ("mod_id") REFERENCES "weapon_mods" ("id");
+
+ALTER TABLE "core_melee_loot" ADD FOREIGN KEY ("weapon_id") REFERENCES "weapons" ("id");
+
+ALTER TABLE "core_thrown_loot" ADD FOREIGN KEY ("weapon_id") REFERENCES "weapons" ("id");
+
+ALTER TABLE "core_publications_loot" ADD FOREIGN KEY ("consumable_id") REFERENCES "consumables" ("id");
+
+ALTER TABLE "wanderer_publications_loot" ADD FOREIGN KEY ("consumable_id") REFERENCES "consumables" ("id");
+
+ALTER TABLE "core_random_loot_robot_modules" ADD FOREIGN KEY ("robot_module_id") REFERENCES "robot_modules" ("id");
+
+ALTER TABLE "core_random_loot_gear" ADD FOREIGN KEY ("gear_id") REFERENCES "gear" ("id");
 
 ALTER TABLE "extended_tests" ADD FOREIGN KEY ("party_id") REFERENCES "parties" ("id");
 
