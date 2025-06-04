@@ -99,6 +99,36 @@ cd ../2d20-fallout-character-builder
 npm run dev -- --open
 ```
 
+once the db schema was loaded into the db
+
+```sh
+npx drizzle-kit pull
+```
+
+```ascii
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/home/josh/2d20-fallout-character-builder/drizzle.config.ts'
+Pulling from ['new_content'] list of schemas
+
+Using 'postgres' driver for database querying
+[✓] 132 tables fetched
+[✓] 752 columns fetched
+[✓] 0   enums fetched
+[✓] 0   indexes fetched
+[✓] 202 foreign keys fetched
+[✓] 0   policies fetched
+[✓] 0   check constraints fetched
+[✓] 0   views fetched
+
+[i] No SQL generated, you already have migrations in project
+[✓] Your schema file is ready ➜ drizzle/schema.ts 🚀
+[✓] Your relations file is ready ➜ drizzle/relations.ts 🚀
+```
+
+```sql
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA new_content TO svelte;
+```
+
 ### this was the old sql setup, still here for future reference
 
 see [db_schema.sql](./db_schema.sql) for the updated schema (i used dbdiagram.io to actually plan it out properly)

@@ -1,4 +1,4 @@
-INSERT INTO weapon_mod_available (weapon_id,mod_id)
+INSERT INTO weapon_mod_available (weapon_id,mod_id) VALUES
 ('1','1'),
 ('1','2'),
 ('1','3'),

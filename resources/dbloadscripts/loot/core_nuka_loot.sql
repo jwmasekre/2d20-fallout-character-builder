@@ -1,8 +1,8 @@
 INSERT INTO core_nuka_loot (roll_value,consumable_id,empties) VALUES
-('9','','1+2CD'),
-('10','','1+2CD'),
-('11','','1+2CD'),
-('12','','1+2CD'),
+('9',NULL,'1+2CD'),
+('10',NULL,'1+2CD'),
+('11',NULL,'1+2CD'),
+('12',NULL,'1+2CD'),
 ('13','148',''),
 ('14','148',''),
 ('15','148',''),

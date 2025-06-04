@@ -1,4 +1,4 @@
-INSERT INTO origin_src (name,description,sourcebook_id,can_ghoul) VALUES
+INSERT INTO origins (name,description,sourcebook_id,can_ghoul) VALUES
 ('Brotherhood of Steel Initiate','The Brotherhood of Steel’s primary goals are the recovery and preservation of old-world tech to keep it from the wrong hands. Different chapters have different ideas on how to accomplish these goals.\n\nYou are an initiate, learning the ways of your chapter and of the wasteland.','1','false'),
 ('Ghoul','Exposure to background radiation has mutated you into a rotting, living corpse. You no longer age, and are healed by radiation. You may be pre-war, or recently converted.\n\nYou’re civilized, meaning you haven’t turned feral (yet).','1','false'),
 ('Super Mutant','You’ve been forced to mutate via exposure to the Forced Evolutionary Virus (FEV). Mutation typically results in significantly increased strength and endurance, and significantly decreased charisma and intelligence.\n\nMost Super Mutants are openly hostile towards all others, so don’t expect warm welcomes.','1','false'),

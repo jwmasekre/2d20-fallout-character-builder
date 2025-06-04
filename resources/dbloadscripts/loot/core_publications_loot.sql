@@ -1,4 +1,4 @@
-INSERT INTO core_publication_loot (roll_value,consumable_id) VALUES
+INSERT INTO core_publications_loot (roll_value,consumable_id) VALUES
 ('1','210'),
 ('2','211'),
 ('2','212'),

@@ -1,4 +1,4 @@
-INSERT INTO backgrounds (name,origin_id,caps,trinket,food,forage,bev,chem,ammo,aid,odd,outcast,junk,sourcebook_id) VALUES
+INSERT INTO backgrounds (name,origin_id,caps,misc,trinket,food,forage,bev,chem,ammo,aid,odd,outcast,junk,sourcebook_id) VALUES
 ('Initiate','1','0','{}','0','0','0','0','0','0','0','0','0','0','1'),
 ('Scribe','1','0','{}','0','0','0','0','0','0','0','0','0','0','1'),
 ('Mercenary','2','15','{“note for a 50c job”}','0','0','0','0','0','0','0','0','0','0','1'),
