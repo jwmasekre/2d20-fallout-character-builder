@@ -92,7 +92,7 @@ INSERT INTO weapon_mods (name,prefix,effects,slot,wgt,cost) VALUES
 ('Huge (Flamer)','Max Capacity','{“+2 Rate”}','11','6','34'),
 ('Compression','Compressed','{“+1CD Dam”}','12','0','22'),
 ('Vaporization','Vaporizing','{“+1CD Dam”,”Gain Vicious”}','12','0','47'),
-('Beam Focuser (Gatling Laser)','Focused','{“Gain Piercing 1”,”+1 Range”)','12','0','22'),
+('Beam Focuser (Gatling Laser)','Focused','{“Gain Piercing 1”,”+1 Range”}','12','0','22'),
 ('Serrated (Sword)','Serrated','{“Gain Persistent”}','13','0','25'),
 ('Serrated (Knife)','Serrated','{“+1CD Dam”,”Gain Persistent”}','13','0','12'),
 ('Serrated (Machete)','Serrated','{“+2CD Dam”,”Gain Persistent”}','13','0','12'),

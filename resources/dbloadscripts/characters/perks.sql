@@ -173,7 +173,7 @@ INSERT INTO perks (name,description,sourcebook_id,level_req,ranks,rank_range,req
 ('Mysterious Savior','For 1 Luck Mysterious Savior may stabilize you (refunded).','4','1','1','0','{"luck: 7"}','{}'),
 ('Psychopath','On kill (Rank)CD, Effect=+Luck.','4','11','3','6','{"luck: 8"}','{}'),
 ('Serendipity','If HP<(MaxHP)/3, spend 1 Luck when attacked before attack roll to make attack miss (Rank) times per scene.','4','5','3','6','{"luck: 7"}','{}'),
-('Storm Chaser','When rain/rad storm, heal 1HP each turn in combat, (LCK)/2HP per hour outside combat.','4','15','1','0','{"luck: 6"}','{}')
+('Storm Chaser','When rain/rad storm, heal 1HP each turn in combat, (LCK)/2HP per hour outside combat.','4','15','1','0','{"luck: 6"}','{}'),
 ('Ammo Factory','Double ammo production','4','5','1','1','{Book}','{}'),
 ('Arms Breaking','Spend 3-rank AP to break target’s wielded weapon after successful melee as Super Mutant or in Power Armor','4','7','3','6','{Book}','{}'),
 ('Blood Sacrifice!','+rank Physical and Energy DR and heal 2+2*rank HP to whole party when reduced to 0HP','4','6','3','6','{Book}','{}'),

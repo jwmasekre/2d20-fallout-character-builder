@@ -1,4 +1,4 @@
-INSERT INTO wanderer_publication_loot (roll_value,consumable_id) VALUES
+INSERT INTO wanderer_publications_loot (roll_value,consumable_id) VALUES
 ('1','305'),
 ('2','306'),
 ('3','307'),

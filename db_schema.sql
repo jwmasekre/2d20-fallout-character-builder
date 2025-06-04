@@ -253,6 +253,7 @@ CREATE TABLE "backgrounds" (
   "name" text,
   "origin_id" smallint,
   "caps" smallint,
+  "misc" text,
   "trinket" smallint,
   "food" smallint,
   "forage" smallint,
@@ -992,7 +993,7 @@ CREATE TABLE "core_ammo_loot" (
 );
 
 CREATE TABLE "core_armor_loot" (
-  "id" smallint PRIMARY KEY,
+  "id" smallserial PRIMARY KEY,
   "roll_value" smallint,
   "apparel_id" smallint
 );
@@ -1018,7 +1019,7 @@ CREATE TABLE "core_beverage_loot" (
 );
 
 CREATE TABLE "core_nuka_loot" (
-  "id" smallint PRIMARY KEY,
+  "id" smallserial PRIMARY KEY,
   "roll_value" smallint,
   "consumable_id" smallint,
   "empties" text
@@ -1030,7 +1031,7 @@ CREATE TABLE "core_chem_loot" (
 );
 
 CREATE TABLE "core_ranged_loot" (
-  "id" smallint PRIMARY KEY,
+  "id" smallserial PRIMARY KEY,
   "roll_value" smallint,
   "weapon_id" smallint,
   "mod_id" smallint
@@ -1048,7 +1049,7 @@ CREATE TABLE "core_thrown_loot" (
 );
 
 CREATE TABLE "core_publications_loot" (
-  "id" smallint PRIMARY KEY,
+  "id" smallserial PRIMARY KEY,
   "roll_value" smallint,
   "consumable_id" smallint
 );
@@ -1065,13 +1066,19 @@ CREATE TABLE "core_random_loot_robot_modules" (
 
 CREATE TABLE "core_random_loot_gear" (
   "roll_value" smallint PRIMARY KEY,
-  "gear_id" smallint
+  "gear_id" smallint,
+  "quantity" text
+);
+
+CREATE TABLE "core_random_loot_consumables" (
+  "roll_value" smallint PRIMARY KEY,
+  "consumable_id" smallint
 );
 
 CREATE TABLE "core_random_loot_money" (
   "roll_value" smallint PRIMARY KEY,
   "prewar" boolean,
-  "2d20s" smallint
+  "d20s" smallint
 );
 
 CREATE TABLE "core_random_loot_misc" (
@@ -1394,14 +1401,6 @@ ALTER TABLE "character_robot_modules" ADD FOREIGN KEY ("module_id") REFERENCES "
 
 ALTER TABLE "character_robot_modules" ADD FOREIGN KEY ("character_id") REFERENCES "characters" ("id");
 
-ALTER TABLE "weapons" ADD FOREIGN KEY ("rarity") REFERENCES "repair_materials" ("rarity");
-
-ALTER TABLE "apparel" ADD FOREIGN KEY ("rarity") REFERENCES "repair_materials" ("rarity");
-
-ALTER TABLE "gear" ADD FOREIGN KEY ("rarity") REFERENCES "repair_materials" ("rarity");
-
-ALTER TABLE "robot_modules" ADD FOREIGN KEY ("rarity") REFERENCES "repair_materials" ("rarity");
-
 ALTER TABLE "apparel_recipes" ADD FOREIGN KEY ("complexity") REFERENCES "recipe_materials" ("complexity");
 
 ALTER TABLE "apparel_recipes" ADD FOREIGN KEY ("apparel_mod") REFERENCES "apparel_mods" ("id");
@@ -1522,6 +1521,8 @@ ALTER TABLE "core_random_loot_robot_modules" ADD FOREIGN KEY ("robot_module_id")
 
 ALTER TABLE "core_random_loot_gear" ADD FOREIGN KEY ("gear_id") REFERENCES "gear" ("id");
 
+ALTER TABLE "core_random_loot_consumables" ADD FOREIGN KEY ("consumable_id") REFERENCES "consumables" ("id");
+
 ALTER TABLE "extended_tests" ADD FOREIGN KEY ("party_id") REFERENCES "parties" ("id");
 
 ALTER TABLE "extended_test_characters" ADD FOREIGN KEY ("test_id") REFERENCES "extended_tests" ("id");
@@ -1541,3 +1542,5 @@ ALTER TABLE "settlement_npc_creatures" ADD FOREIGN KEY ("creature_id") REFERENCE
 ALTER TABLE "settlement_npc_characters" ADD FOREIGN KEY ("settlement_id") REFERENCES "settlements" ("id");
 
 ALTER TABLE "settlement_npc_characters" ADD FOREIGN KEY ("character_id") REFERENCES "active_npc_characters" ("id");
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA new_content TO svelte;

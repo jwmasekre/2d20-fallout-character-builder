@@ -38,16 +38,16 @@ INSERT INTO background_consumables (background_id,consumable_id) VALUES
 ('46','208');
 
 UPDATE background_consumables AS b SET alt_id = a.alt_id FROM (VALUES
-('1','2'),
-('2','1'),
-('4','5'),
-('5','4'),
-('7','8'),
-('8','7'),
-('25','29'),
-('26','29'),
-('27','30'),
-('28','30'),
-('29','25'),
-('30','27')
+(1,2),
+(2,1),
+(4,5),
+(5,4),
+(7,8),
+(8,7),
+(25,29),
+(26,29),
+(27,30),
+(28,30),
+(29,25),
+(30,27)
 ) AS a(id,alt_id) WHERE a.id = b.id;

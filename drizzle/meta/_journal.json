@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1748990233881,
+      "tag": "0000_damp_golden_guardian",
+      "breakpoints": true
+    }
+  ]
+}

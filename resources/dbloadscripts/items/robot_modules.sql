@@ -1,4 +1,5 @@
 INSERT INTO robot_modules (name,eff,wgt,cost,rarity,sourcebook_id) VALUES
+('Behavioral Analysis Mod','{"Reduce the difficulty of Speech tests by 1 (min. 0)"}','0','50','3','1'),
 ('Diagnosis Mod','{"Reduce the difficulty of Medicine tests by 1 (min. 0)"}','0','50','3','1'),
 ('Hacking Module','{"Reduces the difficulty of Science tests to hack into locked computer systems by 1 (min. 0)"}','0','25','2','1'),
 ('Hazard Detection Mod','{"Reduce the difficulty of Survival tests to detect and disable traps and similar hazards by 1 (min. 0)"}','0','25','2','1'),
