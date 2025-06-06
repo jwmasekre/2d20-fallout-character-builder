@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { npcCharactersInNewContent, npcCharacterSpecialInNewContent, activeNpcCharactersInNewContent, activeNpcCharacterSpecialInNewContent, charactersInNewContent, characterSkillsInNewContent, npcCharacterSkillsInNewContent, activeNpcCharacterSkillsInNewContent, characterTagsInNewContent, characterPerksInNewContent, perksInNewContent, characterTraitsInNewContent, traitsInNewContent, characterAddictionsInNewContent, consumablesInNewContent, characterDiseasesInNewContent, diseasesInNewContent, characterCookRecipesInNewContent, cookRecipesInNewContent, characterPowerarmorRecipesInNewContent, powerarmorRecipesInNewContent, characterRobotArmorRecipesInNewContent, robotArmorRecipesInNewContent, characterRobotModulesRecipesInNewContent, robotModuleRecipesInNewContent, characterWeaponRecipesInNewContent, weaponRecipesInNewContent, characterPublicationsReadInNewContent, partyMembershipInNewContent, partiesInNewContent, originsInNewContent, backgroundsInNewContent, sourcebooksInNewContent, backgroundWeaponsInNewContent, weaponsInNewContent, backgroundApparelInNewContent, apparelInNewContent, ammoInNewContent, backgroundAmmoInNewContent, backgroundConsumablesInNewContent, backgroundGearInNewContent, gearInNewContent, backgroundRobotModulesInNewContent, robotModulesInNewContent, originTraitsInNewContent, weaponModsInNewContent, weaponModPerksInNewContent, qualitiesInNewContent, weaponEffectsInNewContent, damEffectsInNewContent, skillsInNewContent, repairMaterialsInNewContent, weaponQualsInNewContent, weaponModAvailableInNewContent, weaponSlotAvailableInNewContent, weaponSlotsInNewContent, ammoVariantsInNewContent, apparelCoversInNewContent, bodyLocationsInNewContent, apparelModAvailableInNewContent, apparelModsInNewContent, apparelModPerksInNewContent, apparelTypesInNewContent, apparelSlotAvailableInNewContent, apparelSlotsInNewContent, robotModulePerksInNewContent, consumableTypesInNewContent, specialInNewContent, characterWeaponsInNewContent, characterAmmoInNewContent, characterConsumablesInNewContent, characterWeaponModsInNewContent, characterWeaponLegendaryInNewContent, weaponLegendaryInNewContent, characterApparelInNewContent, playersInNewContent, characterApparelModsInNewContent, characterArmorLegendaryInNewContent, armorLegendaryInNewContent, characterGearInNewContent, characterPowerarmorPiecesInNewContent, characterPowerarmorPieceModsInNewContent, recipeMaterialsInNewContent, characterPowerarmorFramesInNewContent, chemRecipesInNewContent, characterRobotModulesInNewContent, chemRecipeConsumablesInNewContent, chemRecipePerksInNewContent, chemRecipeSkillsInNewContent, cookRecipeConsumablesInNewContent, characterTypesInNewContent, cookRecipeSkillsInNewContent, robotArmorRecipePerksInNewContent, robotArmorRecipeSkillsInNewContent, robotModuleRecipeSkillsInNewContent, weaponRecipeSkillsInNewContent, encountersInNewContent, storefrontsInNewContent, storeInventoryInNewContent, coreAmmoLootInNewContent, coreArmorLootInNewContent, npcCreaturesInNewContent, activeNpcCreaturesInNewContent, coreClothingLootInNewContent, coreFoodLootInNewContent, coreForagingLootInNewContent, coreBeverageLootInNewContent, coreNukaLootInNewContent, corePublicationsLootInNewContent, coreRandomLootConsumablesInNewContent, extendedTestsInNewContent, extendedTestCharactersInNewContent, coreRangedLootInNewContent, coreMeleeLootInNewContent, coreThrownLootInNewContent, wandererPublicationsLootInNewContent, coreRandomLootRobotModulesInNewContent, coreRandomLootGearInNewContent, factionsInNewContent, characterSpecialInNewContent, characterApparelRecipesInNewContent, apparelRecipesInNewContent, characterChemRecipesInNewContent, creatureTypesInNewContent, coreChemLootInNewContent, settlementsInNewContent, settlementNpcCreaturesInNewContent, settlementNpcCharactersInNewContent } from "./schema";
+import { npcCharactersInNewContent, npcCharacterSpecialInNewContent, activeNpcCharactersInNewContent, activeNpcCharacterSpecialInNewContent, recipeMaterialsInNewContent, powerarmorRecipesInNewContent, apparelModsInNewContent, charactersInNewContent, characterSkillsInNewContent, npcCharacterSkillsInNewContent, activeNpcCharacterSkillsInNewContent, characterTagsInNewContent, characterPerksInNewContent, perksInNewContent, characterTraitsInNewContent, traitsInNewContent, characterAddictionsInNewContent, consumablesInNewContent, playersInNewContent, originsInNewContent, partiesInNewContent, characterSpecialInNewContent, characterChemRecipesInNewContent, chemRecipesInNewContent, characterCookRecipesInNewContent, cookRecipesInNewContent, characterPowerarmorRecipesInNewContent, characterRobotArmorRecipesInNewContent, robotArmorRecipesInNewContent, characterRobotModulesRecipesInNewContent, robotModuleRecipesInNewContent, characterWeaponRecipesInNewContent, weaponRecipesInNewContent, backgroundsInNewContent, sourcebooksInNewContent, backgroundWeaponsInNewContent, weaponsInNewContent, backgroundApparelInNewContent, apparelInNewContent, ammoInNewContent, backgroundAmmoInNewContent, backgroundConsumablesInNewContent, backgroundGearInNewContent, gearInNewContent, backgroundRobotModulesInNewContent, robotModulesInNewContent, originTraitsInNewContent, weaponEffectsInNewContent, damEffectsInNewContent, weaponModsInNewContent, weaponModPerksInNewContent, qualitiesInNewContent, skillsInNewContent, weaponQualsInNewContent, weaponModAvailableInNewContent, weaponSlotAvailableInNewContent, weaponSlotsInNewContent, ammoVariantsInNewContent, apparelCoversInNewContent, bodyLocationsInNewContent, apparelModAvailableInNewContent, apparelModPerksInNewContent, apparelTypesInNewContent, apparelSlotAvailableInNewContent, apparelSlotsInNewContent, robotModulePerksInNewContent, consumableTypesInNewContent, specialInNewContent, characterAmmoInNewContent, characterConsumablesInNewContent, characterWeaponsInNewContent, characterWeaponModsInNewContent, characterWeaponLegendaryInNewContent, weaponLegendaryInNewContent, characterApparelInNewContent, characterApparelModsInNewContent, characterArmorLegendaryInNewContent, armorLegendaryInNewContent, characterGearInNewContent, characterPowerarmorPiecesInNewContent, characterPowerarmorPieceModsInNewContent, characterPowerarmorFramesInNewContent, characterRobotModulesInNewContent, chemRecipeConsumablesInNewContent, chemRecipePerksInNewContent, chemRecipeSkillsInNewContent, cookRecipeConsumablesInNewContent, characterTypesInNewContent, cookRecipeSkillsInNewContent, robotArmorRecipePerksInNewContent, robotArmorRecipeSkillsInNewContent, robotModuleRecipeSkillsInNewContent, weaponRecipeSkillsInNewContent, encountersInNewContent, storefrontsInNewContent, storeInventoryInNewContent, coreAmmoLootInNewContent, coreArmorLootInNewContent, npcCreaturesInNewContent, activeNpcCreaturesInNewContent, coreClothingLootInNewContent, coreFoodLootInNewContent, coreForagingLootInNewContent, coreBeverageLootInNewContent, corePublicationsLootInNewContent, coreRandomLootConsumablesInNewContent, extendedTestsInNewContent, extendedTestCharactersInNewContent, coreNukaLootInNewContent, coreChemLootInNewContent, coreRangedLootInNewContent, coreMeleeLootInNewContent, coreThrownLootInNewContent, wandererPublicationsLootInNewContent, coreRandomLootRobotModulesInNewContent, coreRandomLootGearInNewContent, factionsInNewContent, characterDiseasesInNewContent, diseasesInNewContent, characterApparelRecipesInNewContent, apparelRecipesInNewContent, characterPublicationsReadInNewContent, partyMembershipInNewContent, creatureTypesInNewContent, settlementsInNewContent, settlementNpcCreaturesInNewContent, settlementNpcCharactersInNewContent } from "$lib/server/db/schema";
 
 export const npcCharacterSpecialInNewContentRelations = relations(npcCharacterSpecialInNewContent, ({one}) => ({
 	npcCharactersInNewContent: one(npcCharactersInNewContent, {
@@ -45,6 +45,45 @@ export const activeNpcCharactersInNewContentRelations = relations(activeNpcChara
 	settlementNpcCharactersInNewContents: many(settlementNpcCharactersInNewContent),
 }));
 
+export const powerarmorRecipesInNewContentRelations = relations(powerarmorRecipesInNewContent, ({one, many}) => ({
+	recipeMaterialsInNewContent: one(recipeMaterialsInNewContent, {
+		fields: [powerarmorRecipesInNewContent.complexity],
+		references: [recipeMaterialsInNewContent.complexity]
+	}),
+	apparelModsInNewContent: one(apparelModsInNewContent, {
+		fields: [powerarmorRecipesInNewContent.apparelMod],
+		references: [apparelModsInNewContent.id]
+	}),
+	characterPowerarmorRecipesInNewContents: many(characterPowerarmorRecipesInNewContent),
+}));
+
+export const recipeMaterialsInNewContentRelations = relations(recipeMaterialsInNewContent, ({many}) => ({
+	powerarmorRecipesInNewContents: many(powerarmorRecipesInNewContent),
+	cookRecipesInNewContents: many(cookRecipesInNewContent),
+	chemRecipesInNewContents: many(chemRecipesInNewContent),
+	robotArmorRecipesInNewContents: many(robotArmorRecipesInNewContent),
+	robotModuleRecipesInNewContents: many(robotModuleRecipesInNewContent),
+	weaponRecipesInNewContents: many(weaponRecipesInNewContent),
+	apparelRecipesInNewContents: many(apparelRecipesInNewContent),
+}));
+
+export const apparelModsInNewContentRelations = relations(apparelModsInNewContent, ({one, many}) => ({
+	powerarmorRecipesInNewContents: many(powerarmorRecipesInNewContent),
+	apparelModAvailableInNewContents: many(apparelModAvailableInNewContent),
+	apparelModPerksInNewContents: many(apparelModPerksInNewContent),
+	apparelSlotsInNewContent: one(apparelSlotsInNewContent, {
+		fields: [apparelModsInNewContent.slot],
+		references: [apparelSlotsInNewContent.id]
+	}),
+	skillsInNewContent: one(skillsInNewContent, {
+		fields: [apparelModsInNewContent.skill],
+		references: [skillsInNewContent.id]
+	}),
+	characterApparelModsInNewContents: many(characterApparelModsInNewContent),
+	characterPowerarmorPieceModsInNewContents: many(characterPowerarmorPieceModsInNewContent),
+	apparelRecipesInNewContents: many(apparelRecipesInNewContent),
+}));
+
 export const characterSkillsInNewContentRelations = relations(characterSkillsInNewContent, ({one}) => ({
 	charactersInNewContent: one(charactersInNewContent, {
 		fields: [characterSkillsInNewContent.characterId],
@@ -58,24 +97,6 @@ export const charactersInNewContentRelations = relations(charactersInNewContent,
 	characterPerksInNewContents: many(characterPerksInNewContent),
 	characterTraitsInNewContents: many(characterTraitsInNewContent),
 	characterAddictionsInNewContents: many(characterAddictionsInNewContent),
-	characterDiseasesInNewContents: many(characterDiseasesInNewContent),
-	characterCookRecipesInNewContents: many(characterCookRecipesInNewContent),
-	characterPowerarmorRecipesInNewContents: many(characterPowerarmorRecipesInNewContent),
-	characterRobotArmorRecipesInNewContents: many(characterRobotArmorRecipesInNewContent),
-	characterRobotModulesRecipesInNewContents: many(characterRobotModulesRecipesInNewContent),
-	characterWeaponRecipesInNewContents: many(characterWeaponRecipesInNewContent),
-	characterPublicationsReadInNewContents: many(characterPublicationsReadInNewContent),
-	partyMembershipInNewContents: many(partyMembershipInNewContent),
-	characterWeaponsInNewContents: many(characterWeaponsInNewContent),
-	characterAmmoInNewContents: many(characterAmmoInNewContent),
-	characterConsumablesInNewContents: many(characterConsumablesInNewContent),
-	characterGearInNewContents: many(characterGearInNewContent),
-	characterPowerarmorFramesInNewContents: many(characterPowerarmorFramesInNewContent),
-	characterPowerarmorPiecesInNewContents: many(characterPowerarmorPiecesInNewContent),
-	characterRobotModulesInNewContents: many(characterRobotModulesInNewContent),
-	activeNpcCharactersInNewContents: many(activeNpcCharactersInNewContent),
-	activeNpcCreaturesInNewContents: many(activeNpcCreaturesInNewContent),
-	extendedTestCharactersInNewContents: many(extendedTestCharactersInNewContent),
 	playersInNewContent: one(playersInNewContent, {
 		fields: [charactersInNewContent.playerId],
 		references: [playersInNewContent.id]
@@ -89,8 +110,26 @@ export const charactersInNewContentRelations = relations(charactersInNewContent,
 		references: [partiesInNewContent.id]
 	}),
 	characterSpecialInNewContents: many(characterSpecialInNewContent),
-	characterApparelRecipesInNewContents: many(characterApparelRecipesInNewContent),
 	characterChemRecipesInNewContents: many(characterChemRecipesInNewContent),
+	characterCookRecipesInNewContents: many(characterCookRecipesInNewContent),
+	characterPowerarmorRecipesInNewContents: many(characterPowerarmorRecipesInNewContent),
+	characterRobotArmorRecipesInNewContents: many(characterRobotArmorRecipesInNewContent),
+	characterRobotModulesRecipesInNewContents: many(characterRobotModulesRecipesInNewContent),
+	characterWeaponRecipesInNewContents: many(characterWeaponRecipesInNewContent),
+	characterAmmoInNewContents: many(characterAmmoInNewContent),
+	characterConsumablesInNewContents: many(characterConsumablesInNewContent),
+	characterWeaponsInNewContents: many(characterWeaponsInNewContent),
+	characterGearInNewContents: many(characterGearInNewContent),
+	characterPowerarmorPiecesInNewContents: many(characterPowerarmorPiecesInNewContent),
+	characterPowerarmorFramesInNewContents: many(characterPowerarmorFramesInNewContent),
+	characterRobotModulesInNewContents: many(characterRobotModulesInNewContent),
+	activeNpcCharactersInNewContents: many(activeNpcCharactersInNewContent),
+	activeNpcCreaturesInNewContents: many(activeNpcCreaturesInNewContent),
+	extendedTestCharactersInNewContents: many(extendedTestCharactersInNewContent),
+	characterDiseasesInNewContents: many(characterDiseasesInNewContent),
+	characterApparelRecipesInNewContents: many(characterApparelRecipesInNewContent),
+	characterPublicationsReadInNewContents: many(characterPublicationsReadInNewContent),
+	partyMembershipInNewContents: many(partyMembershipInNewContent),
 }));
 
 export const npcCharacterSkillsInNewContentRelations = relations(npcCharacterSkillsInNewContent, ({one}) => ({
@@ -167,7 +206,6 @@ export const characterAddictionsInNewContentRelations = relations(characterAddic
 
 export const consumablesInNewContentRelations = relations(consumablesInNewContent, ({one, many}) => ({
 	characterAddictionsInNewContents: many(characterAddictionsInNewContent),
-	characterPublicationsReadInNewContents: many(characterPublicationsReadInNewContent),
 	backgroundConsumablesInNewContents: many(backgroundConsumablesInNewContent),
 	sourcebooksInNewContent: one(sourcebooksInNewContent, {
 		fields: [consumablesInNewContent.sourcebookId],
@@ -185,30 +223,72 @@ export const consumablesInNewContentRelations = relations(consumablesInNewConten
 	coreFoodLootInNewContents: many(coreFoodLootInNewContent),
 	coreForagingLootInNewContents: many(coreForagingLootInNewContent),
 	coreBeverageLootInNewContents: many(coreBeverageLootInNewContent),
-	coreNukaLootInNewContents: many(coreNukaLootInNewContent),
 	corePublicationsLootInNewContents: many(corePublicationsLootInNewContent),
 	coreRandomLootConsumablesInNewContents: many(coreRandomLootConsumablesInNewContent),
-	wandererPublicationsLootInNewContents: many(wandererPublicationsLootInNewContent),
+	coreNukaLootInNewContents: many(coreNukaLootInNewContent),
 	coreChemLootInNewContents: many(coreChemLootInNewContent),
+	wandererPublicationsLootInNewContents: many(wandererPublicationsLootInNewContent),
+	characterPublicationsReadInNewContents: many(characterPublicationsReadInNewContent),
 }));
 
-export const characterDiseasesInNewContentRelations = relations(characterDiseasesInNewContent, ({one}) => ({
-	charactersInNewContent: one(charactersInNewContent, {
-		fields: [characterDiseasesInNewContent.characterId],
-		references: [charactersInNewContent.id]
-	}),
-	diseasesInNewContent: one(diseasesInNewContent, {
-		fields: [characterDiseasesInNewContent.diseaseId],
-		references: [diseasesInNewContent.id]
-	}),
+export const playersInNewContentRelations = relations(playersInNewContent, ({many}) => ({
+	charactersInNewContents: many(charactersInNewContent),
+	characterApparelInNewContents: many(characterApparelInNewContent),
 }));
 
-export const diseasesInNewContentRelations = relations(diseasesInNewContent, ({one, many}) => ({
-	characterDiseasesInNewContents: many(characterDiseasesInNewContent),
+export const originsInNewContentRelations = relations(originsInNewContent, ({one, many}) => ({
+	charactersInNewContents: many(charactersInNewContent),
+	backgroundsInNewContents: many(backgroundsInNewContent),
 	sourcebooksInNewContent: one(sourcebooksInNewContent, {
-		fields: [diseasesInNewContent.sourcebookId],
+		fields: [originsInNewContent.sourcebookId],
 		references: [sourcebooksInNewContent.id]
 	}),
+	originTraitsInNewContents: many(originTraitsInNewContent),
+}));
+
+export const partiesInNewContentRelations = relations(partiesInNewContent, ({many}) => ({
+	charactersInNewContents: many(charactersInNewContent),
+	encountersInNewContents: many(encountersInNewContent),
+	storefrontsInNewContents: many(storefrontsInNewContent),
+	activeNpcCharactersInNewContents: many(activeNpcCharactersInNewContent),
+	activeNpcCreaturesInNewContents: many(activeNpcCreaturesInNewContent),
+	extendedTestsInNewContents: many(extendedTestsInNewContent),
+	factionsInNewContents: many(factionsInNewContent),
+	partyMembershipInNewContents: many(partyMembershipInNewContent),
+	settlementsInNewContents: many(settlementsInNewContent),
+}));
+
+export const characterSpecialInNewContentRelations = relations(characterSpecialInNewContent, ({one}) => ({
+	charactersInNewContent: one(charactersInNewContent, {
+		fields: [characterSpecialInNewContent.characterId],
+		references: [charactersInNewContent.id]
+	}),
+}));
+
+export const characterChemRecipesInNewContentRelations = relations(characterChemRecipesInNewContent, ({one}) => ({
+	charactersInNewContent: one(charactersInNewContent, {
+		fields: [characterChemRecipesInNewContent.characterId],
+		references: [charactersInNewContent.id]
+	}),
+	chemRecipesInNewContent: one(chemRecipesInNewContent, {
+		fields: [characterChemRecipesInNewContent.chemRecipeId],
+		references: [chemRecipesInNewContent.id]
+	}),
+}));
+
+export const chemRecipesInNewContentRelations = relations(chemRecipesInNewContent, ({one, many}) => ({
+	characterChemRecipesInNewContents: many(characterChemRecipesInNewContent),
+	recipeMaterialsInNewContent: one(recipeMaterialsInNewContent, {
+		fields: [chemRecipesInNewContent.complexity],
+		references: [recipeMaterialsInNewContent.complexity]
+	}),
+	consumablesInNewContent: one(consumablesInNewContent, {
+		fields: [chemRecipesInNewContent.consumable],
+		references: [consumablesInNewContent.id]
+	}),
+	chemRecipeConsumablesInNewContents: many(chemRecipeConsumablesInNewContent),
+	chemRecipePerksInNewContents: many(chemRecipePerksInNewContent),
+	chemRecipeSkillsInNewContents: many(chemRecipeSkillsInNewContent),
 }));
 
 export const characterCookRecipesInNewContentRelations = relations(characterCookRecipesInNewContent, ({one}) => ({
@@ -244,18 +324,6 @@ export const characterPowerarmorRecipesInNewContentRelations = relations(charact
 	powerarmorRecipesInNewContent: one(powerarmorRecipesInNewContent, {
 		fields: [characterPowerarmorRecipesInNewContent.powerarmorRecipeId],
 		references: [powerarmorRecipesInNewContent.id]
-	}),
-}));
-
-export const powerarmorRecipesInNewContentRelations = relations(powerarmorRecipesInNewContent, ({one, many}) => ({
-	characterPowerarmorRecipesInNewContents: many(characterPowerarmorRecipesInNewContent),
-	recipeMaterialsInNewContent: one(recipeMaterialsInNewContent, {
-		fields: [powerarmorRecipesInNewContent.complexity],
-		references: [recipeMaterialsInNewContent.complexity]
-	}),
-	apparelModsInNewContent: one(apparelModsInNewContent, {
-		fields: [powerarmorRecipesInNewContent.apparelMod],
-		references: [apparelModsInNewContent.id]
 	}),
 }));
 
@@ -332,40 +400,6 @@ export const weaponRecipesInNewContentRelations = relations(weaponRecipesInNewCo
 	weaponRecipeSkillsInNewContents: many(weaponRecipeSkillsInNewContent),
 }));
 
-export const characterPublicationsReadInNewContentRelations = relations(characterPublicationsReadInNewContent, ({one}) => ({
-	charactersInNewContent: one(charactersInNewContent, {
-		fields: [characterPublicationsReadInNewContent.characterId],
-		references: [charactersInNewContent.id]
-	}),
-	consumablesInNewContent: one(consumablesInNewContent, {
-		fields: [characterPublicationsReadInNewContent.publicationId],
-		references: [consumablesInNewContent.id]
-	}),
-}));
-
-export const partyMembershipInNewContentRelations = relations(partyMembershipInNewContent, ({one}) => ({
-	charactersInNewContent: one(charactersInNewContent, {
-		fields: [partyMembershipInNewContent.characterId],
-		references: [charactersInNewContent.id]
-	}),
-	partiesInNewContent: one(partiesInNewContent, {
-		fields: [partyMembershipInNewContent.partyId],
-		references: [partiesInNewContent.id]
-	}),
-}));
-
-export const partiesInNewContentRelations = relations(partiesInNewContent, ({many}) => ({
-	partyMembershipInNewContents: many(partyMembershipInNewContent),
-	encountersInNewContents: many(encountersInNewContent),
-	storefrontsInNewContents: many(storefrontsInNewContent),
-	activeNpcCharactersInNewContents: many(activeNpcCharactersInNewContent),
-	activeNpcCreaturesInNewContents: many(activeNpcCreaturesInNewContent),
-	extendedTestsInNewContents: many(extendedTestsInNewContent),
-	factionsInNewContents: many(factionsInNewContent),
-	charactersInNewContents: many(charactersInNewContent),
-	settlementsInNewContents: many(settlementsInNewContent),
-}));
-
 export const backgroundsInNewContentRelations = relations(backgroundsInNewContent, ({one, many}) => ({
 	originsInNewContent: one(originsInNewContent, {
 		fields: [backgroundsInNewContent.originId],
@@ -382,27 +416,17 @@ export const backgroundsInNewContentRelations = relations(backgroundsInNewConten
 	backgroundRobotModulesInNewContents: many(backgroundRobotModulesInNewContent),
 }));
 
-export const originsInNewContentRelations = relations(originsInNewContent, ({one, many}) => ({
-	backgroundsInNewContents: many(backgroundsInNewContent),
-	originTraitsInNewContents: many(originTraitsInNewContent),
-	charactersInNewContents: many(charactersInNewContent),
-	sourcebooksInNewContent: one(sourcebooksInNewContent, {
-		fields: [originsInNewContent.sourcebookId],
-		references: [sourcebooksInNewContent.id]
-	}),
-}));
-
 export const sourcebooksInNewContentRelations = relations(sourcebooksInNewContent, ({many}) => ({
 	backgroundsInNewContents: many(backgroundsInNewContent),
-	ammoInNewContents: many(ammoInNewContent),
+	originsInNewContents: many(originsInNewContent),
 	weaponsInNewContents: many(weaponsInNewContent),
+	ammoInNewContents: many(ammoInNewContent),
 	apparelInNewContents: many(apparelInNewContent),
 	robotModulesInNewContents: many(robotModulesInNewContent),
 	consumablesInNewContents: many(consumablesInNewContent),
 	gearInNewContents: many(gearInNewContent),
 	perksInNewContents: many(perksInNewContent),
 	diseasesInNewContents: many(diseasesInNewContent),
-	originsInNewContents: many(originsInNewContent),
 }));
 
 export const backgroundWeaponsInNewContentRelations = relations(backgroundWeaponsInNewContent, ({one, many}) => ({
@@ -439,10 +463,6 @@ export const weaponsInNewContentRelations = relations(weaponsInNewContent, ({one
 	skillsInNewContent: one(skillsInNewContent, {
 		fields: [weaponsInNewContent.type],
 		references: [skillsInNewContent.id]
-	}),
-	repairMaterialsInNewContent: one(repairMaterialsInNewContent, {
-		fields: [weaponsInNewContent.rarity],
-		references: [repairMaterialsInNewContent.rarity]
 	}),
 	weaponQualsInNewContents: many(weaponQualsInNewContent),
 	weaponModAvailableInNewContents: many(weaponModAvailableInNewContent),
@@ -484,10 +504,6 @@ export const apparelInNewContentRelations = relations(apparelInNewContent, ({one
 		fields: [apparelInNewContent.type],
 		references: [apparelTypesInNewContent.id]
 	}),
-	repairMaterialsInNewContent: one(repairMaterialsInNewContent, {
-		fields: [apparelInNewContent.rarity],
-		references: [repairMaterialsInNewContent.rarity]
-	}),
 	apparelSlotAvailableInNewContents: many(apparelSlotAvailableInNewContent),
 	characterApparelInNewContents: many(characterApparelInNewContent),
 	characterPowerarmorPiecesInNewContents: many(characterPowerarmorPiecesInNewContent),
@@ -509,16 +525,16 @@ export const backgroundAmmoInNewContentRelations = relations(backgroundAmmoInNew
 
 export const ammoInNewContentRelations = relations(ammoInNewContent, ({one, many}) => ({
 	backgroundAmmoInNewContents: many(backgroundAmmoInNewContent),
-	sourcebooksInNewContent: one(sourcebooksInNewContent, {
-		fields: [ammoInNewContent.sourcebookId],
-		references: [sourcebooksInNewContent.id]
-	}),
 	weaponsInNewContents: many(weaponsInNewContent),
 	ammoVariantsInNewContents_variant: many(ammoVariantsInNewContent, {
 		relationName: "ammoVariantsInNewContent_variant_ammoInNewContent_id"
 	}),
 	ammoVariantsInNewContents_base: many(ammoVariantsInNewContent, {
 		relationName: "ammoVariantsInNewContent_base_ammoInNewContent_id"
+	}),
+	sourcebooksInNewContent: one(sourcebooksInNewContent, {
+		fields: [ammoInNewContent.sourcebookId],
+		references: [sourcebooksInNewContent.id]
 	}),
 	characterAmmoInNewContents: many(characterAmmoInNewContent),
 	coreAmmoLootInNewContents: many(coreAmmoLootInNewContent),
@@ -560,10 +576,6 @@ export const gearInNewContentRelations = relations(gearInNewContent, ({one, many
 		fields: [gearInNewContent.sourcebookId],
 		references: [sourcebooksInNewContent.id]
 	}),
-	repairMaterialsInNewContent: one(repairMaterialsInNewContent, {
-		fields: [gearInNewContent.rarity],
-		references: [repairMaterialsInNewContent.rarity]
-	}),
 	characterGearInNewContents: many(characterGearInNewContent),
 	coreRandomLootGearInNewContents: many(coreRandomLootGearInNewContent),
 }));
@@ -594,10 +606,6 @@ export const robotModulesInNewContentRelations = relations(robotModulesInNewCont
 		fields: [robotModulesInNewContent.sourcebookId],
 		references: [sourcebooksInNewContent.id]
 	}),
-	repairMaterialsInNewContent: one(repairMaterialsInNewContent, {
-		fields: [robotModulesInNewContent.rarity],
-		references: [repairMaterialsInNewContent.rarity]
-	}),
 	characterRobotModulesInNewContents: many(characterRobotModulesInNewContent),
 	robotModuleRecipesInNewContents: many(robotModuleRecipesInNewContent),
 	coreRandomLootRobotModulesInNewContents: many(coreRandomLootRobotModulesInNewContent),
@@ -612,6 +620,21 @@ export const originTraitsInNewContentRelations = relations(originTraitsInNewCont
 		fields: [originTraitsInNewContent.traitId],
 		references: [traitsInNewContent.id]
 	}),
+}));
+
+export const weaponEffectsInNewContentRelations = relations(weaponEffectsInNewContent, ({one}) => ({
+	weaponsInNewContent: one(weaponsInNewContent, {
+		fields: [weaponEffectsInNewContent.weaponId],
+		references: [weaponsInNewContent.id]
+	}),
+	damEffectsInNewContent: one(damEffectsInNewContent, {
+		fields: [weaponEffectsInNewContent.effectId],
+		references: [damEffectsInNewContent.id]
+	}),
+}));
+
+export const damEffectsInNewContentRelations = relations(damEffectsInNewContent, ({many}) => ({
+	weaponEffectsInNewContents: many(weaponEffectsInNewContent),
 }));
 
 export const weaponModPerksInNewContentRelations = relations(weaponModPerksInNewContent, ({one}) => ({
@@ -649,21 +672,6 @@ export const qualitiesInNewContentRelations = relations(qualitiesInNewContent, (
 	weaponQualsInNewContents: many(weaponQualsInNewContent),
 }));
 
-export const weaponEffectsInNewContentRelations = relations(weaponEffectsInNewContent, ({one}) => ({
-	weaponsInNewContent: one(weaponsInNewContent, {
-		fields: [weaponEffectsInNewContent.weaponId],
-		references: [weaponsInNewContent.id]
-	}),
-	damEffectsInNewContent: one(damEffectsInNewContent, {
-		fields: [weaponEffectsInNewContent.effectId],
-		references: [damEffectsInNewContent.id]
-	}),
-}));
-
-export const damEffectsInNewContentRelations = relations(damEffectsInNewContent, ({many}) => ({
-	weaponEffectsInNewContents: many(weaponEffectsInNewContent),
-}));
-
 export const skillsInNewContentRelations = relations(skillsInNewContent, ({one, many}) => ({
 	weaponsInNewContents: many(weaponsInNewContent),
 	apparelModsInNewContents: many(apparelModsInNewContent),
@@ -676,13 +684,6 @@ export const skillsInNewContentRelations = relations(skillsInNewContent, ({one, 
 	robotArmorRecipeSkillsInNewContents: many(robotArmorRecipeSkillsInNewContent),
 	robotModuleRecipeSkillsInNewContents: many(robotModuleRecipeSkillsInNewContent),
 	weaponRecipeSkillsInNewContents: many(weaponRecipeSkillsInNewContent),
-}));
-
-export const repairMaterialsInNewContentRelations = relations(repairMaterialsInNewContent, ({many}) => ({
-	weaponsInNewContents: many(weaponsInNewContent),
-	apparelInNewContents: many(apparelInNewContent),
-	robotModulesInNewContents: many(robotModulesInNewContent),
-	gearInNewContents: many(gearInNewContent),
 }));
 
 export const weaponQualsInNewContentRelations = relations(weaponQualsInNewContent, ({one}) => ({
@@ -762,23 +763,6 @@ export const apparelModAvailableInNewContentRelations = relations(apparelModAvai
 	}),
 }));
 
-export const apparelModsInNewContentRelations = relations(apparelModsInNewContent, ({one, many}) => ({
-	apparelModAvailableInNewContents: many(apparelModAvailableInNewContent),
-	apparelModPerksInNewContents: many(apparelModPerksInNewContent),
-	apparelSlotsInNewContent: one(apparelSlotsInNewContent, {
-		fields: [apparelModsInNewContent.slot],
-		references: [apparelSlotsInNewContent.id]
-	}),
-	skillsInNewContent: one(skillsInNewContent, {
-		fields: [apparelModsInNewContent.skill],
-		references: [skillsInNewContent.id]
-	}),
-	characterApparelModsInNewContents: many(characterApparelModsInNewContent),
-	characterPowerarmorPieceModsInNewContents: many(characterPowerarmorPieceModsInNewContent),
-	powerarmorRecipesInNewContents: many(powerarmorRecipesInNewContent),
-	apparelRecipesInNewContents: many(apparelRecipesInNewContent),
-}));
-
 export const apparelModPerksInNewContentRelations = relations(apparelModPerksInNewContent, ({one}) => ({
 	apparelModsInNewContent: one(apparelModsInNewContent, {
 		fields: [apparelModPerksInNewContent.modId],
@@ -829,19 +813,6 @@ export const specialInNewContentRelations = relations(specialInNewContent, ({man
 	skillsInNewContents: many(skillsInNewContent),
 }));
 
-export const characterWeaponsInNewContentRelations = relations(characterWeaponsInNewContent, ({one, many}) => ({
-	weaponsInNewContent: one(weaponsInNewContent, {
-		fields: [characterWeaponsInNewContent.weaponId],
-		references: [weaponsInNewContent.id]
-	}),
-	charactersInNewContent: one(charactersInNewContent, {
-		fields: [characterWeaponsInNewContent.characterId],
-		references: [charactersInNewContent.id]
-	}),
-	characterWeaponModsInNewContents: many(characterWeaponModsInNewContent),
-	characterWeaponLegendaryInNewContents: many(characterWeaponLegendaryInNewContent),
-}));
-
 export const characterAmmoInNewContentRelations = relations(characterAmmoInNewContent, ({one}) => ({
 	ammoInNewContent: one(ammoInNewContent, {
 		fields: [characterAmmoInNewContent.ammoId],
@@ -862,6 +833,19 @@ export const characterConsumablesInNewContentRelations = relations(characterCons
 		fields: [characterConsumablesInNewContent.characterId],
 		references: [charactersInNewContent.id]
 	}),
+}));
+
+export const characterWeaponsInNewContentRelations = relations(characterWeaponsInNewContent, ({one, many}) => ({
+	weaponsInNewContent: one(weaponsInNewContent, {
+		fields: [characterWeaponsInNewContent.weaponId],
+		references: [weaponsInNewContent.id]
+	}),
+	charactersInNewContent: one(charactersInNewContent, {
+		fields: [characterWeaponsInNewContent.characterId],
+		references: [charactersInNewContent.id]
+	}),
+	characterWeaponModsInNewContents: many(characterWeaponModsInNewContent),
+	characterWeaponLegendaryInNewContents: many(characterWeaponLegendaryInNewContent),
 }));
 
 export const characterWeaponModsInNewContentRelations = relations(characterWeaponModsInNewContent, ({one}) => ({
@@ -903,11 +887,6 @@ export const characterApparelInNewContentRelations = relations(characterApparelI
 	characterArmorLegendaryInNewContents: many(characterArmorLegendaryInNewContent),
 }));
 
-export const playersInNewContentRelations = relations(playersInNewContent, ({many}) => ({
-	characterApparelInNewContents: many(characterApparelInNewContent),
-	charactersInNewContents: many(charactersInNewContent),
-}));
-
 export const characterApparelModsInNewContentRelations = relations(characterApparelModsInNewContent, ({one}) => ({
 	characterApparelInNewContent: one(characterApparelInNewContent, {
 		fields: [characterApparelModsInNewContent.characterApparelId],
@@ -945,18 +924,15 @@ export const characterGearInNewContentRelations = relations(characterGearInNewCo
 	}),
 }));
 
-export const characterPowerarmorPieceModsInNewContentRelations = relations(characterPowerarmorPieceModsInNewContent, ({one}) => ({
-	characterPowerarmorPiecesInNewContent: one(characterPowerarmorPiecesInNewContent, {
-		fields: [characterPowerarmorPieceModsInNewContent.pieceId],
-		references: [characterPowerarmorPiecesInNewContent.id]
-	}),
-	apparelModsInNewContent: one(apparelModsInNewContent, {
-		fields: [characterPowerarmorPieceModsInNewContent.modId],
-		references: [apparelModsInNewContent.id]
-	}),
-}));
-
 export const characterPowerarmorPiecesInNewContentRelations = relations(characterPowerarmorPiecesInNewContent, ({one, many}) => ({
+	apparelInNewContent: one(apparelInNewContent, {
+		fields: [characterPowerarmorPiecesInNewContent.pieceId],
+		references: [apparelInNewContent.id]
+	}),
+	charactersInNewContent: one(charactersInNewContent, {
+		fields: [characterPowerarmorPiecesInNewContent.characterId],
+		references: [charactersInNewContent.id]
+	}),
 	characterPowerarmorPieceModsInNewContents: many(characterPowerarmorPieceModsInNewContent),
 	characterPowerarmorFramesInNewContents_head: many(characterPowerarmorFramesInNewContent, {
 		relationName: "characterPowerarmorFramesInNewContent_head_characterPowerarmorPiecesInNewContent_id"
@@ -976,24 +952,17 @@ export const characterPowerarmorPiecesInNewContentRelations = relations(characte
 	characterPowerarmorFramesInNewContents_rl: many(characterPowerarmorFramesInNewContent, {
 		relationName: "characterPowerarmorFramesInNewContent_rl_characterPowerarmorPiecesInNewContent_id"
 	}),
-	apparelInNewContent: one(apparelInNewContent, {
-		fields: [characterPowerarmorPiecesInNewContent.pieceId],
-		references: [apparelInNewContent.id]
-	}),
-	charactersInNewContent: one(charactersInNewContent, {
-		fields: [characterPowerarmorPiecesInNewContent.characterId],
-		references: [charactersInNewContent.id]
-	}),
 }));
 
-export const recipeMaterialsInNewContentRelations = relations(recipeMaterialsInNewContent, ({many}) => ({
-	cookRecipesInNewContents: many(cookRecipesInNewContent),
-	chemRecipesInNewContents: many(chemRecipesInNewContent),
-	powerarmorRecipesInNewContents: many(powerarmorRecipesInNewContent),
-	robotArmorRecipesInNewContents: many(robotArmorRecipesInNewContent),
-	robotModuleRecipesInNewContents: many(robotModuleRecipesInNewContent),
-	weaponRecipesInNewContents: many(weaponRecipesInNewContent),
-	apparelRecipesInNewContents: many(apparelRecipesInNewContent),
+export const characterPowerarmorPieceModsInNewContentRelations = relations(characterPowerarmorPieceModsInNewContent, ({one}) => ({
+	characterPowerarmorPiecesInNewContent: one(characterPowerarmorPiecesInNewContent, {
+		fields: [characterPowerarmorPieceModsInNewContent.pieceId],
+		references: [characterPowerarmorPiecesInNewContent.id]
+	}),
+	apparelModsInNewContent: one(apparelModsInNewContent, {
+		fields: [characterPowerarmorPieceModsInNewContent.modId],
+		references: [apparelModsInNewContent.id]
+	}),
 }));
 
 export const characterPowerarmorFramesInNewContentRelations = relations(characterPowerarmorFramesInNewContent, ({one}) => ({
@@ -1031,21 +1000,6 @@ export const characterPowerarmorFramesInNewContentRelations = relations(characte
 		references: [characterPowerarmorPiecesInNewContent.id],
 		relationName: "characterPowerarmorFramesInNewContent_rl_characterPowerarmorPiecesInNewContent_id"
 	}),
-}));
-
-export const chemRecipesInNewContentRelations = relations(chemRecipesInNewContent, ({one, many}) => ({
-	recipeMaterialsInNewContent: one(recipeMaterialsInNewContent, {
-		fields: [chemRecipesInNewContent.complexity],
-		references: [recipeMaterialsInNewContent.complexity]
-	}),
-	consumablesInNewContent: one(consumablesInNewContent, {
-		fields: [chemRecipesInNewContent.consumable],
-		references: [consumablesInNewContent.id]
-	}),
-	chemRecipeConsumablesInNewContents: many(chemRecipeConsumablesInNewContent),
-	chemRecipePerksInNewContents: many(chemRecipePerksInNewContent),
-	chemRecipeSkillsInNewContents: many(chemRecipeSkillsInNewContent),
-	characterChemRecipesInNewContents: many(characterChemRecipesInNewContent),
 }));
 
 export const characterRobotModulesInNewContentRelations = relations(characterRobotModulesInNewContent, ({one}) => ({
@@ -1254,13 +1208,6 @@ export const coreBeverageLootInNewContentRelations = relations(coreBeverageLootI
 	}),
 }));
 
-export const coreNukaLootInNewContentRelations = relations(coreNukaLootInNewContent, ({one}) => ({
-	consumablesInNewContent: one(consumablesInNewContent, {
-		fields: [coreNukaLootInNewContent.consumableId],
-		references: [consumablesInNewContent.id]
-	}),
-}));
-
 export const corePublicationsLootInNewContentRelations = relations(corePublicationsLootInNewContent, ({one}) => ({
 	consumablesInNewContent: one(consumablesInNewContent, {
 		fields: [corePublicationsLootInNewContent.consumableId],
@@ -1291,6 +1238,20 @@ export const extendedTestsInNewContentRelations = relations(extendedTestsInNewCo
 	partiesInNewContent: one(partiesInNewContent, {
 		fields: [extendedTestsInNewContent.partyId],
 		references: [partiesInNewContent.id]
+	}),
+}));
+
+export const coreNukaLootInNewContentRelations = relations(coreNukaLootInNewContent, ({one}) => ({
+	consumablesInNewContent: one(consumablesInNewContent, {
+		fields: [coreNukaLootInNewContent.consumableId],
+		references: [consumablesInNewContent.id]
+	}),
+}));
+
+export const coreChemLootInNewContentRelations = relations(coreChemLootInNewContent, ({one}) => ({
+	consumablesInNewContent: one(consumablesInNewContent, {
+		fields: [coreChemLootInNewContent.consumableId],
+		references: [consumablesInNewContent.id]
 	}),
 }));
 
@@ -1347,10 +1308,22 @@ export const factionsInNewContentRelations = relations(factionsInNewContent, ({o
 	}),
 }));
 
-export const characterSpecialInNewContentRelations = relations(characterSpecialInNewContent, ({one}) => ({
+export const characterDiseasesInNewContentRelations = relations(characterDiseasesInNewContent, ({one}) => ({
 	charactersInNewContent: one(charactersInNewContent, {
-		fields: [characterSpecialInNewContent.characterId],
+		fields: [characterDiseasesInNewContent.characterId],
 		references: [charactersInNewContent.id]
+	}),
+	diseasesInNewContent: one(diseasesInNewContent, {
+		fields: [characterDiseasesInNewContent.diseaseId],
+		references: [diseasesInNewContent.id]
+	}),
+}));
+
+export const diseasesInNewContentRelations = relations(diseasesInNewContent, ({one, many}) => ({
+	characterDiseasesInNewContents: many(characterDiseasesInNewContent),
+	sourcebooksInNewContent: one(sourcebooksInNewContent, {
+		fields: [diseasesInNewContent.sourcebookId],
+		references: [sourcebooksInNewContent.id]
 	}),
 }));
 
@@ -1377,26 +1350,30 @@ export const apparelRecipesInNewContentRelations = relations(apparelRecipesInNew
 	}),
 }));
 
-export const characterChemRecipesInNewContentRelations = relations(characterChemRecipesInNewContent, ({one}) => ({
+export const characterPublicationsReadInNewContentRelations = relations(characterPublicationsReadInNewContent, ({one}) => ({
 	charactersInNewContent: one(charactersInNewContent, {
-		fields: [characterChemRecipesInNewContent.characterId],
+		fields: [characterPublicationsReadInNewContent.characterId],
 		references: [charactersInNewContent.id]
 	}),
-	chemRecipesInNewContent: one(chemRecipesInNewContent, {
-		fields: [characterChemRecipesInNewContent.chemRecipeId],
-		references: [chemRecipesInNewContent.id]
+	consumablesInNewContent: one(consumablesInNewContent, {
+		fields: [characterPublicationsReadInNewContent.publicationId],
+		references: [consumablesInNewContent.id]
+	}),
+}));
+
+export const partyMembershipInNewContentRelations = relations(partyMembershipInNewContent, ({one}) => ({
+	charactersInNewContent: one(charactersInNewContent, {
+		fields: [partyMembershipInNewContent.characterId],
+		references: [charactersInNewContent.id]
+	}),
+	partiesInNewContent: one(partiesInNewContent, {
+		fields: [partyMembershipInNewContent.partyId],
+		references: [partiesInNewContent.id]
 	}),
 }));
 
 export const creatureTypesInNewContentRelations = relations(creatureTypesInNewContent, ({many}) => ({
 	npcCreaturesInNewContents: many(npcCreaturesInNewContent),
-}));
-
-export const coreChemLootInNewContentRelations = relations(coreChemLootInNewContent, ({one}) => ({
-	consumablesInNewContent: one(consumablesInNewContent, {
-		fields: [coreChemLootInNewContent.consumableId],
-		references: [consumablesInNewContent.id]
-	}),
 }));
 
 export const settlementsInNewContentRelations = relations(settlementsInNewContent, ({one, many}) => ({
