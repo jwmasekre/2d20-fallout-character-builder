@@ -1,4 +1,4 @@
-import { pgTable, pgSchema, foreignKey, smallserial, smallint, boolean, text, char, json, integer } from "drizzle-orm/pg-core"
+import { pgTable, pgSchema, foreignKey, smallserial, smallint, boolean, text, integer, char, json } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 export const newContent = pgSchema("new_content");
@@ -39,6 +39,28 @@ export const activeNpcCharacterSpecialInNewContent = newContent.table("active_np
 			name: "active_npc_character_special_npc_character_id_fkey"
 		}),
 ]);
+
+export const powerarmorRecipesInNewContent = newContent.table("powerarmor_recipes", {
+	id: smallserial().notNull(),
+	apparelMod: smallint("apparel_mod"),
+	complexity: smallint(),
+	rarity: smallint(),
+}, (table) => [
+	foreignKey({
+			columns: [table.complexity],
+			foreignColumns: [recipeMaterialsInNewContent.complexity],
+			name: "powerarmor_recipes_complexity_fkey"
+		}),
+	foreignKey({
+			columns: [table.apparelMod],
+			foreignColumns: [apparelModsInNewContent.id],
+			name: "powerarmor_recipes_apparel_mod_fkey"
+		}),
+]);
+
+export const scavengingLocationsInNewContent = newContent.table("scavenging_locations", {
+	id: smallserial().notNull(),
+});
 
 export const characterSkillsInNewContent = newContent.table("character_skills", {
 	id: smallserial().notNull(),
@@ -204,27 +226,97 @@ export const characterAddictionsInNewContent = newContent.table("character_addic
 		}),
 ]);
 
-export const characterDiseasesInNewContent = newContent.table("character_diseases", {
-	id: smallserial().notNull(),
-	characterId: smallint("character_id"),
-	diseaseId: smallint("disease_id"),
-}, (table) => [
-	foreignKey({
-			columns: [table.characterId],
-			foreignColumns: [charactersInNewContent.id],
-			name: "character_diseases_character_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.diseaseId],
-			foreignColumns: [diseasesInNewContent.id],
-			name: "character_diseases_disease_id_fkey"
-		}),
-]);
-
 export const sourcebooksInNewContent = newContent.table("sourcebooks", {
 	id: smallserial().notNull(),
 	name: text(),
 });
+
+export const encounterTablesInNewContent = newContent.table("encounter_tables", {
+	id: smallserial().notNull(),
+	type: text(),
+	dieRoll: smallint("die_roll"),
+	name: text(),
+	description: text(),
+});
+
+export const charactersInNewContent = newContent.table("characters", {
+	id: smallserial().notNull(),
+	playerId: smallint("player_id"),
+	characterName: text("character_name"),
+	xp: integer(),
+	origin: smallint(),
+	luckPoints: smallint("luck_points"),
+	currentHealth: smallint("current_health"),
+	headHp: smallint("head_hp"),
+	headInj: smallint("head_inj"),
+	laHp: smallint("la_hp"),
+	laInj: smallint("la_inj"),
+	raHp: smallint("ra_hp"),
+	raInj: smallint("ra_inj"),
+	torsoHp: smallint("torso_hp"),
+	torsoInj: smallint("torso_inj"),
+	llHp: smallint("ll_hp"),
+	llInj: smallint("ll_inj"),
+	rlHp: smallint("rl_hp"),
+	rlInj: smallint("rl_inj"),
+	caps: smallint(),
+	hunger: smallint(),
+	thirst: smallint(),
+	sleep: smallint(),
+	exposure: smallint(),
+	party: smallint(),
+}, (table) => [
+	foreignKey({
+			columns: [table.playerId],
+			foreignColumns: [playersInNewContent.id],
+			name: "characters_player_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.origin],
+			foreignColumns: [originsInNewContent.id],
+			name: "characters_origin_fkey"
+		}),
+	foreignKey({
+			columns: [table.party],
+			foreignColumns: [partiesInNewContent.id],
+			name: "characters_party_fkey"
+		}),
+]);
+
+export const characterSpecialInNewContent = newContent.table("character_special", {
+	id: smallserial().notNull(),
+	characterId: smallint("character_id"),
+	strength: smallint(),
+	perception: smallint(),
+	endurance: smallint(),
+	charisma: smallint(),
+	intelligence: smallint(),
+	agility: smallint(),
+	luck: smallint(),
+}, (table) => [
+	foreignKey({
+			columns: [table.characterId],
+			foreignColumns: [charactersInNewContent.id],
+			name: "character_special_character_id_fkey"
+		}),
+]);
+
+export const characterChemRecipesInNewContent = newContent.table("character_chem_recipes", {
+	id: smallserial().notNull(),
+	characterId: smallint("character_id"),
+	chemRecipeId: smallint("chem_recipe_id"),
+}, (table) => [
+	foreignKey({
+			columns: [table.characterId],
+			foreignColumns: [charactersInNewContent.id],
+			name: "character_chem_recipes_character_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.chemRecipeId],
+			foreignColumns: [chemRecipesInNewContent.id],
+			name: "character_chem_recipes_chem_recipe_id_fkey"
+		}),
+]);
 
 export const characterCookRecipesInNewContent = newContent.table("character_cook_recipes", {
 	id: smallserial().notNull(),
@@ -311,45 +403,12 @@ export const characterWeaponRecipesInNewContent = newContent.table("character_we
 		}),
 ]);
 
-export const characterPublicationsReadInNewContent = newContent.table("character_publications_read", {
-	id: smallserial().notNull(),
-	characterId: smallint("character_id"),
-	publicationId: smallint("publication_id"),
-}, (table) => [
-	foreignKey({
-			columns: [table.characterId],
-			foreignColumns: [charactersInNewContent.id],
-			name: "character_publications_read_character_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.publicationId],
-			foreignColumns: [consumablesInNewContent.id],
-			name: "character_publications_read_publication_id_fkey"
-		}),
-]);
-
-export const partyMembershipInNewContent = newContent.table("party_membership", {
-	id: smallserial().notNull(),
-	partyId: smallint("party_id"),
-	characterId: smallint("character_id"),
-}, (table) => [
-	foreignKey({
-			columns: [table.characterId],
-			foreignColumns: [charactersInNewContent.id],
-			name: "party_membership_character_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.partyId],
-			foreignColumns: [partiesInNewContent.id],
-			name: "party_membership_party_id_fkey"
-		}),
-]);
-
 export const backgroundsInNewContent = newContent.table("backgrounds", {
 	id: smallserial().notNull(),
 	name: text(),
 	originId: smallint("origin_id"),
 	caps: smallint(),
+	misc: text(),
 	trinket: smallint(),
 	food: smallint(),
 	forage: smallint(),
@@ -418,6 +477,20 @@ export const backgroundApparelInNewContent = newContent.table("background_appare
 			columns: [table.altId],
 			foreignColumns: [table.id],
 			name: "background_apparel_alt_id_fkey"
+		}),
+]);
+
+export const originsInNewContent = newContent.table("origins", {
+	id: smallserial().notNull(),
+	name: text(),
+	description: text(),
+	canGhoul: boolean("can_ghoul"),
+	sourcebookId: smallint("sourcebook_id"),
+}, (table) => [
+	foreignKey({
+			columns: [table.sourcebookId],
+			foreignColumns: [sourcebooksInNewContent.id],
+			name: "origins_sourcebook_id_fkey"
 		}),
 ]);
 
@@ -519,19 +592,21 @@ export const originTraitsInNewContent = newContent.table("origin_traits", {
 		}),
 ]);
 
-export const ammoInNewContent = newContent.table("ammo", {
+export const weaponEffectsInNewContent = newContent.table("weapon_effects", {
 	id: smallserial().notNull(),
-	name: text(),
-	rollQuantity: text("roll_quantity"),
-	wgt: smallint(),
-	cost: smallint(),
-	rarity: smallint(),
-	sourcebookId: smallint("sourcebook_id"),
+	weaponId: smallint("weapon_id"),
+	effectId: smallint("effect_id"),
+	effectVal: smallint("effect_val"),
 }, (table) => [
 	foreignKey({
-			columns: [table.sourcebookId],
-			foreignColumns: [sourcebooksInNewContent.id],
-			name: "ammo_sourcebook_id_fkey"
+			columns: [table.weaponId],
+			foreignColumns: [weaponsInNewContent.id],
+			name: "weapon_effects_weapon_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.effectId],
+			foreignColumns: [damEffectsInNewContent.id],
+			name: "weapon_effects_effect_id_fkey"
 		}),
 ]);
 
@@ -572,24 +647,6 @@ export const qualitiesInNewContent = newContent.table("qualities", {
 		}),
 ]);
 
-export const weaponEffectsInNewContent = newContent.table("weapon_effects", {
-	id: smallserial().notNull(),
-	weaponId: smallint("weapon_id"),
-	effectId: smallint("effect_id"),
-	effectVal: smallint("effect_val"),
-}, (table) => [
-	foreignKey({
-			columns: [table.weaponId],
-			foreignColumns: [weaponsInNewContent.id],
-			name: "weapon_effects_weapon_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.effectId],
-			foreignColumns: [damEffectsInNewContent.id],
-			name: "weapon_effects_effect_id_fkey"
-		}),
-]);
-
 export const weaponsInNewContent = newContent.table("weapons", {
 	id: smallserial().notNull(),
 	name: text(),
@@ -618,11 +675,6 @@ export const weaponsInNewContent = newContent.table("weapons", {
 			columns: [table.type],
 			foreignColumns: [skillsInNewContent.id],
 			name: "weapons_type_fkey"
-		}),
-	foreignKey({
-			columns: [table.rarity],
-			foreignColumns: [repairMaterialsInNewContent.rarity],
-			name: "weapons_rarity_fkey"
 		}),
 ]);
 
@@ -682,7 +734,7 @@ export const weaponModsInNewContent = newContent.table("weapon_mods", {
 	id: smallserial().notNull(),
 	name: text(),
 	prefix: text(),
-	effects: text(),
+	effects: text().array(),
 	slot: smallint(),
 	wgt: smallint(),
 	cost: smallint(),
@@ -773,6 +825,22 @@ export const apparelModPerksInNewContent = newContent.table("apparel_mod_perks",
 		}),
 ]);
 
+export const ammoInNewContent = newContent.table("ammo", {
+	id: smallserial().notNull(),
+	name: text(),
+	rollQuantity: text("roll_quantity"),
+	wgt: smallint(),
+	cost: smallint(),
+	rarity: smallint(),
+	sourcebookId: smallint("sourcebook_id"),
+}, (table) => [
+	foreignKey({
+			columns: [table.sourcebookId],
+			foreignColumns: [sourcebooksInNewContent.id],
+			name: "ammo_sourcebook_id_fkey"
+		}),
+]);
+
 export const apparelInNewContent = newContent.table("apparel", {
 	id: smallserial().notNull(),
 	name: text(),
@@ -781,7 +849,7 @@ export const apparelInNewContent = newContent.table("apparel", {
 	physDr: smallint("phys_dr"),
 	enrgDr: smallint("enrg_dr"),
 	radsDr: smallint("rads_dr"),
-	eff: text(),
+	eff: text().array(),
 	wgt: smallint(),
 	cost: smallint(),
 	rarity: smallint(),
@@ -798,11 +866,6 @@ export const apparelInNewContent = newContent.table("apparel", {
 			foreignColumns: [apparelTypesInNewContent.id],
 			name: "apparel_type_fkey"
 		}),
-	foreignKey({
-			columns: [table.rarity],
-			foreignColumns: [repairMaterialsInNewContent.rarity],
-			name: "apparel_rarity_fkey"
-		}),
 ]);
 
 export const apparelTypesInNewContent = newContent.table("apparel_types", {
@@ -813,7 +876,7 @@ export const apparelTypesInNewContent = newContent.table("apparel_types", {
 export const bodyLocationsInNewContent = newContent.table("body_locations", {
 	id: smallserial().notNull(),
 	name: text(),
-	alternateNames: text("alternate_names"),
+	alternateNames: text("alternate_names").array(),
 });
 
 export const apparelSlotAvailableInNewContent = newContent.table("apparel_slot_available", {
@@ -841,7 +904,7 @@ export const apparelModsInNewContent = newContent.table("apparel_mods", {
 	enrgDr: smallint("enrg_dr"),
 	radsDr: smallint("rads_dr"),
 	health: smallint(),
-	effects: text(),
+	effects: text().array(),
 	wgt: smallint(),
 	cost: smallint(),
 	skill: smallint(),
@@ -879,7 +942,7 @@ export const robotModulePerksInNewContent = newContent.table("robot_module_perks
 export const robotModulesInNewContent = newContent.table("robot_modules", {
 	id: smallserial().notNull(),
 	name: text(),
-	eff: text(),
+	eff: text().array(),
 	wgt: smallint(),
 	cost: smallint(),
 	rarity: smallint(),
@@ -889,11 +952,6 @@ export const robotModulesInNewContent = newContent.table("robot_modules", {
 			columns: [table.sourcebookId],
 			foreignColumns: [sourcebooksInNewContent.id],
 			name: "robot_modules_sourcebook_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.rarity],
-			foreignColumns: [repairMaterialsInNewContent.rarity],
-			name: "robot_modules_rarity_fkey"
 		}),
 ]);
 
@@ -907,7 +965,7 @@ export const consumablesInNewContent = newContent.table("consumables", {
 	name: text(),
 	type: smallint(),
 	heals: smallint(),
-	eff: text(),
+	eff: text().array(),
 	rads: smallint(),
 	wgt: smallint(),
 	cost: smallint(),
@@ -937,7 +995,7 @@ export const traitsInNewContent = newContent.table("traits", {
 export const gearInNewContent = newContent.table("gear", {
 	id: smallserial().notNull(),
 	name: text(),
-	eff: text(),
+	eff: text().array(),
 	wgt: smallint(),
 	cost: smallint(),
 	rarity: smallint(),
@@ -948,18 +1006,7 @@ export const gearInNewContent = newContent.table("gear", {
 			foreignColumns: [sourcebooksInNewContent.id],
 			name: "gear_sourcebook_id_fkey"
 		}),
-	foreignKey({
-			columns: [table.rarity],
-			foreignColumns: [repairMaterialsInNewContent.rarity],
-			name: "gear_rarity_fkey"
-		}),
 ]);
-
-export const specialInNewContent = newContent.table("special", {
-	id: smallserial().notNull(),
-	name: text(),
-	description: text(),
-});
 
 export const perksInNewContent = newContent.table("perks", {
 	id: smallserial().notNull(),
@@ -968,8 +1015,8 @@ export const perksInNewContent = newContent.table("perks", {
 	ranks: smallint(),
 	rankRange: smallint("rank_range"),
 	levelReq: smallint("level_req"),
-	reqs: text(),
-	limits: text(),
+	reqs: text().array(),
+	limits: text().array(),
 	sourcebookId: smallint("sourcebook_id"),
 }, (table) => [
 	foreignKey({
@@ -1000,22 +1047,11 @@ export const skillsInNewContent = newContent.table("skills", {
 		}),
 ]);
 
-export const characterWeaponsInNewContent = newContent.table("character_weapons", {
+export const specialInNewContent = newContent.table("special", {
 	id: smallserial().notNull(),
-	weaponId: smallint("weapon_id"),
-	characterId: smallint("character_id"),
-}, (table) => [
-	foreignKey({
-			columns: [table.weaponId],
-			foreignColumns: [weaponsInNewContent.id],
-			name: "character_weapons_weapon_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.characterId],
-			foreignColumns: [charactersInNewContent.id],
-			name: "character_weapons_character_id_fkey"
-		}),
-]);
+	name: text(),
+	description: text(),
+});
 
 export const characterAmmoInNewContent = newContent.table("character_ammo", {
 	id: smallserial().notNull(),
@@ -1053,17 +1089,20 @@ export const characterConsumablesInNewContent = newContent.table("character_cons
 		}),
 ]);
 
-export const diseasesInNewContent = newContent.table("diseases", {
+export const characterWeaponsInNewContent = newContent.table("character_weapons", {
 	id: smallserial().notNull(),
-	name: text(),
-	eff: text(),
-	duration: text(),
-	sourcebookId: smallint("sourcebook_id"),
+	weaponId: smallint("weapon_id"),
+	characterId: smallint("character_id"),
 }, (table) => [
 	foreignKey({
-			columns: [table.sourcebookId],
-			foreignColumns: [sourcebooksInNewContent.id],
-			name: "diseases_sourcebook_id_fkey"
+			columns: [table.weaponId],
+			foreignColumns: [weaponsInNewContent.id],
+			name: "character_weapons_weapon_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.characterId],
+			foreignColumns: [charactersInNewContent.id],
+			name: "character_weapons_character_id_fkey"
 		}),
 ]);
 
@@ -1194,6 +1233,24 @@ export const characterGearInNewContent = newContent.table("character_gear", {
 		}),
 ]);
 
+export const characterPowerarmorPiecesInNewContent = newContent.table("character_powerarmor_pieces", {
+	id: smallserial().notNull(),
+	pieceId: smallint("piece_id"),
+	modsApplied: smallint("mods_applied").array(),
+	characterId: smallint("character_id"),
+}, (table) => [
+	foreignKey({
+			columns: [table.pieceId],
+			foreignColumns: [apparelInNewContent.id],
+			name: "character_powerarmor_pieces_piece_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.characterId],
+			foreignColumns: [charactersInNewContent.id],
+			name: "character_powerarmor_pieces_character_id_fkey"
+		}),
+]);
+
 export const characterPowerarmorPieceModsInNewContent = newContent.table("character_powerarmor_piece_mods", {
 	id: smallserial().notNull(),
 	pieceId: smallint("piece_id"),
@@ -1210,6 +1267,13 @@ export const characterPowerarmorPieceModsInNewContent = newContent.table("charac
 			name: "character_powerarmor_piece_mods_mod_id_fkey"
 		}),
 ]);
+
+export const repairMaterialsInNewContent = newContent.table("repair_materials", {
+	rarity: smallint().notNull(),
+	common: smallint(),
+	uncommon: smallint(),
+	rare: smallint(),
+});
 
 export const cookRecipesInNewContent = newContent.table("cook_recipes", {
 	id: smallserial().notNull(),
@@ -1298,24 +1362,6 @@ export const chemRecipesInNewContent = newContent.table("chem_recipes", {
 		}),
 ]);
 
-export const characterPowerarmorPiecesInNewContent = newContent.table("character_powerarmor_pieces", {
-	id: smallserial().notNull(),
-	pieceId: smallint("piece_id"),
-	modsApplied: smallint("mods_applied"),
-	characterId: smallint("character_id"),
-}, (table) => [
-	foreignKey({
-			columns: [table.pieceId],
-			foreignColumns: [apparelInNewContent.id],
-			name: "character_powerarmor_pieces_piece_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.characterId],
-			foreignColumns: [charactersInNewContent.id],
-			name: "character_powerarmor_pieces_character_id_fkey"
-		}),
-]);
-
 export const characterRobotModulesInNewContent = newContent.table("character_robot_modules", {
 	id: smallserial().notNull(),
 	moduleId: smallint("module_id"),
@@ -1333,13 +1379,6 @@ export const characterRobotModulesInNewContent = newContent.table("character_rob
 			name: "character_robot_modules_character_id_fkey"
 		}),
 ]);
-
-export const repairMaterialsInNewContent = newContent.table("repair_materials", {
-	rarity: smallint().notNull(),
-	common: smallint(),
-	uncommon: smallint(),
-	rare: smallint(),
-});
 
 export const recipeMaterialsInNewContent = newContent.table("recipe_materials", {
 	complexity: smallint().notNull(),
@@ -1417,30 +1456,12 @@ export const cookRecipeConsumablesInNewContent = newContent.table("cook_recipe_c
 		}),
 ]);
 
-export const powerarmorRecipesInNewContent = newContent.table("powerarmor_recipes", {
-	id: smallserial().notNull(),
-	apparelMod: smallint("apparel_mod"),
-	complexity: smallint(),
-	rarity: smallint(),
-}, (table) => [
-	foreignKey({
-			columns: [table.complexity],
-			foreignColumns: [recipeMaterialsInNewContent.complexity],
-			name: "powerarmor_recipes_complexity_fkey"
-		}),
-	foreignKey({
-			columns: [table.apparelMod],
-			foreignColumns: [apparelModsInNewContent.id],
-			name: "powerarmor_recipes_apparel_mod_fkey"
-		}),
-]);
-
 export const npcCharactersInNewContent = newContent.table("npc_characters", {
 	id: smallserial().notNull(),
 	name: text(),
 	lvl: smallint(),
 	type: smallint(),
-	keywords: text(),
+	keywords: text().array(),
 	radsDr: smallint("rads_dr"),
 	poisonDr: smallint("poison_dr"),
 	headHp: smallint("head_hp"),
@@ -1467,10 +1488,10 @@ export const npcCharactersInNewContent = newContent.table("npc_characters", {
 	rlInj: smallint("rl_inj"),
 	rlPhysDr: smallint("rl_phys_dr"),
 	rlEnrgDr: smallint("rl_enrg_dr"),
-	attacks: text(),
-	abilities: text(),
+	attacks: text().array(),
+	abilities: text().array(),
 	caps: text(),
-	inventory: text(),
+	inventory: text().array(),
 }, (table) => [
 	foreignKey({
 			columns: [table.type],
@@ -1689,7 +1710,7 @@ export const coreAmmoLootInNewContent = newContent.table("core_ammo_loot", {
 ]);
 
 export const coreArmorLootInNewContent = newContent.table("core_armor_loot", {
-	id: smallint().notNull(),
+	id: smallserial().notNull(),
 	rollValue: smallint("roll_value"),
 	apparelId: smallint("apparel_id"),
 }, (table) => [
@@ -1732,10 +1753,10 @@ export const activeNpcCharactersInNewContent = newContent.table("active_npc_char
 	rlInj: smallint("rl_inj"),
 	rlPhysDr: smallint("rl_phys_dr"),
 	rlEnrgDr: smallint("rl_enrg_dr"),
-	attacks: text(),
-	abilities: text(),
+	attacks: text().array(),
+	abilities: text().array(),
 	caps: text(),
-	inventory: text(),
+	inventory: text().array(),
 	partyId: smallint("party_id"),
 	notes: text(),
 	owningCharacter: smallint("owning_character"),
@@ -1787,9 +1808,9 @@ export const activeNpcCreaturesInNewContent = newContent.table("active_npc_creat
 	llInj: smallint("ll_inj"),
 	rlHp: smallint("rl_hp"),
 	rlInj: smallint("rl_inj"),
-	attacks: text(),
-	abilities: text(),
-	inventory: text(),
+	attacks: text().array(),
+	abilities: text().array(),
+	inventory: text().array(),
 	partyId: smallint("party_id"),
 	notes: text(),
 	owningCharacter: smallint("owning_character"),
@@ -1855,21 +1876,8 @@ export const coreBeverageLootInNewContent = newContent.table("core_beverage_loot
 		}),
 ]);
 
-export const coreNukaLootInNewContent = newContent.table("core_nuka_loot", {
-	id: smallint().notNull(),
-	rollValue: smallint("roll_value"),
-	consumableId: smallint("consumable_id"),
-	empties: text(),
-}, (table) => [
-	foreignKey({
-			columns: [table.consumableId],
-			foreignColumns: [consumablesInNewContent.id],
-			name: "core_nuka_loot_consumable_id_fkey"
-		}),
-]);
-
 export const corePublicationsLootInNewContent = newContent.table("core_publications_loot", {
-	id: smallint().notNull(),
+	id: smallserial().notNull(),
 	rollValue: smallint("roll_value"),
 	consumableId: smallint("consumable_id"),
 }, (table) => [
@@ -1894,7 +1902,7 @@ export const coreRandomLootConsumablesInNewContent = newContent.table("core_rand
 export const coreRandomLootMoneyInNewContent = newContent.table("core_random_loot_money", {
 	rollValue: smallint("roll_value").notNull(),
 	prewar: boolean(),
-	"2D20S": smallint(),
+	d20S: smallint(),
 });
 
 export const coreRandomLootMiscInNewContent = newContent.table("core_random_loot_misc", {
@@ -1919,12 +1927,32 @@ export const extendedTestCharactersInNewContent = newContent.table("extended_tes
 		}),
 ]);
 
-export const scavengingLocationsInNewContent = newContent.table("scavenging_locations", {
+export const coreNukaLootInNewContent = newContent.table("core_nuka_loot", {
 	id: smallserial().notNull(),
-});
+	rollValue: smallint("roll_value"),
+	consumableId: smallint("consumable_id"),
+	empties: text(),
+}, (table) => [
+	foreignKey({
+			columns: [table.consumableId],
+			foreignColumns: [consumablesInNewContent.id],
+			name: "core_nuka_loot_consumable_id_fkey"
+		}),
+]);
+
+export const coreChemLootInNewContent = newContent.table("core_chem_loot", {
+	rollValue: smallint("roll_value").notNull(),
+	consumableId: smallint("consumable_id"),
+}, (table) => [
+	foreignKey({
+			columns: [table.consumableId],
+			foreignColumns: [consumablesInNewContent.id],
+			name: "core_chem_loot_consumable_id_fkey"
+		}),
+]);
 
 export const coreRangedLootInNewContent = newContent.table("core_ranged_loot", {
-	id: smallint().notNull(),
+	id: smallserial().notNull(),
 	rollValue: smallint("roll_value"),
 	weaponId: smallint("weapon_id"),
 	modId: smallint("mod_id"),
@@ -2024,73 +2052,34 @@ export const factionsInNewContent = newContent.table("factions", {
 		}),
 ]);
 
-export const encounterTablesInNewContent = newContent.table("encounter_tables", {
-	id: smallserial().notNull(),
-	type: text(),
-	dieRoll: smallint("die_roll"),
-	name: text(),
-	description: text(),
-});
-
-export const charactersInNewContent = newContent.table("characters", {
-	id: smallserial().notNull(),
-	playerId: smallint("player_id"),
-	characterName: text("character_name"),
-	xp: integer(),
-	origin: smallint(),
-	luckPoints: smallint("luck_points"),
-	currentHealth: smallint("current_health"),
-	headHp: smallint("head_hp"),
-	headInj: smallint("head_inj"),
-	laHp: smallint("la_hp"),
-	laInj: smallint("la_inj"),
-	raHp: smallint("ra_hp"),
-	raInj: smallint("ra_inj"),
-	torsoHp: smallint("torso_hp"),
-	torsoInj: smallint("torso_inj"),
-	llHp: smallint("ll_hp"),
-	llInj: smallint("ll_inj"),
-	rlHp: smallint("rl_hp"),
-	rlInj: smallint("rl_inj"),
-	caps: smallint(),
-	hunger: smallint(),
-	thirst: smallint(),
-	sleep: smallint(),
-	exposure: smallint(),
-	party: smallint(),
-}, (table) => [
-	foreignKey({
-			columns: [table.playerId],
-			foreignColumns: [playersInNewContent.id],
-			name: "characters_player_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.origin],
-			foreignColumns: [originsInNewContent.id],
-			name: "characters_origin_fkey"
-		}),
-	foreignKey({
-			columns: [table.party],
-			foreignColumns: [partiesInNewContent.id],
-			name: "characters_party_fkey"
-		}),
-]);
-
-export const characterSpecialInNewContent = newContent.table("character_special", {
+export const characterDiseasesInNewContent = newContent.table("character_diseases", {
 	id: smallserial().notNull(),
 	characterId: smallint("character_id"),
-	strength: smallint(),
-	perception: smallint(),
-	endurance: smallint(),
-	charisma: smallint(),
-	intelligence: smallint(),
-	agility: smallint(),
-	luck: smallint(),
+	diseaseId: smallint("disease_id"),
 }, (table) => [
 	foreignKey({
 			columns: [table.characterId],
 			foreignColumns: [charactersInNewContent.id],
-			name: "character_special_character_id_fkey"
+			name: "character_diseases_character_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.diseaseId],
+			foreignColumns: [diseasesInNewContent.id],
+			name: "character_diseases_disease_id_fkey"
+		}),
+]);
+
+export const diseasesInNewContent = newContent.table("diseases", {
+	id: smallserial().notNull(),
+	name: text(),
+	eff: text(),
+	duration: text(),
+	sourcebookId: smallint("sourcebook_id"),
+}, (table) => [
+	foreignKey({
+			columns: [table.sourcebookId],
+			foreignColumns: [sourcebooksInNewContent.id],
+			name: "diseases_sourcebook_id_fkey"
 		}),
 ]);
 
@@ -2129,20 +2118,20 @@ export const apparelRecipesInNewContent = newContent.table("apparel_recipes", {
 		}),
 ]);
 
-export const characterChemRecipesInNewContent = newContent.table("character_chem_recipes", {
+export const characterPublicationsReadInNewContent = newContent.table("character_publications_read", {
 	id: smallserial().notNull(),
 	characterId: smallint("character_id"),
-	chemRecipeId: smallint("chem_recipe_id"),
+	publicationId: smallint("publication_id"),
 }, (table) => [
 	foreignKey({
 			columns: [table.characterId],
 			foreignColumns: [charactersInNewContent.id],
-			name: "character_chem_recipes_character_id_fkey"
+			name: "character_publications_read_character_id_fkey"
 		}),
 	foreignKey({
-			columns: [table.chemRecipeId],
-			foreignColumns: [chemRecipesInNewContent.id],
-			name: "character_chem_recipes_chem_recipe_id_fkey"
+			columns: [table.publicationId],
+			foreignColumns: [consumablesInNewContent.id],
+			name: "character_publications_read_publication_id_fkey"
 		}),
 ]);
 
@@ -2152,17 +2141,20 @@ export const playersInNewContent = newContent.table("players", {
 	auth: text(),
 });
 
-export const originsInNewContent = newContent.table("origins", {
+export const partyMembershipInNewContent = newContent.table("party_membership", {
 	id: smallserial().notNull(),
-	name: text(),
-	description: text(),
-	canGhoul: boolean("can_ghoul"),
-	sourcebookId: smallint("sourcebook_id"),
+	partyId: smallint("party_id"),
+	characterId: smallint("character_id"),
 }, (table) => [
 	foreignKey({
-			columns: [table.sourcebookId],
-			foreignColumns: [sourcebooksInNewContent.id],
-			name: "origins_sourcebook_id_fkey"
+			columns: [table.characterId],
+			foreignColumns: [charactersInNewContent.id],
+			name: "party_membership_character_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.partyId],
+			foreignColumns: [partiesInNewContent.id],
+			name: "party_membership_party_id_fkey"
 		}),
 ]);
 
@@ -2171,7 +2163,7 @@ export const npcCreaturesInNewContent = newContent.table("npc_creatures", {
 	name: text(),
 	lvl: smallint(),
 	type: smallint(),
-	keywords: text(),
+	keywords: text().array(),
 	body: smallint(),
 	mind: smallint(),
 	melee: smallint(),
@@ -2184,29 +2176,18 @@ export const npcCreaturesInNewContent = newContent.table("npc_creatures", {
 	enrgDr: smallint("enrg_dr"),
 	radsDr: smallint("rads_dr"),
 	poisDr: smallint("pois_dr"),
-	attacks: text(),
-	abilities: text(),
+	attacks: text().array(),
+	abilities: text().array(),
 	butcher: text(),
 	salvage: text(),
 	caps: text(),
 	junk: text(),
-	inventory: text(),
+	inventory: text().array(),
 }, (table) => [
 	foreignKey({
 			columns: [table.type],
 			foreignColumns: [creatureTypesInNewContent.id],
 			name: "npc_creatures_type_fkey"
-		}),
-]);
-
-export const coreChemLootInNewContent = newContent.table("core_chem_loot", {
-	rollValue: smallint("roll_value").notNull(),
-	consumableId: smallint("consumable_id"),
-}, (table) => [
-	foreignKey({
-			columns: [table.consumableId],
-			foreignColumns: [consumablesInNewContent.id],
-			name: "core_chem_loot_consumable_id_fkey"
 		}),
 ]);
 
@@ -2224,7 +2205,7 @@ export const settlementsInNewContent = newContent.table("settlements", {
 	beds: smallint(),
 	happiness: smallint(),
 	income: smallint(),
-	stockpile: text(),
+	stockpile: text().array(),
 }, (table) => [
 	foreignKey({
 			columns: [table.partyId],

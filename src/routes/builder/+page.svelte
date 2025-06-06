@@ -1,24 +1,44 @@
-<script>
+<script lang="ts">
     let charName = '';
     let level = 1;
-    let selectedOrigin = 'brotherhood-initiate';
-    import {
-        PUBLIC_coreOrigins,
-        PUBLIC_settlerOrigins,
-        PUBLIC_atomOrigins,
-        PUBLIC_wandererOrigins,
-        PUBLIC_corePerks,
-        PUBLIC_settlerPerks,
-        PUBLIC_wandererPerks
-    } from '$env/static/public';
-    $: coreOrigins = JSON.parse(PUBLIC_coreOrigins);
-    $: settlerOrigins = JSON.parse(PUBLIC_settlerOrigins);
-    $: atomOrigins = JSON.parse(PUBLIC_atomOrigins);
-    $: wandererOrigins = JSON.parse(PUBLIC_wandererOrigins);
-    $: originData = { ...coreOrigins, ...settlerOrigins, ...atomOrigins, ...wandererOrigins };
+
+    type Trait = {
+        id: number;
+        name: string;
+        description: string;
+    };
+
+    type OriginWithTraits = {
+        id: number;
+        name: string;
+        description: string;
+        canGhoul: boolean;
+        sourcebookId: number;
+        traits: Trait[];
+    };
+
+    export let data: {
+        groupedOrigins: Record<string, OriginWithTraits[]>;
+        sourcebookMap: Record<string, string>;
+    };
+    let selectedOrigin: string = '';
     let isGhoul = false;
-    let selectedTraits = [];
-    let traitDescriptions = [];
+    let selectedTraits: string[] = [];
+    let traitDescriptions: string[] = [];
+
+    $: allOrigins = Object.values(data.groupedOrigins).flat();
+    $: selectedOriginData = allOrigins.find(o => o.id.toString() === selectedOrigin);
+    $: ghoulOrigin = allOrigins.find(o => o.name?.toLowerCase() === 'ghoul');
+
+    function handleTraitSelection(event: Event) {
+        const selectEl = event.target as HTMLSelectElement;
+        selectedTraits = Array.from(selectEl.selectedOptions).map(opt => opt.value);
+        traitDescriptions = selectedTraits.map(name => {
+            const trait = selectedOriginData?.traits.find(t => t.name === name);
+            return trait?.description ?? '';
+        });
+    }
+
     let isOriginValid = false;
 
     let remainingSpecialPoints = 0;
@@ -134,6 +154,7 @@
         navigateTo('special')
     }
     
+    /*
     function handleTraitSelection(event) {
         const selected = Array.from(event.target.selectedOptions).map(option => option.value);
 
@@ -142,6 +163,7 @@
             traitDescriptions = selected.map(trait => getAllTraitsForOrigin(selectedOrigin)[trait]);
         }
     }
+    */
 
     function getAllTraitsForOrigin(origin) {
         let allTraits = { ...originData[origin].trait.traits };
@@ -342,6 +364,7 @@
     <label for="level-select">Level: </label>
     <input type="number" min="1" bind:value={level} id="level-select" title="level-select">
     <label for="origin-select">Origin: </label>
+    <!--
     <select name="origin-select" id="origin-select" bind:value={selectedOrigin} title="origin-select" class="origin-select">
         <optgroup label="Core">
             {#each Object.keys(coreOrigins) as origin}
@@ -364,16 +387,29 @@
             {/each}
         </optgroup>
     </select>
+    -->
+    <select name="origin-select" id="origin-select" bind:value={selectedOrigin} class="origin-select">
+        {#each Object.entries(data.groupedOrigins) as [sourcebookId, origins]}
+            <optgroup label={data.sourcebookMap[sourcebookId]}>
+                {#each origins as origin}
+                    <option value={origin.id}>{origin.name}</option>
+                {/each}
+            </optgroup>
+        {/each}
+    </select>
 
-    <pre>{originData[selectedOrigin].description}</pre>
+    {#if selectedOriginData}
+        <pre>{selectedOriginData.description}</pre>
 
-    {#if originData[selectedOrigin].trait.canGhoul === true}
-        <label for="is-ghoul">Ghoul: </label>
-        <input type="checkbox" id="is-ghoul" name="is-ghoul" bind:checked={isGhoul}>
+        {#if selectedOriginData.canGhoul}
+            <label for="is-ghoul">Ghoul: </label>
+            <input type="checkbox" id="is-ghoul" name="is-ghoul" bind:checked={isGhoul}>
+        {/if}
     {/if}
 
     <h3>Trait:</h3>
 
+    <!--
     {#if isGhoul === true}
         <p>{originData['ghoul'].trait.name}</p>
         <pre>{originData['ghoul'].trait.description}</pre>
@@ -396,6 +432,36 @@
         <div style="display:inline-block">
             {#each selectedTraits as trait, index}
                 <div key={index}>
+                    <h4>{trait}</h4>
+                    <pre>{traitDescriptions[index]}</pre>
+                </div>
+            {/each}
+        </div>
+    {/if}
+    -->
+
+    {#if isGhoul === true && ghoulOrigin}
+        <p>{ghoulOrigin.traits[0]?.name}</p>
+        <pre>{ghoulOrigin.traits[0]?.description}</pre>
+    {:else if selectedOriginData}
+        <p>{selectedOriginData.traits[0]?.name}</p>
+        <pre>{selectedOriginData.traits[0]?.description}</pre>
+
+        {#if selectedOriginData.traits[0]?.description === 'Choose 2, or 1 and a perk:'}
+            <div style="display:inline-block">
+                <select multiple on:change={handleTraitSelection} style="height:11.5em">
+                    {#each selectedOriginData.traits as trait}
+                        <option value={trait.name}>{trait.name}</option>
+                    {/each}
+                </select>
+            </div>
+        {/if}
+    {/if}
+
+    {#if selectedTraits.length > 0}
+        <div style="display:inline-block">
+            {#each selectedTraits as trait, index}
+                <div>
                     <h4>{trait}</h4>
                     <pre>{traitDescriptions[index]}</pre>
                 </div>
