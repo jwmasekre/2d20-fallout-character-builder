@@ -8,7 +8,7 @@ INSERT INTO traits (name,description) VALUES
 ('Gifted','Increase 2 SPECIAL by 1 each. Your maximum Luck points is LCK minus 1.'),
 ('Heavy Handed','Melee damage is +1CD. Melee and Un-armed suffer complications at 19+.'),
 ('Small Frame','You may reroll 1d20 on AGI that rely on balance/coordination. Carry weight is 150+(5*STR)lbs.'),
-('Feat','Take an extra feat when selecting feats.'),
+('Perk','Take an extra perk when selecting perks.'),
 ('Vault Kid','Difficulty of Endurance checks to resist disease are minus 1. You get +1 Tag skill. Work with GM to determine a psychological compli-cation. Overcoming this complica-tion restores one LCK.'),
 ('United We Stand','You gain Energy Weapons or Small Guns as a Tag skill. Your DR is +1 in cover, and you gain +1CD while outnumbered. Your settlements gain traders every 5 days and have a base Defense resource of 4.'),
 ('Good Natured','Tag 2 of: Speech, Medicine, Repair, Science, Barter. Maximum of all skills not listed is 4.'),
