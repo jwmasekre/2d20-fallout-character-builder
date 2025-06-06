@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db/index';
-import * as schema from $lib/server/db/schema;
+import * as schema from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function getOriginsSourcesTraits() {

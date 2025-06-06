@@ -7,7 +7,7 @@
         characterId = saveResult.data.characterId
     }
 
-    // ORIGIN PAGE
+
     let charName = '';
     let level = 1;
 
@@ -35,20 +35,27 @@
     let traitDescriptions: string[] = [];
 
     $: allOrigins = Object.values(data.groupedOrigins).flat();
-    $: selectedOriginData = allOrigins.find(o => o.id.toString() === selectedOrigin.toString());
+    $: selectedOriginData = allOrigins.find(o => o.id.toString() === selectedOrigin);
     $: ghoulOrigin = allOrigins.find(o => o.name?.toLowerCase() === 'ghoul');
-    $: traitCount = selectedOriginData?.traits?.length ?? 0;
-    $: if (selectedOriginData && traitCount === 1) {
-        selectedTraits = [selectedOriginData.traits[0].id.toString()];
+    $: if (selectedOriginData && selectedTraits.length) {
+        traitDescriptions = selectedTraits.map(id => {
+            const trait = selectedOriginData.traits.find(t => t.id.toString() === id.toString());
+            return trait?.description ?? '';
+        });
     }
-    $: traitDescriptions = selectedTraits.map(id => {
-        const trait = selectedOriginData?.traits.find(t => t.id.toString() === id.toString());
-        return trait?.description ?? '';
-    })
-    $: traitPerk = selectedTraits.includes('10');
-    $: if (selectedOriginData && !(selectedOriginData.canGhoul)) {
-        isGhoul = false;
+
+    /*
+    function handleTraitSelection(event: Event) {
+        const selectEl = event.target as HTMLSelectElement;
+        selectedTraits = Array.from(selectEl.selectedOptions).map(opt => opt.value);
+        traitDescriptions = selectedTraits.map(name => {
+            const trait = selectedOriginData?.traits.find(t => t.name === name);
+            return trait?.description ?? '';
+        });
     }
+    */
+
+    const traitCount = selectedOriginData?.traits?.length ?? 0;
 
     let isOriginValid = false;
     $: isOriginValid = (
@@ -61,39 +68,7 @@
         )
     )
 
-    // SPECIAL PAGE
-    $: isSuperMutant = selectedTraits.includes('3');
-    $: isNightkin = selectedTraits.includes('25');
-    $: isGifted = selectedTraits.includes('7');
-
-    $: giftedSelected = {};
-    $: giftedCount = Object.values(giftedSelected).filter(Boolean).length;
-
-    //import { SPECIAL_FIELDS } from '$lib/server/constants';
-	//import Special from '$lib/special.svelte';
-
-    function getStatMax(stat) {
-        if (isSuperMutant || isNightkin) {
-            if (['intelligence','charisma'].includes(stat)) {
-                return 6 + (isSuperMutant ? 0 : 2);
-            }
-        }
-        return 10;
-    }
-
-    function getDisplayStat(stat, value) {
-        let mod = 0;
-        if (isSuperMutant || isNightkin) {
-            if (['strength', 'endurance'].includes(stat)) mod += 2;
-        }
-        if (isGifted && giftedSelected[stat]) mod += 1;
-        return value + mod;
-    }
-
-    $: remainingSpecialPoints = specialPoints
-        + (isGifted ? giftedCount : 0)
-        - Object.values(customStats).reduce((acc,val) => acc + val, 0);
-    
+    let remainingSpecialPoints = 0;
     let specialPoints = 40;
     let specialStats = {
         strength: 5,
@@ -120,38 +95,6 @@
         Specialized: [9,8,5,5,5,4,4]
     };
     let isSpecialValid = false;
-
-    function updateArray() {
-        if (selectedArray === 'Custom') {
-            remainingSpecialPoints = specialPoints - Object.values(customStats).reduce((acc, val) => acc + val, 0);
-        } else {
-            const selected = arrays[selectedArray];
-            Object.keys(specialStats).forEach((key, index) => {
-                specialStats[key] = selected[index];
-            });
-
-            remainingSpecialPoints = specialPoints - selected.reduce((acc, val) => acc + val, 0);
-        }
-    }
-
-    function handleStatChange(stat, value) {
-        const parsedValue = parseInt(value);
-        if (!isNaN(parsedValue)) {
-            if (selectedArray === 'Custom') {
-                customStats[stat] = parsedValue;
-                remainingSpecialPoints = specialPoints - Object.values(customStats).reduce((acc, val) => acc + val, 0);
-            } else {
-                specialStats[stat] = parsedValue;
-                remainingSpecialPoints = specialPoints - Object.values(specialStats).reduce((acc, val) => acc + val, 0);
-            }
-        }
-    }
-
-    $: isSpecialValid =
-        Object.entries(selectedArray === 'Custom' ? customStats : specialStats)
-            .every(([key, val]) => val >= 4 && val <= getStatMax(key)) &&
-        remainingSpecialPoints === 0 &&
-        (!isGifted || giftedCount === 2);
 
     let skillPoints = {};
     let skillPointsRemaining = 9 + specialStats.intelligence - Object.values(skillPoints).reduce((acc, val) => acc + val, 0);
@@ -233,6 +176,59 @@
     function goBackEquipmentPage() {
         navigateTo('special')
     }
+    
+    /*
+    function handleTraitSelection(event) {
+        const selected = Array.from(event.target.selectedOptions).map(option => option.value);
+
+        if (selected.length <= 2) {
+            selectedTraits = selected;
+            traitDescriptions = selected.map(trait => getAllTraitsForOrigin(selectedOrigin)[trait]);
+        }
+    }
+
+    function getAllTraitsForOrigin(origin) {
+        let allTraits = { ...originData[origin].trait.traits };
+
+        if (originData[origin].trait.alternates) {
+            originData[origin].trait.alternates.forEach(alternate => {
+                const alternateTraits = originData[alternate]?.trait?.traits;
+                if (alternateTraits) {
+                    allTraits = { ...allTraits, ...alternateTraits };
+                }
+            });
+        }
+        return allTraits;
+    }
+    */
+
+    function updateArray() {
+        if (selectedArray === 'Custom') {
+            remainingSpecialPoints = specialPoints - Object.values(customStats).reduce((acc, val) => acc + val, 0);
+        } else {
+            const selected = arrays[selectedArray];
+            Object.keys(specialStats).forEach((key, index) => {
+                specialStats[key] = selected[index];
+            });
+
+            remainingSpecialPoints = specialPoints - selected.reduce((acc, val) => acc + val, 0);
+        }
+    }
+
+    function handleStatChange(stat, value) {
+        const parsedValue = parseInt(value);
+        if (!isNaN(parsedValue)) {
+            if (selectedArray === 'Custom') {
+                customStats[stat] = parsedValue;
+                remainingSpecialPoints = specialPoints - Object.values(customStats).reduce((acc, val) => acc + val, 0);
+            } else {
+                specialStats[stat] = parsedValue;
+                remainingSpecialPoints = specialPoints - Object.values(specialStats).reduce((acc, val) => acc + val, 0);
+            }
+        }
+    }
+
+    $: isSpecialValid = Object.values(customStats).every(val => val >= 4 && val <= 10) && remainingSpecialPoints === 0;
     
     function handleSkillPointChange(skill, value) {
         const parsedValue = parseInt(value);
@@ -379,12 +375,6 @@
     }
 </style>
 
-<!-- save button -->
-<!-- save button -->
-<!-- save button -->
-<!-- save button -->
-<!-- save button -->
-
 <form method="POST" use:enhance={(res) => { res.then(r => saveResult = r); }}>
     <!-- origin fields -->
     <input type="hidden" name="originId" value={selectedOriginData?.id} />
@@ -417,10 +407,6 @@
 {/if}
 
 <!--ORIGIN-->
-<!--ORIGIN-->
-<!--ORIGIN-->
-<!--ORIGIN-->
-<!--ORIGIN-->
 
 <div class={`page ${currentPage === 'origin' ? 'page-origin' : 'page-leave'}`}>
     <h1>Origin</h1>
@@ -429,6 +415,30 @@
     <label for="level-select">Level: </label>
     <input type="number" min="1" bind:value={level} id="level-select" title="level-select">
     <label for="origin-select">Origin: </label>
+    <!--
+    <select name="origin-select" id="origin-select" bind:value={selectedOrigin} title="origin-select" class="origin-select">
+        <optgroup label="Core">
+            {#each Object.keys(coreOrigins) as origin}
+                <option value={origin}>{coreOrigins[origin].prettyname}</option>
+            {/each}
+        </optgroup>
+        <optgroup label="Settlers">
+            {#each Object.keys(settlerOrigins) as origin}
+                <option value={origin}>{settlerOrigins[origin].prettyname}</option>
+            {/each}
+        </optgroup>
+        <optgroup label="Winter of Atom">
+            {#each Object.keys(atomOrigins) as origin}
+                <option value={origin}>{atomOrigins[origin].prettyname}</option>
+            {/each}
+        </optgroup>
+        <optgroup label="Wanderers">
+            {#each Object.keys(wandererOrigins) as origin}
+                <option value={origin}>{wandererOrigins[origin].prettyname}</option>
+            {/each}
+        </optgroup>
+    </select>
+    -->
     <select name="origin-select" id="origin-select" bind:value={selectedOrigin} class="origin-select">
         {#each Object.entries(data.groupedOrigins) as [sourcebookId, origins]}
             <optgroup label={data.sourcebookMap[sourcebookId]}>
@@ -440,21 +450,58 @@
     </select>
 
     {#if selectedOriginData}
-        <pre>{selectedOriginData.description.replace(/\\n/g, "\n")}</pre>
+        <pre>yes</pre>
+        <pre>{selectedOriginData.description}</pre>
+
         {#if selectedOriginData.canGhoul}
             <label for="is-ghoul">Ghoul: </label>
             <input type="checkbox" id="is-ghoul" name="is-ghoul" bind:checked={isGhoul}>
         {/if}
-
-        <h3>Trait:</h3>
     {/if}
 
+    <h3>Trait:</h3>
+
+    <!--
+    {#if isGhoul === true}
+        <p>{originData['ghoul'].trait.name}</p>
+        <pre>{originData['ghoul'].trait.description}</pre>
+    {:else}
+        <p>{originData[selectedOrigin].trait.name}</p>
+        <pre>{originData[selectedOrigin].trait.description}</pre>
+
+        <div style="display:inline-block">
+            {#if originData[selectedOrigin].trait.description === 'Choose 2, or 1 and a perk:'}
+                <select multiple on:change={handleTraitSelection} style="height:11.5em">
+                    {#each Object.keys(getAllTraitsForOrigin(selectedOrigin)) as trait}
+                        <option value={trait}>{trait}</option>
+                    {/each}
+                </select>
+            {/if}
+        </div>
+    {/if}
+
+    {#if selectedTraits.length > 0}
+        <div style="display:inline-block">
+            {#each selectedTraits as trait, index}
+                <div key={index}>
+                    <h4>{trait}</h4>
+                    <pre>{traitDescriptions[index]}</pre>
+                </div>
+            {/each}
+        </div>
+    {/if}
+    -->
+
     {#if isGhoul === true && ghoulOrigin}
-        <h4>{ghoulOrigin.traits[0]?.name}</h4>
+        <p>{ghoulOrigin.traits[0]?.name}</p>
         <pre>{ghoulOrigin.traits[0]?.description}</pre>
     {:else if selectedOriginData}
         {#if traitCount > 1}
             <div style="display:inline-block">
+                <label>
+                    <input type="checkbox" bind:checked={traitPerk} />
+                    Perk instead of second trait
+                </label>
                 <select multiple bind:value={selectedTraits} style="height:11.5em">
                     {#each selectedOriginData.traits as trait}
                         <option value={trait.id.toString()}>{trait.name}</option>
@@ -464,7 +511,7 @@
         {/if}
     {/if}
 
-    {#if traitDescriptions.length > 0 && !isGhoul}
+    {#if traitDescriptions.length > 0}
         <div style="display:inline-block">
             {#each selectedTraits as traitId, index}
                 {#if selectedOriginData}
@@ -472,7 +519,7 @@
                         {#if trait.id.toString() === traitId.toString()}
                             <div>
                                 <h4>{trait.name}</h4>
-                                <pre>{trait.description.replace(/\\n/g, "\n")}</pre>
+                                <pre>{trait.description}</pre>
                             </div>
                         {/if}
                     {/each}
@@ -485,10 +532,6 @@
 </div>
 
 
-<!--SPECIAL-->
-<!--SPECIAL-->
-<!--SPECIAL-->
-<!--SPECIAL-->
 <!--SPECIAL-->
 
 <div class={`page ${currentPage === 'special' ? 'page-special' : 'page-leave'}`}>
@@ -506,26 +549,15 @@
     {#if selectedArray === 'Custom'}
         <p>Remaining Points: {remainingSpecialPoints}</p>
         {#each Object.keys(customStats) as stat}
-                <label for={stat}>{stat.toUpperCase()}: </label>
-                <input
-                    type="number"
-                    id={stat}
-                    bind:value={customStats[stat]}
-                    min="4"
-                    max={getStatMax(stat)}
-                    on:input={(e) => handleStatChange(stat, e.target.value)}
-                />
-                {#if isGifted}
-                    <input
-                        type="checkbox"
-                        bind:checked={giftedSelected[stat]}
-                        disabled={(!giftedSelected[stat] && giftedCount >=2) || customStats[stat] === 10}
-                        on:change={() => {
-                            giftedSelected = { ...giftedSelected };
-                        }}
-                    />
-                {/if}
-                <span style="margin-right:1em;">→ {getDisplayStat(stat, customStats[stat])}</span>
+            <label for={stat}>{stat.toUpperCase()}: </label>
+            <input
+                type="number"
+                id={stat}
+                bind:value={customStats[stat]}
+                min="4"
+                max="10"
+                on:input={(e) => handleStatChange(stat, e.target.value)}
+            />
         {/each}
     {:else}
         <div>
@@ -540,19 +572,7 @@
                         {#each arrays[selectedArray] as value, index}
                             <option value={value}>{value}</option>
                         {/each}
-
                     </select>
-                    {#if isGifted}
-                        <input
-                            type="checkbox"
-                            bind:checked={giftedSelected[stat]}
-                            disabled={!giftedSelected[stat] && giftedCount >= 2}
-                            on:change={() => {
-                                giftedSelected = { ...giftedSelected };
-                            }}
-                        />
-                    {/if}
-                    <span>→ {getDisplayStat(stat, specialStats[stat])}</span>
                 </div>
             {/each}
         </div>
@@ -561,10 +581,6 @@
     <button disabled={!isSpecialValid} on:click={goToSkillsPage}>Skills</button>
 </div>
 
-<!--SKILLS-->
-<!--SKILLS-->
-<!--SKILLS-->
-<!--SKILLS-->
 <!--SKILLS-->
 
 <div class={`page ${currentPage === 'skills' ? 'page-skills' : 'page-leave'}`}>
@@ -576,7 +592,7 @@
     <div class="skill-list">
         {#each skills as skill, index}
             <div class="skill-item" key={index}>
-                <div>{skill}</div>allOrigins.find(o => o.id.toString()
+                <div>{skill}</div>
                 <input
                     type="number"
                     class="skill-input"

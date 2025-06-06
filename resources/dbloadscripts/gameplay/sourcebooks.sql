@@ -1,1 +1,1 @@
-INSERT INTO sourcebooks (name) VALUES ('core'),('custom'),('settlers'),('wanderers'),('atom');
+INSERT INTO sourcebooks (name) VALUES ('Core'),('Custom'),('Settlers'),('Wanderers'),('Atom');
