@@ -26,6 +26,39 @@ export const actions = {
         const special = Object.fromEntries(
             SPECIAL_FIELDS.map((stat) => [stat, parseInt(data.get(stat)?.toString() || '')])
         );
+        const skillValid = data.get('skillValid') === 'true';
+        const skillPointsEntries = Array.from(data.entries())
+            .filter(([key]) => key.startsWith('skillPoints['))
+            .map(([key, val]) => {
+                const match = key.match(/skillPoints\[(.+?)\]/);
+                if (match) return [match[1], parseInt(val.toString())] as const;
+                return null;
+            })
+            .filter((e): e is readonly [string, number] => e !== null);
+    
+        const skillPoints = Object.fromEntries(skillPointsEntries);
+        const tagSkillsEntries = Array.from(data.entries())
+            .filter(([key]) => key.startsWith('tagSkills['))
+            .map(([key, val]) => {
+                const match = key.match(/tagSkills\[(.+?)\]/);
+                if (match) return [match[1], val === 'on'] as const;
+                return null;
+            })
+            .filter((e): e is readonly [string, boolean] => e !== null);
+
+        const tagSkills = Object.fromEntries(tagSkillsEntries);
+        function toCamelCase(str: string) {
+			return str
+				.replace(/\s(.)/g, (_, c) => c.toUpperCase())
+				.replace(/\s/g, '')
+				.replace(/^(.)/, (_, c) => c.toLowerCase());
+		}
+        const camelSkillPoints = Object.fromEntries(
+			Object.entries(skillPoints).map(([k, v]) => [toCamelCase(k), v])
+		);
+		const camelTagSkills = Object.fromEntries(
+			Object.entries(tagSkills).map(([k, v]) => [toCamelCase(k), v])
+		);
         
         try {
             let newCharacterId = characterId;
@@ -68,6 +101,53 @@ export const actions = {
                     });
                 }
             }
+
+            const existingSkills =
+				await db.query.characterSkillsInNewContent.findFirst({
+					where: (c, { eq }) => eq(c.characterId, newCharacterId)
+				});
+
+			if (existingSkills) {
+				await db
+					.update(db.schema.characterSkillsInNewContent)
+					.set(camelSkillPoints)
+					.where(
+						eq(
+							db.schema.characterSkillsInNewContent.characterId,
+							newCharacterId
+                        )
+					);
+			} else {
+				await db
+					.insert(db.schema.characterSkillsInNewContent)
+					.values({
+						characterId: newCharacterId,
+						...camelSkillPoints
+					});
+			}
+            const existingTags =
+				await db.query.characterTagsInNewContent.findFirst({
+					where: (c, { eq }) => eq(c.characterId, newCharacterId)
+				});
+
+			if (existingTags) {
+				await db
+					.update(db.schema.characterTagsInNewContent)
+					.set(camelTagSkills)
+					.where(
+						eq(
+							db.schema.characterTagsInNewContent.characterId,
+							newCharacterId
+                        )
+					);
+			} else {
+				await db
+					.insert(db.schema.characterTagsInNewContent)
+					.values({
+						characterId: newCharacterId,
+						...camelTagSkills
+					});
+			}
 
         /*
         const existing = await db.query.charactersInNewContent.findFirst({

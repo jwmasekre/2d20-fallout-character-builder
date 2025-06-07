@@ -69,9 +69,6 @@
     $: giftedSelected = {};
     $: giftedCount = Object.values(giftedSelected).filter(Boolean).length;
 
-    //import { SPECIAL_FIELDS } from '$lib/server/constants';
-	//import Special from '$lib/special.svelte';
-
     function getStatMax(stat) {
         if (isSuperMutant || isNightkin) {
             if (['intelligence','charisma'].includes(stat)) {
@@ -153,17 +150,116 @@
         remainingSpecialPoints === 0 &&
         (!isGifted || giftedCount === 2);
 
-    let skillPoints = {};
-    let skillPointsRemaining = 9 + specialStats.intelligence - Object.values(skillPoints).reduce((acc, val) => acc + val, 0);
+    // SKILLS PAGE
     const skills = [
         'Athletics', 'Barter', 'Big Guns', 'Energy Weapons', 'Explosives', 'Lockpick', 'Medicine', 'Melee Weapons', 'Pilot', 'Repair', 'Science', 'Small Guns', 'Sneak', 'Speech', 'Survival', 'Throwing', 'Unarmed'
     ];
+    let skillPoints = {};
     skills.forEach(skill => {
         skillPoints[skill] = 0;
     });
+    let extraTagSkills = 0;
+    let forcedTagSkills = '';
+    let forbiddenTagSkills = '';
+    let tagSkillGroups = skills;
+    let maxSkillCap = (level > 3 ? (level < 7 ? level : 6) : 3);
+    let limitedSkills = [];
+    let limitedSkillCap = 4;
+    let baseTagSkills = 3;
+    let totalTagSkillsAllowed = 3;
+    $: if (selectedTraits.includes('1') || selectedTraits.includes('24')) {
+        extraTagSkills = 1;
+        tagSkillGroups = ["Energy Weapons", "Repair", "Science"];
+    } else if (selectedTraits.includes('12')) {
+        extraTagSkills = 1;
+        tagSkillGroups = ['Small Guns', 'Energy Weapons'];
+    } else if (selectedTraits.includes('13')) {
+        extraTagSkills = 2;
+        tagSkillGroups = ['Speech', 'Medicine', 'Repair', 'Science', 'Barter'];
+        limitedSkills = ['Athletics', 'Big Guns', 'Energy Weapons', 'Explosives', 'Lockpick', 'Melee Weapons', 'Pilot', 'Small Guns', 'Sneak', 'Survival', 'Throwing', 'Unarmed']
+    } else if (selectedTraits.includes('5') || selectedTraits.includes('11')) {
+        extraTagSkills = 1;
+    } else {
+        extraTagSkills = 0;
+        tagSkillGroups = skills;
+        limitedSkills = [];
+    }
+
+    $: if (selectedTraits.includes('2')) {
+        baseTagSkills = 4;
+        forcedTagSkills = 'Survival';
+        if (!tagSkills['Survival']) {
+            tagSkills['Survival'] = true;
+            toggleTagSkill('Survival');
+        }
+    } else {
+        baseTagSkills = 3;
+        forcedTagSkills = '';
+        if (tagSkills['Survival']) {
+            tagSkills['Survival'] = false;
+            toggleTagSkill('Survival');
+        }
+    }
+
+    $: if (selectedTraits.includes('3') || selectedTraits.includes('25')) {
+        maxSkillCap = (level > 3 ? 4 : 3);
+    } else {
+        maxSkillCap = (level > 3 ? (level < 7 ? level : 6) : 3);
+    }        
+
+    $: if (selectedTraits.includes('27')) {
+        forbiddenTagSkills = 'Science';
+    } else {
+        forbiddenTagSkills = '';
+    }
+    $: totalTagSkillsAllowed = baseTagSkills + extraTagSkills;
+
+    /*$: skills.forEach(skill => {
+        if (forcedTagSkills === skill && !tagSkills[skill]) {
+            toggleTagSkill(skill);
+        }
+        if (forbiddenTagSkills === skill && tagSkills[skill]) {
+            toggleTagSkill(skill);
+        }
+    });*/
+    
     let tagSkills = {};
+    function handleSkillPointChange(skill, value) {
+        const parsedValue = parseInt(value);
+        if (!isNaN(parsedValue)) {
+            let maxPoints = limitedSkills.includes(skill) ? limitedSkillCap : maxSkillCap;
+            if (parsedValue <= maxPoints) {
+                skillPoints[skill] = parsedValue;
+                skillPointsRemaining = 9 + specialStats.intelligence + Object.values(tagSkills).filter(Boolean).length - Object.values(skillPoints).reduce((acc, val) => acc + val, 0);
+            }
+        }
+    }
+    let skillPointsRemaining = 9 + specialStats.intelligence + Object.values(tagSkills).filter(Boolean).length - Object.values(skillPoints).reduce((acc, val) => acc + val, 0);
+
+
+    function toggleTagSkill(skill) {
+        if (skillPoints[skill] === maxSkillCap) {
+            skillPoints[skill] += -2;
+        }
+        skillPoints[skill] += tagSkills[skill] ? 2 : -2;
+        skillPointsRemaining += tagSkills[skill] ? 2 : -2;
+    }
+
+    $: skillPointsRemaining = 9 + specialStats.intelligence + Object.values(tagSkills).filter(Boolean).length*2 - Object.values(skillPoints).reduce((acc, val) => acc + val, 0);
+
     let isSkillsValid = false;
 
+    $: isSkillsValid = (
+        skillPointsRemaining === 0 &&
+        Object.entries(skillPoints).every(([skillPoints, points]) => 
+            points <= (tagSkills[skill] ? 6 : maxSkillCap)
+        ) && 
+        Object.values(tagSkills).filter(Boolean).length === totalTagSkillsAllowed &&
+        !(forbiddenTagSkills === 'Science') || !tagSkills['Science']
+    );
+
+
+    // PERKS PAGE
     let ownedPerks = {};
     let showOnlyAvailablePerks = true;
     let perkPointsRemaining = level - Object.values(ownedPerks).reduce((acc, val) => acc + val, 0);
@@ -177,6 +273,38 @@
         A: true,
         L: true
     };
+
+    /*
+    function isPerkAvailable(perk) {
+        let levelReqMet = level >= perk.minlevel;
+        let statReqMet = Object.keys(perk.statReq).every(stat => specialStats[stat] >= perk.statReq[stat]);
+        let alreadyPurchased = ownedPerks[perk.name] && ownedPerks[perk.name] >= perk.ranks;
+
+        return levelReqMet && statReqMet && !alreadyPurchased;
+    }
+
+    function handlePerkSelection(perk) {
+        if (isPerkAvailable(perk) && perkPointsRemaining > 0) {
+            if (!selectedPerks.includes(perk)) {
+                selectedPerk.push(perk);
+                ownedPerks[perk.name] = (ownedPerks[perk.name] || 0) + 1
+                perkPointsRemaining -= 1
+            }
+        }
+    }
+
+    function togglePerkDescription(perk) {
+        perk.showDescription = !perk.showDescription;
+    }
+
+    $: filteredPerks = Object.values(perks).filter(perk => {
+        let meetsSpecialReq = selectedSPECIAL[perk.specialreq] || perk.specialreq === 'X';
+        return meetsSpecialReq && (!showOnlyAvailablePerks || isPerkAvailable(perk));
+    });
+
+    //console.log(filteredPerks);
+    */
+
     let isPerksValid = false;
     
     let isEquipmentValid = false;
@@ -234,61 +362,6 @@
         navigateTo('special')
     }
     
-    function handleSkillPointChange(skill, value) {
-        const parsedValue = parseInt(value);
-        if (!isNaN(parsedValue)) {
-            let maxPoints = Math.min(level, 6);
-            if (tagSkills[skill]) {
-                maxPoints = 6;
-            }
-            if (parsedValue <= maxPoints) {
-                skillPoints[skill] = parsedValue;
-                skillPointsRemaining = 9 + specialStats.intelligence - Object.values(skillPoints).reduce((acc, val) => acc + val, 0);
-            }
-        }
-    }
-
-    function toggleTagSkill(skill) {
-        if (tagSkills[skill]) {
-            skillPoints[skill] += 2;
-        } else {
-            skillPoints[skill] -=2;
-        }
-        skillPointsRemaining = 9 + specialStats.intelligence - Object.values(skillPoints).reduce((acc, val) => acc + val, 0);
-    }
-
-    $: skillPointsRemaining = 9 + specialStats.intelligence - Object.values(skillPoints).reduce((acc, val) => acc + val, 0);
-
-    /*
-    function isPerkAvailable(perk) {
-        let levelReqMet = level >= perk.minlevel;
-        let statReqMet = Object.keys(perk.statReq).every(stat => specialStats[stat] >= perk.statReq[stat]);
-        let alreadyPurchased = ownedPerks[perk.name] && ownedPerks[perk.name] >= perk.ranks;
-
-        return levelReqMet && statReqMet && !alreadyPurchased;
-    }
-
-    function handlePerkSelection(perk) {
-        if (isPerkAvailable(perk) && perkPointsRemaining > 0) {
-            if (!selectedPerks.includes(perk)) {
-                selectedPerk.push(perk);
-                ownedPerks[perk.name] = (ownedPerks[perk.name] || 0) + 1
-                perkPointsRemaining -= 1
-            }
-        }
-    }
-
-    function togglePerkDescription(perk) {
-        perk.showDescription = !perk.showDescription;
-    }
-
-    $: filteredPerks = Object.values(perks).filter(perk => {
-        let meetsSpecialReq = selectedSPECIAL[perk.specialreq] || perk.specialreq === 'X';
-        return meetsSpecialReq && (!showOnlyAvailablePerks || isPerkAvailable(perk));
-    });
-
-    //console.log(filteredPerks);
-    */
 </script>
 
 <style>
@@ -352,6 +425,17 @@
     .tag-skill-checkbox {
         margin-left: 0.5rem;
     }
+    .forced-tag {
+        font-weight: bold;
+        color: green;
+    }
+    .forbidden-tag {
+        text-decoration: line-through;
+        color: gray;
+    }
+    input[type=checkbox][disabled] {
+        filter: invert(25%);
+    }
 
     .perk-list {
         display: grid;
@@ -391,6 +475,7 @@
     <input type="hidden" name="isGhoul" value={isGhoul ? 'on' : ''} />
     <input type="hidden" name="charName" value={charName} />
     <input type="hidden" name="level" value={level} />
+    <input type="hidden" name="characterId" value={characterId ?? ''} />
     {#each selectedTraits as trait}
         <input type="hidden" name="selectedTraits" value={trait} />
     {/each}
@@ -405,8 +490,16 @@
             />
         {/each}
     {/if}
+    <!-- skill fields -->
+    {#if isSkillsValid}
+        {#each Object.entries(skillPoints) as [skill, value]}
+            <input type="hidden" name={`skillPoints[${skill}]`} value={value} />
+        {/each}
+        {#each Object.entries(tagSkills) as [skill, isTagged]}
+            <input type="hidden" name={`tagSkills[${skill}]`} value={isTagged ? 'on' : ''} />
+        {/each}
+    {/if}
 
-    <input type="hidden" name="characterId" value={characterId ?? ''} />
     <button type="submit" name="action" value="saveCharacter" class="saveButton">Save Character</button>
 </form>
 
@@ -572,17 +665,18 @@
 
     <h1>Skills</h1>
     <p>Remaining Skill Points: {skillPointsRemaining}</p>
+    <p>Tag Skills: {Object.values(tagSkills).filter(Boolean).length}/{totalTagSkillsAllowed}</p>
 
     <div class="skill-list">
         {#each skills as skill, index}
             <div class="skill-item" key={index}>
-                <div>{skill}</div>allOrigins.find(o => o.id.toString()
+                <div>{skill}</div>
                 <input
                     type="number"
                     class="skill-input"
                     bind:value={skillPoints[skill]}
                     min="0"
-                    max={level < 3 ? 3 : Math.min(level, 6)}
+                    max={(tagSkills[skill] ? 6 :maxSkillCap)}
                     on:input={(e) => handleSkillPointChange(skill, e.target.value)}
                 />
                 <input
@@ -590,15 +684,38 @@
                     class="tag-skill-checkbox"
                     bind:checked={tagSkills[skill]}
                     on:change={() => toggleTagSkill(skill)}
-                    disabled={Object.values(tagSkills).filter(value => value === true).length >= 3 && tagSkills[skill] === false}
+                    disabled={
+                        (!tagSkills[skill] && Object.values(tagSkills).filter(Boolean).length >= baseTagSkills) || forcedTagSkills === skill
+                    }
                 />
-                <span>Tag Skill</span>
+                {#if extraTagSkills > 0 && tagSkillGroups.includes(skill)}
+
+                    <input
+                        type="checkbox"
+                        class="extra-tag-skill-checkbox"
+                        bind:checked={tagSkills[skill]}
+                        on:change={() => toggleTagSkill(skill)}
+                        disabled={
+                            (!tagSkills[skill] && (Object.values(tagSkills).filter(Boolean).length >= totalTagSkillsAllowed || Object.values(tagSkills).filter(Boolean).length < baseTagSkills))
+                        }
+                    />
+                {/if}
+                <span
+                    class:forced-tag={forcedTagSkills === skill}
+                    class:forbidden-tag={forbiddenTagSkills === skill}
+                >
+                    Tag Skill
+                </span>
             </div>
         {/each}
     </div>
-    <button disabled={skillPointsRemaining !== 0} on:click={goToPerksPage}>Perks</button>
+    <button disabled={!isSkillsValid} on:click={goToPerksPage}>Perks</button>
 </div>
 
+<!---PERKS-->
+<!---PERKS-->
+<!---PERKS-->
+<!---PERKS-->
 <!---PERKS-->
 
 <div class={`page ${currentPage === 'perks' ? 'page-perks' : 'page-leave'}`}>
