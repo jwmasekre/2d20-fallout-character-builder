@@ -149,46 +149,6 @@ export const actions = {
 					});
 			}
 
-        /*
-        const existing = await db.query.charactersInNewContent.findFirst({
-            where: eq(db.schema.charactersInNewContent.characterName, charName) //this is super dangerous, but will be fixed with auth/player association
-        });
-
-        
-        let characterId: number;
-
-        if (existing)  {
-            await db.update(db.schema.charactersInNewContent)
-                .set({ xp, origin: originId })
-                .where(eq(db.schema.charactersInNewContent.id, existing.id));
-            characterId = existing.id;
-        } else {
-            const [created] = await db
-                .insert(db.schema.charactersInNewContent)
-                .values({
-                    characterName: charName,
-                    origin: originId,
-                    xp
-                })
-                .returning({ id: db.schema.charactersInNewContent.id });
-            characterId = created.id;
-        }
-
-        const traitRows = await db
-            .select()
-            .from(db.schema.traitsInNewContent)
-            .where(
-                selectedTraitNames.length > 0
-                    ? (row) => row.name.in(selectedTraitNames)
-                    : () => false
-            );
-        await db.insert(db.schema.characterTraitsInNewContent).values(
-            traitRows.map(trait => ({
-                characterId,
-                traitId: trait.id
-            }))
-        );
-        */
             return { data: { success: true, characterId: newCharacterId } };
         } catch (error) {
             console.error(error)
@@ -198,10 +158,47 @@ export const actions = {
 }
 
 export const load = async () => {
-    const { groupedOrigins, sourcebookMap } = await queries.getOriginsSourcesTraits();
+    const [originsData, allPerks] = await Promise.all([
+        queries.getOriginsSourcesTraits(),
+        queries.getAllPerks()
+    ]);
 
     return {
-        groupedOrigins,
-        sourcebookMap
+        groupedOrigins: originsData.groupedOrigins,
+        sourcebookMap: originsData.sourcebookMap,
+        allPerks
     };
-}
+};
+
+/*
+currently, we ship all perks to the client and do filtering on the client. if that's too cumbersome, then we can try doing the filtering at the server; this will probably not be as effective and result in excess requests/data utilization, but we want to at least test it first
+
+export async function getElligiblePerks(character: {
+    level: number;
+    traits: number[];
+    special: Record<string, number>;
+    hasReadBook: boolean;
+}) {
+    const allPerks = await db.select().from(PgSchema.perksInNewContent);
+
+    return allPerks.filter(perk => {
+            const specialTypes = getSpecialRequirementTypes(perk);
+            if (!specialTypes.some(type => specialFilters[type])) return false;
+            if (showEligibleOnly && !isEligibleForPerk(perk)) return false;
+        return true;
+    }
+/*
+
+/*
+
+ Handle existing character loading: Update load() to fetch a character if an ID is passed via query or store.
+
+ Split UI logic per step: Let the form work incrementally (origin → SPECIAL → skills → perks).
+
+ Add background/perks/equipment data to the schema (if not already in your SQL).
+
+ Create a utility layer for DB upserts: As seen with upsertOneToOne() above.
+
+ Add createdAt/updatedAt timestamps (if you haven’t already; helpful for UX down the road).
+
+*/
