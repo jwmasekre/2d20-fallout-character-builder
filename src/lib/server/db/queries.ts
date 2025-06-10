@@ -39,3 +39,7 @@ export async function getOriginsSourcesTraits() {
     
     return { groupedOrigins, sourcebookMap };
 }
+
+export async function getAllPerks() {
+    return db.select().from(schema.perksInNewContent);
+}
