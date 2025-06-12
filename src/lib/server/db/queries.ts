@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db/index';
 import * as schema from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 
 export async function getOriginsSourcesTraits() {
     const [origins, sourcebooks, originTraits] = await Promise.all([
@@ -42,4 +42,76 @@ export async function getOriginsSourcesTraits() {
 
 export async function getAllPerks() {
     return db.select().from(schema.perksInNewContent);
+}
+
+export async function getBackgroundEquipment(backgroundId: number) {
+	const weaponIdsResult = await db
+        .select({ id: schema.backgroundWeaponsInNewContent.id })
+        .from(schema.backgroundWeaponsInNewContent)
+        .where(eq(schema.backgroundWeaponsInNewContent.backgroundId, backgroundId))
+    const weaponIds = weaponIdsResult.map(w => w.id);
+    
+    let ammo = [];
+
+    if (weaponIds.length > 0) {
+        ammo = await db
+            .select({
+                ammo: schema.ammoInNewContent,
+                quantity: schema.backgroundAmmoInNewContent.quantity
+            })
+            .from(schema.backgroundAmmoInNewContent)
+            .innerJoin(
+                schema.ammoInNewContent,
+                eq(schema.backgroundAmmoInNewContent.ammoId, schema.ammoInNewContent.id)
+            )
+            .where(
+                inArray(schema.backgroundAmmoInNewContent.bgWeaponId, weaponIds)
+            );
+    }
+
+    const [weapons, apparel, consumables, gear, robotModules] = await Promise.all([
+		db.select({
+			weapon: schema.weaponsInNewContent,
+		})
+			.from(schema.backgroundWeaponsInNewContent)
+			.innerJoin(schema.weaponsInNewContent, eq(schema.backgroundWeaponsInNewContent.weaponId, schema.weaponsInNewContent.id))
+			.where(eq(schema.backgroundWeaponsInNewContent.backgroundId, backgroundId)),
+
+		db.select({
+			apparel: schema.apparelInNewContent,
+		})
+			.from(schema.backgroundApparelInNewContent)
+			.innerJoin(schema.apparelInNewContent, eq(schema.backgroundApparelInNewContent.apparelId, schema.apparelInNewContent.id))
+			.where(eq(schema.backgroundApparelInNewContent.backgroundId, backgroundId)),
+
+		db.select({
+			consumable: schema.consumablesInNewContent,
+		})
+			.from(schema.backgroundConsumablesInNewContent)
+			.innerJoin(schema.consumablesInNewContent, eq(schema.backgroundConsumablesInNewContent.consumableId, schema.consumablesInNewContent.id))
+			.where(eq(schema.backgroundConsumablesInNewContent.backgroundId, backgroundId)),
+
+		db.select({
+			gear: schema.gearInNewContent,
+		})
+			.from(schema.backgroundGearInNewContent)
+			.innerJoin(schema.gearInNewContent, eq(schema.backgroundGearInNewContent.gearId, schema.gearInNewContent.id))
+			.where(eq(schema.backgroundGearInNewContent.backgroundId, backgroundId)),
+
+		db.select({
+			robotModule: schema.robotModulesInNewContent,
+		})
+			.from(schema.backgroundRobotModulesInNewContent)
+			.innerJoin(schema.robotModulesInNewContent, eq(schema.backgroundRobotModulesInNewContent.robotModuleId, schema.robotModulesInNewContent.id))
+			.where(eq(schema.backgroundRobotModulesInNewContent.backgroundId, backgroundId)),
+	]);
+
+	return {
+		weapons,
+		apparel,
+		ammo,
+		consumables,
+		gear,
+		robotModules
+	};
 }
