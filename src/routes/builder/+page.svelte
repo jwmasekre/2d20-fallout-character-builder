@@ -1,7 +1,6 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
     import { onMount } from 'svelte';
-    import { writable, derived } from 'svelte/store';
 
     let characterId = null;
     let saveResult;
@@ -38,6 +37,7 @@
         groupedOrigins: Record<string, OriginWithTraits[]>;
         sourcebookMap: Record<string, string>;
         allPerks: perktype;
+        backgrounds;
     };
 
 /**
@@ -550,6 +550,52 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
 
 */
 
+    let backgrounds = [];
+    async function fetchBackgrounds(originId) {
+        const res = await fetch(`/builder/api/backgrounds?originId=${originId}`, { method: 'GET' });
+        if (!res.ok) {
+            console.error('Failed to fetch backgrounds:', await res.text());
+        }
+        backgrounds = await res.json();
+    }
+    let selectedBackgroundId: string;
+    let backgroundEquipment;
+
+    async function fetchBackgroundEquipment(id: string) {
+        if (!id) return;
+        const res = await fetch(`/builder/api/background-equipment?backgroundId=${id}`);
+        backgroundEquipment = await res.json();
+    }
+
+    function groupWeaponChoices(weapons: BackgroundWeapon[]): (BackgroundWeapon | BackgroundWeapon[])[] {
+        const idMap = new Map<number, BackgroundWeapon>();
+        const visited = new Set<number>();
+        const groups: (BackgroundWeapon | BackgroundWeapon[])[] = [];
+
+        weapons.forEach(w => idMap.set(w.id, w));
+
+        for (const weapon of weapons) {
+            if (visited.has(weapon.id)) continue;
+
+            const group = [];
+            let current = weapon;
+
+            while (current && !visited.has(current.id)) {
+                group.push(current);
+                visited.add(current.id);
+                current = idMap.get(current.altId ?? -1);
+                if (current?.id === weapon.id) break;
+            }
+
+            if (group.length > 1) {
+                groups.push(group);
+            } else {
+                groups.push(weapon);
+            }
+        }
+        return groups;
+    }
+
     let isEquipmentValid = false;
 
 /*
@@ -669,7 +715,7 @@ S*S.      .S*P    .S*P
         top: 12vh;
         left: 0;
         width: 100%;
-        height: 100vh;
+        height: 88vh;
         transition: transform 0.5s ease-in-out;
     }
     .page-origin {
@@ -697,7 +743,7 @@ S*S.      .S*P    .S*P
         transform: translateY(0);
     }
     .page-leave {
-        transform: translateY(-100%);
+        transform: translateY(-100vh);
     }
     .page.hidden {
         visibility: hidden;
@@ -879,7 +925,7 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
     <label for="level-select">Level: </label>
     <input type="number" min="1" bind:value={level} id="level-select" title="level-select">
     <label for="origin-select">Origin: </label>
-    <select name="origin-select" id="origin-select" bind:value={selectedOrigin} class="origin-select">
+    <select name="origin-select" id="origin-select" bind:value={selectedOrigin} on:change={() => fetchBackgrounds(selectedOrigin)} class="origin-select">
         {#each Object.entries(data.groupedOrigins) as [sourcebookId, origins]}
             <optgroup label={data.sourcebookMap[sourcebookId]}>
                 {#each origins as origin}
@@ -1127,7 +1173,7 @@ Y                   Y           Y
 <div class={`page ${currentPage === 'perks' ? 'page-perks' : 'page-leave'}`}>
     <button on:click={goBackSkillsPage}>Skills</button>
     <h1>Perks</h1>
-    <p>Remaining Perks: {perkPointsRemaining}/{maxPerks}</p>
+    <p>Perks: {maxPerks - perkPointsRemaining}/{maxPerks}</p>
 
     <label>
         <input
@@ -1152,7 +1198,7 @@ Y                   Y           Y
     <div class="perk-list">
         {#each filteredPerks as perk (perk.id)}
             <div class={` ${getPerkStatus(perk)}`}>
-                <h4>{perk.name}</h4>
+                <h4>{perk.name} {"✭".repeat(getRanks(perk.id.toString())) + "✩".repeat(perk.ranks-getRanks(perk.id.toString()))}</h4>
                 <p><b>Lvl:</b> {perk.levelReq} | <b>Ranks:</b> {perk.ranks}</p>
                 <pre>{perk.description.replace(/\\n/g, "\n")}</pre>
                 <p><b>Requires:</b> {#if perk.reqs.length > 0}{#each perk.reqs as req}/{req}/{/each}{:else} None{/if} | <b>Limits:</b> {#if perk.limits.length > 0}{perk.limits}{:else} None{/if}</p>
@@ -1276,8 +1322,69 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
                                       Y    Y           
 -->
 <div class={`page ${currentPage === 'equipment' ? 'page-equipment' : 'page-leave'}`}>
+    <button on:click={goBackStatsPage}>Stats</button>
+    <h1>Equipment</h1>
+    <label for="background-select">Background:</label>
+    <select id="background-select" bind:value={selectedBackgroundId} on:change={() => fetchBackgroundEquipment(parseInt(selectedBackgroundId))}>
+        {#each backgrounds as bg}
+            <option value={bg.id.toString()}>{bg.name}</option>
+        {/each}
+    </select>
 
+    {#if backgroundEquipment}
+        {console.log(selectedBackgroundId,backgroundEquipment,backgrounds)}
+        <div class="equipment-list">
+            <h3>Starting Equipment</h3>
+            <h4>Weapons</h4>
+            <ul>{#each backgroundEquipment.weapons as item}<li>{item.weapon.name}</li>{/each}</ul>
+            <h4>Ammo</h4>
+            <ul>{#each backgroundEquipment.ammo as item}<li>{item.ammo.name} ({item.quantity})</li>{/each}</ul>
+            <h4>Apparel</h4>
+            <ul>{#each backgroundEquipment.apparel as item}<li>{item.apparel.name}</li>{/each}</ul>
+            <h4>Consumables</h4>
+            <ul>{#each backgroundEquipment.consumables as item}<li>{item.consumable.name}</li>{/each}</ul>
+            <h4>Gear</h4>
+            <ul>{#each backgroundEquipment.gear as item}<li>{item.gear.name}</li>{/each}</ul>
+            <h4>Robot Modules</h4>
+            <ul>{#each backgroundEquipment.robotModules as item}<li>{item.robotModule.name}</li>{/each}</ul>
+            <h4>Caps: {backgrounds[parseInt(selectedBackgroundId) - 1].caps}</h4>
+            <h4>Misc</h4>
+            <p>{backgrounds[parseInt(selectedBackgroundId) - 1].misc}</p>
 
+            {#if (backgrounds[parseInt(selectedBackgroundId) - 1].junk > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].trinket > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].food > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].forage > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].bev > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].chem > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].aid > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].odd > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].outcast > 0)}
+                <h4>Random Loot Rolls</h4>
+            {/if}
+            <ul>
+                {#if backgrounds[parseInt(selectedBackgroundId) - 1].junk > 0}
+                    <li>Junk: {backgrounds[parseInt(selectedBackgroundId) - 1].junk}</li>
+                {/if}
+                {#if backgrounds[parseInt(selectedBackgroundId) - 1].trinket > 0}
+                    <li>Trinkets: {backgrounds[parseInt(selectedBackgroundId) - 1].trinket}</li>
+                {/if}
+                {#if backgrounds[parseInt(selectedBackgroundId) - 1].food > 0}
+                    <li>Food: {backgrounds[parseInt(selectedBackgroundId) - 1].food}</li>
+                {/if}
+                {#if backgrounds[parseInt(selectedBackgroundId) - 1].forage > 0}
+                    <li>Forage: {backgrounds[parseInt(selectedBackgroundId) - 1].forage}</li>
+                {/if}
+                {#if backgrounds[parseInt(selectedBackgroundId) - 1].bev > 0}
+                    <li>Beverages: {backgrounds[parseInt(selectedBackgroundId) - 1].bev}</li>
+                {/if}
+                {#if backgrounds[parseInt(selectedBackgroundId) - 1].chem > 0}
+                    <li>Chem: {backgrounds[parseInt(selectedBackgroundId) - 1].chem}</li>
+                {/if}
+                {#if backgrounds[parseInt(selectedBackgroundId) - 1].aid > 0}
+                    <li>Aid: {backgrounds[parseInt(selectedBackgroundId) - 1].aid}</li>
+                {/if}
+                {#if backgrounds[parseInt(selectedBackgroundId) - 1].odd > 0}
+                    <li>Oddities: {backgrounds[parseInt(selectedBackgroundId) - 1].odd}</li>
+                {/if}
+                {#if backgrounds[parseInt(selectedBackgroundId) - 1].outcast > 0}
+                    <li>Outcast Items: {backgrounds[parseInt(selectedBackgroundId) - 1].outcast}</li>
+                {/if}
+            </ul>
+        </div>
+    {/if}
     <button class="transition" disabled={!isEquipmentValid} on:click={goToStatsPage}>Stats</button>
 </div>
 

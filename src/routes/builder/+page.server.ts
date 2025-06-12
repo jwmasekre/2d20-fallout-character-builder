@@ -3,6 +3,7 @@ import { db } from '$lib/server/db/index';
 import { eq } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 import { SPECIAL_FIELDS } from '$lib/server/constants';
+import { backgroundsInNewContent } from '$lib/server/db/schema.js';
 
 export const actions = {
     saveCharacter: async ({ request }) => {
