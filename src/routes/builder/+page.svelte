@@ -540,21 +540,19 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
 
     async function fetchBackgroundEquipment(id: string) {
         if (!id) return;
+        selectedWeaponKey = [];
+        selectedWeapons = [];
         const res = await fetch(`/builder/api/background-equipment?backgroundId=${id}`);
         const data = await res.json();
         backgroundEquipment = data;
         //groupedWeaponChoices = groupBackgroundWeapons(data.weapons);
         newGroupWeapons = newGroupBackgroundWeapons(data.weapons);
-        console.log('Fetched Data',backgroundEquipment);
-        console.log('Grouped Weapon Choices',newGroupWeapons);
+        //console.log('Grouped Weapon Choices',newGroupWeapons);
         
         backgroundEquipment = {
             ...data,
             newGroupWeapons
         };
-        console.log('Merged', backgroundEquipment);
-
-        //selectedWeapons = groupWeaponChoices.map(() => null);
     }
 
     type Weapon = {
@@ -613,6 +611,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         // that means that if they're equal, there must not be any single weapons that replace multiple weapons
         let loops = new Map<BackgroundWeapon, BackgroundWeapon[]>();
         let flatGroup: BackgroundWeapon[][] = [];
+        let clearedIds: BackgroundWeapon[] = [];
         for (const entry of fwdLinks) {
             const id: BackgroundWeapon = idMap.get(entry[0])!;
             const alt: BackgroundWeapon = idMap.get(entry[1])!;
@@ -621,13 +620,33 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
                 loops.set(id,[alt]);
                 continue;
             }
-            if (loops.has(alt) && loops.get(alt)!.includes(id)) continue;
+            if (loops.has(alt) && loops.get(alt)!.includes(id)) {
+                continue;
+            }
             if (loops.has(alt) && !loops.get(alt)!.includes(id)) {
                 loops.get(alt)!.push(id)
+                continue;
             }
             for (const item of loops) {
+                if (clearedIds.includes(alt)) {
+                    break;
+                }
+                if (item[1].includes(alt)) {
+                    const oldId = item[0];
+                    const oldAlts = item[1];
+                    oldAlts.splice(oldAlts.indexOf(alt),1);
+                    loops.delete(item[0]);
+                    oldAlts.push(oldId);
+                    oldAlts.push(id);
+                    loops.set(alt,oldAlts);
+                    for (const oldAlt of oldAlts) {
+                        clearedIds.push(oldAlt);
+                    }
+                    idSet = true;
+                    break;
+                }
                 if (item[1].includes(id)) {
-                    loops.get(item[0])!.push(alt)
+                    loops.get(item[0])!.push(alt);
                     idSet = true;
                     continue;
                 }
@@ -640,7 +659,8 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         }
         for (const group of loops) {
             const id = group[0];
-            const alts = group[1];
+            let altSet = new Set(group[1]);
+            const alts = [...altSet]
             alts.push(id);
             if (fwdLinks.size === revLinks.size) {
                 results.push(alts);
@@ -649,46 +669,71 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             }
         }
         if (flatGroup.length > 0) {
+            const revGroup: (BackgroundWeapon | BackgroundWeapon[])[] = [];
             for (const group of flatGroup) {
-                const revGroup: (BackgroundWeapon | BackgroundWeapon[])[] = [];
                 for (const alt of group) {
-                    if (revLinks.has(revMap.get(alt)!)) revGroup.push(revLinks.get(revMap.get(alt)!)!);
+                    let altId: number | null = null;
+                    if (revMap.has(alt)) altId = revMap.get(alt)!;
+                    if (altId !== null) {
+                        if (revLinks.has(altId)) {
+                            revGroup.push(revLinks.get(revMap.get(alt)!)!)
+                        };
+                    }
                 }
-                results.push(revGroup);
             }
+            results.push(revGroup);    
         }
-
         return results;
     }
 
-    function advancedGrouping(group) {
-        groupId = group[0].id;
-        let selected = selectedWeaponGroups[groupId]
-            ? JSON.stringify(selectedWeaponGroups[groupId])
-            : "";
-        return [selected, groupId]
-    }
+    let selectWeaponKey: string[] = [];
+    let selectedWeaponKey: string[] = [];
+    let selectedWeapons: BackgroundWeapon[][] = [];
 
-    
-    let groupWeapons: (BackgroundWeapon | BackgroundWeapon[])[][] = [];
-    let selectedWeaponKey: string = "";
-    let selectedWeapons: BackgroundWeapon[] = [];
-
-    function handleWeaponSelect(key: string) {
-        selectedWeaponKey = key;
+    function handleWeaponSelect(key: string, index: number) {
+        console.log("key/index:", key, index);
+        console.log("start weapon key:");
+        for (const skey of selectedWeaponKey) console.log(index,skey);
+        selectedWeaponKey[index] = key;
+        console.log("new weapon key:");
+        for (const skey of selectedWeaponKey) console.log(index,skey);        
         const ids = key.split("-").map(Number);
-        selectedWeapons = [];
+        console.log("old selected weapons:")
+        for (const sweap of selectedWeapons) {
+            console.log(index);
+            for (const sweapitem of sweap) {
+                console.log(sweapitem)
+            }   
+        }
+        selectedWeapons[index] = [];
+        console.log("cleared index selected weapons:")
+        for (const sweap of selectedWeapons) console.log(index,sweap);
 
-        for (const group of groupWeapons) {
+        for (const group of backgroundEquipment.newGroupWeapons) {
             for (const item of group) {
                 if (Array.isArray(item)) {
+                    console.log("item is an array:");
+                    for (const arritem of item) console.log(arritem);
                     if (item.every(w => ids.includes(w.id))) {
-                        selectedWeapons = item;
+                        selectedWeapons[index].push(item);
+                        console.log("new selected weapons")
+                        for (const swsel of selectedWeapons) {
+                            for (const switem of swsel) {
+                                console.log(switem);
+                            }
+                        }
                         return;
                     }
                 } else {
+                    console.log("item is string:", item);
                     if (ids.includes(item.id)) {
-                        selectedWeapons = [item];
+                        selectedWeapons[index].push([item]);
+                        console.log("new selected weapons")
+                        for (const swsel of selectedWeapons) {
+                            for (const switem of swsel) {
+                                console.log(switem);
+                            }
+                        }
                         return;
                     }
                 }
@@ -716,14 +761,35 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         }
     }
 
-    let selectedWeaponGroup;
-    let selectedWeaponGroups: Record<number, number[]> = {};
-    $: selectedWeaponIds = selectedWeaponGroup ? selectedWeaponGroup.split(',').map(id => parseInt(id)) : [];
-    $: allSelectedWeaponIds = Object.values(selectedWeaponGroups).flat();
+    let allSelectedWeaponIds: string[] = [];
+    $: if (selectedWeaponKey.length > 0) {
+        const newWeaponKey: string[] = [];
+        for (const key of selectedWeaponKey) {
+            if (key.includes("-")) {
+                const tempArr = key.split("-")
+                for (const str of tempArr) {
+                    newWeaponKey.push(str);
+                }
+            } else {
+                newWeaponKey.push(key)
+            }
+        }
+        allSelectedWeaponIds = newWeaponKey;
+    }
+    $: allSelectedWeapons = Object.values(selectedWeapons).flat();
     let selected;
     let groupId;
 
     let isEquipmentValid = false;
+    $: if (selectedWeapons.length > 0) {
+        let valid = true;
+        for (const selectedWeapon of selectedWeapons) {
+            if (selectedWeapon.length === 0) {
+                valid = false;
+            }
+        }
+        isEquipmentValid = valid;
+    }
 
 /*
 
@@ -1459,24 +1525,25 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
     </select>
 
     {#if backgroundEquipment}
-        {console.log(selectedBackgroundId,backgroundEquipment,backgrounds)}
+        <!--{console.log("bgid:",selectedBackgroundId,"bgEquip",backgroundEquipment,"bgs",backgrounds)}-->
         <div class="equipment-list">
             <h3>Starting Equipment</h3>
             <h4>Weapons</h4>
-            <select id="weapon-select" bind:value={selectedWeaponKey} on:change={() => handleWeaponSelect(selectedWeaponKey)}>
-                {#each groupWeapons as group}
+            {#each backgroundEquipment.newGroupWeapons as group, index}
+                <select id="weapon-select-{index}" bind:value={selectWeaponKey[index]} on:change={() => handleWeaponSelect(selectWeaponKey[index],index)}>
+                    <option hidden disabled selected value>Weapon {index + 1}</option>
                     {#each group as choice}
                         <option value={getOptionKey(choice)}>
                             {getOptionLabel(choice)}
                         </option>
                     {/each}
-                {/each}
-            </select>
-            <p>IDs: {selectedWeapons.map(w => w.id).join(", ")}</p>
+                </select>
+            {/each}
+            <p>IDs: {allSelectedWeaponIds} - {allSelectedWeaponIds.length}</p>
             <h4>Ammo</h4>
             <ul>
                 {#each backgroundEquipment.ammo as item}
-                    {#if selectedWeapons.includes(item.bgWeaponId)}
+                    {#if allSelectedWeaponIds.includes(item.bgWeaponId.toString())}
                         <li>{item.ammo.name} ({item.quantity})</li>
                     {/if}
                 {/each}
