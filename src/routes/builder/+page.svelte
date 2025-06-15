@@ -1,5 +1,6 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
+	import { resolveRoute } from '$app/paths';
     import { onMount } from 'svelte';
 
     let characterId = null;
@@ -37,7 +38,7 @@
         groupedOrigins: Record<string, OriginWithTraits[]>;
         sourcebookMap: Record<string, string>;
         allPerks: perktype;
-        backgrounds;
+        //backgrounds;
     };
 
 /**
@@ -141,8 +142,7 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
     }
 
     $: remainingSpecialPoints = specialPoints
-        + (isGifted ? giftedCount : 0)
-        - Object.values(customStats).reduce((acc,val) => acc + val, 0);
+        - (selectedArray === 'Custom' ? Object.values(customStats).reduce((acc,val) => acc + val, 0) : Object.values(specialStats).reduce((acc,val) => acc + val, 0));
     
     let specialPoints = 40;
     let specialStats = {
@@ -189,17 +189,15 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
         if (!isNaN(parsedValue)) {
             if (selectedArray === 'Custom') {
                 customStats[stat] = parsedValue;
-                remainingSpecialPoints = specialPoints - Object.values(customStats).reduce((acc, val) => acc + val, 0);
             } else {
                 specialStats[stat] = parsedValue;
-                remainingSpecialPoints = specialPoints - Object.values(specialStats).reduce((acc, val) => acc + val, 0);
             }
         }
     }
 
     $: isSpecialValid =
         Object.entries(selectedArray === 'Custom' ? customStats : specialStats)
-            .every(([key, val]) => val >= 4 && val <= getStatMax(key)) &&
+            .every(([key, val]) => val >= 4 && (isGifted && giftedSelected[key] ? val < getStatMax(key) : val <= getStatMax(key))) &&
         remainingSpecialPoints === 0 &&
         (!isGifted || giftedCount === 2);
 
@@ -395,66 +393,52 @@ Y                   Y           Y
         if (selectedPerks.includes(perk.id.toString())) {
             let ranks = getRanks(perk.id.toString())
             if (ranks === perk.ranks) {
-                //console.log(perk.id,"maxed out ranks");
                 return false;
             //doesn't meet lvl req for next rank
             } else if (level <= perk.levelReq + (ranks*perk.rankRange)) {
-                //console.log(perk.id,"not enough levels for next rank");
                 return false;
             }
         }
         //level requirement
         if (level < perk.levelReq) {
-            //console.log(perk.id,"too low level");
             return false;
         }
         //special requirement
         for (const req of perk.reqs || []) {
             if (req.includes(':')) {
                 const [stat, value] = req.split(':').map(s => s.trim());
-                //console.log(specialStats,stat)
                 const statValue = specialStats[stat];
-                //console.log(statValue)
                 if (statValue === undefined || statValue < parseInt(value)) {
-                    //console.log(perk.id,"does not meet special requirement",stat,value,"has",statValue);
                     return false;
                 }
             }
         }
         //book requirement
         if ((perk.reqs || []).includes("book") && !hasReadRequiredBook) {
-            //console.log(perk.id,"lrn2read");
             return false;
         }
         //other limiters
         for (const limit of perk.limits || []) {
             const lower = limit.toLowerCase();
             if (lower.includes("daring nature") && selectedPerks.includes('25')) {
-                //console.log(perk.id,"has daring nature");
                 return false;
             }
             if (lower.includes("cautious nature") && selectedPerks.includes('18')) {
-                //console.log(perk.id,"has cautious nature");
                 return false;
             }
             if (lower.includes("robot") && ['4','18','19','20','21','23'].some(robotId => selectedTraits.includes(robotId))) {
-                //console.log(perk.id,"is robot");
                 return false;
             }
             if (lower.includes("ghoul") && selectedTraits.includes('2')) {
-                //console.log(perk.id,"is ghoul");
                 return false;
             }
             if (lower.includes("rads") && ['2','3','4','18','19','20','21','23','25'].some(robotId => selectedTraits.includes(robotId))) {
-                //console.log(perk.id,"resists Rads");
                 return false;
             }
             if (lower.includes("companion") && hasCompanion) {
-                //console.log(perk.id,"has companion");
                 return false;
             }
         }
-        //console.log(perk.id,"available")
         return true;
     }
 
@@ -471,39 +455,30 @@ Y                   Y           Y
         const maxRanks = perk.ranks;
         const available = isEligibleForPerk(perk);
 
-        //console.log(perk.id,perk.name,ranksTaken,maxRanks,available)
-
         if (ranksTaken === maxRanks) {
-            //console.log("perk taken");
             return "perk-taken";
         }
         if (available && ranksTaken > 0) {
-            //console.log("rank available");
             return "rank-available";
         }
         if (available && ranksTaken === 0) {
-            //console.log("perk available")
             return "perk-available";
         }
         return "perk-unavailable";
     }
 
     function addPerk(perkId: string) {
-        console.log("adding perk",perkId);
         selectedPerks = [...selectedPerks, perkId];
-        console.log(selectedPerks);
     }
 
     function removePerk(perkId: string) {
         const index = selectedPerks.indexOf(perkId);
-        console.log("dropping perk",perkId,"at",index);
         if (index !== -1) {
             selectedPerks = [
                 ...selectedPerks.slice(0, index),
                 ...selectedPerks.slice(index + 1)
             ];
         }
-        console.log(selectedPerks);
     }
 
     function getRanks(perkId: string) {
@@ -559,42 +534,194 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         backgrounds = await res.json();
     }
     let selectedBackgroundId: string;
+    $: selectedBackgroundIndex = (backgrounds.length > 0 ? parseInt(selectedBackgroundId) - backgrounds[0].id : 0);
     let backgroundEquipment;
+    let newGroupWeapons: (BackgroundWeapon | BackgroundWeapon[])[][] = [];
 
     async function fetchBackgroundEquipment(id: string) {
         if (!id) return;
         const res = await fetch(`/builder/api/background-equipment?backgroundId=${id}`);
-        backgroundEquipment = await res.json();
+        const data = await res.json();
+        backgroundEquipment = data;
+        //groupedWeaponChoices = groupBackgroundWeapons(data.weapons);
+        newGroupWeapons = newGroupBackgroundWeapons(data.weapons);
+        console.log('Fetched Data',backgroundEquipment);
+        console.log('Grouped Weapon Choices',newGroupWeapons);
+        
+        backgroundEquipment = {
+            ...data,
+            newGroupWeapons
+        };
+        console.log('Merged', backgroundEquipment);
+
+        //selectedWeapons = groupWeaponChoices.map(() => null);
     }
 
-    function groupWeaponChoices(weapons: BackgroundWeapon[]): (BackgroundWeapon | BackgroundWeapon[])[] {
+    type Weapon = {
+        ammo: number;
+        cost: number;
+        dam: string;
+        dtype: string;
+        id: number;
+        name: string;
+        range: string;
+        rarity: number;
+        rate: number;
+        sourcebookId: number;
+        type: number;
+        wgt: number;
+    }
+
+    type BackgroundWeapon = {
+        id: number;
+        backgroundId: number;
+        weaponId: number;
+        modId: number;
+        altId: number;
+        weapon: Weapon;
+    }
+
+    //quite proud of this one, handles all the logic of choices, including many for one swaps
+    function newGroupBackgroundWeapons(weapons: BackgroundWeapon[]): (BackgroundWeapon | BackgroundWeapon[])[][] {
         const idMap = new Map<number, BackgroundWeapon>();
-        const visited = new Set<number>();
-        const groups: (BackgroundWeapon | BackgroundWeapon[])[] = [];
-
-        weapons.forEach(w => idMap.set(w.id, w));
-
-        for (const weapon of weapons) {
-            if (visited.has(weapon.id)) continue;
-
-            const group = [];
-            let current = weapon;
-
-            while (current && !visited.has(current.id)) {
-                group.push(current);
-                visited.add(current.id);
-                current = idMap.get(current.altId ?? -1);
-                if (current?.id === weapon.id) break;
-            }
-
-            if (group.length > 1) {
-                groups.push(group);
+        const fwdLinks = new Map<number, number>();
+        const revLinks = new Map<number, BackgroundWeapon[]>();
+        const revMap = new Map<BackgroundWeapon, number>();
+        const results: (BackgroundWeapon | BackgroundWeapon[])[][] = [];
+        
+        for (const w of weapons) {
+            idMap.set(w.id, w)
+            revMap.set(w, w.id)
+            let id = w.id
+            let alt = w.altId
+            if (alt !== null) {
+                if (!fwdLinks.has(id)) {
+                    fwdLinks.set(id,alt);
+                }
+                if (!revLinks.has(alt)) {
+                    revLinks.set(alt,[w]);
+                } else if (!revLinks.get(alt)!.includes(w)) {
+                    revLinks.get(alt)!.push(w)
+                }
             } else {
-                groups.push(weapon);
+                //if it doesn't have an alt, then add it as its own array, so it doesn't get grouped with others
+                results.push([w]);
             }
         }
-        return groups;
+
+        //fwdLinks will always be >= revLinks, since we can't have more than one iteration of an id but we can have duplicate alts, which would consolidate the related ids into a set and reduce the size of the map
+        // that means that if they're equal, there must not be any single weapons that replace multiple weapons
+        let loops = new Map<BackgroundWeapon, BackgroundWeapon[]>();
+        let flatGroup: BackgroundWeapon[][] = [];
+        for (const entry of fwdLinks) {
+            const id: BackgroundWeapon = idMap.get(entry[0])!;
+            const alt: BackgroundWeapon = idMap.get(entry[1])!;
+            let idSet = false;
+            if (loops.size === 0) {
+                loops.set(id,[alt]);
+                continue;
+            }
+            if (loops.has(alt) && loops.get(alt)!.includes(id)) continue;
+            if (loops.has(alt) && !loops.get(alt)!.includes(id)) {
+                loops.get(alt)!.push(id)
+            }
+            for (const item of loops) {
+                if (item[1].includes(id)) {
+                    loops.get(item[0])!.push(alt)
+                    idSet = true;
+                    continue;
+                }
+            }
+            if (!idSet) {
+                loops.set(id,[alt]);
+                idSet = false;
+                continue;
+            }
+        }
+        for (const group of loops) {
+            const id = group[0];
+            const alts = group[1];
+            alts.push(id);
+            if (fwdLinks.size === revLinks.size) {
+                results.push(alts);
+            } else {
+                flatGroup.push(alts);
+            }
+        }
+        if (flatGroup.length > 0) {
+            for (const group of flatGroup) {
+                const revGroup: (BackgroundWeapon | BackgroundWeapon[])[] = [];
+                for (const alt of group) {
+                    if (revLinks.has(revMap.get(alt)!)) revGroup.push(revLinks.get(revMap.get(alt)!)!);
+                }
+                results.push(revGroup);
+            }
+        }
+
+        return results;
     }
+
+    function advancedGrouping(group) {
+        groupId = group[0].id;
+        let selected = selectedWeaponGroups[groupId]
+            ? JSON.stringify(selectedWeaponGroups[groupId])
+            : "";
+        return [selected, groupId]
+    }
+
+    
+    let groupWeapons: (BackgroundWeapon | BackgroundWeapon[])[][] = [];
+    let selectedWeaponKey: string = "";
+    let selectedWeapons: BackgroundWeapon[] = [];
+
+    function handleWeaponSelect(key: string) {
+        selectedWeaponKey = key;
+        const ids = key.split("-").map(Number);
+        selectedWeapons = [];
+
+        for (const group of groupWeapons) {
+            for (const item of group) {
+                if (Array.isArray(item)) {
+                    if (item.every(w => ids.includes(w.id))) {
+                        selectedWeapons = item;
+                        return;
+                    }
+                } else {
+                    if (ids.includes(item.id)) {
+                        selectedWeapons = [item];
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    function formatWeaponName(w: BackgroundWeapon): string {
+        return w.weapon.name;
+    }
+
+    function getOptionLabel(group: (BackgroundWeapon | BackgroundWeapon[])): string {
+        if (Array.isArray(group)) {
+            return group.map(formatWeaponName).join(" + ");
+        } else {
+            return formatWeaponName(group);
+        }
+    }
+
+    function getOptionKey(group: (BackgroundWeapon | BackgroundWeapon[])): string {
+        if (Array.isArray(group)) {
+            return group.map(w => w.id).sort((a, b) => a - b).join("-");
+        } else {
+            return String(group.id);
+        }
+    }
+
+    let selectedWeaponGroup;
+    let selectedWeaponGroups: Record<number, number[]> = {};
+    $: selectedWeaponIds = selectedWeaponGroup ? selectedWeaponGroup.split(',').map(id => parseInt(id)) : [];
+    $: allSelectedWeaponIds = Object.values(selectedWeaponGroups).flat();
+    let selected;
+    let groupId;
 
     let isEquipmentValid = false;
 
@@ -1020,7 +1147,7 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
                 id={stat}
                 bind:value={customStats[stat]}
                 min="4"
-                max={getStatMax(stat)}
+                max={(isGifted && giftedSelected[stat] ? getStatMax(stat) - 1 : getStatMax(stat))}
                 on:input={(e) => handleStatChange(stat, e.target.value)}
             />
             {#if isGifted}
@@ -1218,7 +1345,7 @@ Y                   Y           Y
                 </div>
                 <div class="perk-buttons" style="display:inline-block">
                     <button
-                        disabled={(selectedPerks.length >= maxPerks) || (selectedPerks.filter(id => id === perk.id.toString()).length === perk.ranks)}
+                        disabled={(selectedPerks.length >= maxPerks) || (selectedPerks.filter(id => id === perk.id.toString()).length === 0) || (selectedPerks.filter(id => id === perk.id.toString()).length === perk.ranks)}
                         on:click={() => selectedPerks = [...selectedPerks, perk.id.toString()]}
                     >
                         Add Rank
@@ -1336,9 +1463,24 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         <div class="equipment-list">
             <h3>Starting Equipment</h3>
             <h4>Weapons</h4>
-            <ul>{#each backgroundEquipment.weapons as item}<li>{item.weapon.name}</li>{/each}</ul>
+            <select id="weapon-select" bind:value={selectedWeaponKey} on:change={() => handleWeaponSelect(selectedWeaponKey)}>
+                {#each groupWeapons as group}
+                    {#each group as choice}
+                        <option value={getOptionKey(choice)}>
+                            {getOptionLabel(choice)}
+                        </option>
+                    {/each}
+                {/each}
+            </select>
+            <p>IDs: {selectedWeapons.map(w => w.id).join(", ")}</p>
             <h4>Ammo</h4>
-            <ul>{#each backgroundEquipment.ammo as item}<li>{item.ammo.name} ({item.quantity})</li>{/each}</ul>
+            <ul>
+                {#each backgroundEquipment.ammo as item}
+                    {#if selectedWeapons.includes(item.bgWeaponId)}
+                        <li>{item.ammo.name} ({item.quantity})</li>
+                    {/if}
+                {/each}
+            </ul>
             <h4>Apparel</h4>
             <ul>{#each backgroundEquipment.apparel as item}<li>{item.apparel.name}</li>{/each}</ul>
             <h4>Consumables</h4>
@@ -1347,40 +1489,40 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             <ul>{#each backgroundEquipment.gear as item}<li>{item.gear.name}</li>{/each}</ul>
             <h4>Robot Modules</h4>
             <ul>{#each backgroundEquipment.robotModules as item}<li>{item.robotModule.name}</li>{/each}</ul>
-            <h4>Caps: {backgrounds[parseInt(selectedBackgroundId) - 1].caps}</h4>
+            <h4>Caps: {backgrounds[selectedBackgroundIndex].caps}</h4>
             <h4>Misc</h4>
-            <p>{backgrounds[parseInt(selectedBackgroundId) - 1].misc}</p>
+            <p>{backgrounds[selectedBackgroundIndex].misc}</p>
 
-            {#if (backgrounds[parseInt(selectedBackgroundId) - 1].junk > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].trinket > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].food > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].forage > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].bev > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].chem > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].aid > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].odd > 0 || backgrounds[parseInt(selectedBackgroundId) - 1].outcast > 0)}
+            {#if (backgrounds[selectedBackgroundIndex].junk > 0 || backgrounds[selectedBackgroundIndex].trinket > 0 || backgrounds[selectedBackgroundIndex].food > 0 || backgrounds[selectedBackgroundIndex].forage > 0 || backgrounds[selectedBackgroundIndex].bev > 0 || backgrounds[selectedBackgroundIndex].chem > 0 || backgrounds[selectedBackgroundIndex].aid > 0 || backgrounds[selectedBackgroundIndex].odd > 0 || backgrounds[selectedBackgroundIndex].outcast > 0)}
                 <h4>Random Loot Rolls</h4>
             {/if}
             <ul>
-                {#if backgrounds[parseInt(selectedBackgroundId) - 1].junk > 0}
-                    <li>Junk: {backgrounds[parseInt(selectedBackgroundId) - 1].junk}</li>
+                {#if backgrounds[selectedBackgroundIndex].junk > 0}
+                    <li>Junk: {backgrounds[selectedBackgroundIndex].junk}</li>
                 {/if}
-                {#if backgrounds[parseInt(selectedBackgroundId) - 1].trinket > 0}
-                    <li>Trinkets: {backgrounds[parseInt(selectedBackgroundId) - 1].trinket}</li>
+                {#if backgrounds[selectedBackgroundIndex].trinket > 0}
+                    <li>Trinkets: {backgrounds[selectedBackgroundIndex].trinket}</li>
                 {/if}
-                {#if backgrounds[parseInt(selectedBackgroundId) - 1].food > 0}
-                    <li>Food: {backgrounds[parseInt(selectedBackgroundId) - 1].food}</li>
+                {#if backgrounds[selectedBackgroundIndex].food > 0}
+                    <li>Food: {backgrounds[selectedBackgroundIndex].food}</li>
                 {/if}
-                {#if backgrounds[parseInt(selectedBackgroundId) - 1].forage > 0}
-                    <li>Forage: {backgrounds[parseInt(selectedBackgroundId) - 1].forage}</li>
+                {#if backgrounds[selectedBackgroundIndex].forage > 0}
+                    <li>Forage: {backgrounds[selectedBackgroundIndex].forage}</li>
                 {/if}
-                {#if backgrounds[parseInt(selectedBackgroundId) - 1].bev > 0}
-                    <li>Beverages: {backgrounds[parseInt(selectedBackgroundId) - 1].bev}</li>
+                {#if backgrounds[selectedBackgroundIndex].bev > 0}
+                    <li>Beverages: {backgrounds[selectedBackgroundIndex].bev}</li>
                 {/if}
-                {#if backgrounds[parseInt(selectedBackgroundId) - 1].chem > 0}
-                    <li>Chem: {backgrounds[parseInt(selectedBackgroundId) - 1].chem}</li>
+                {#if backgrounds[selectedBackgroundIndex].chem > 0}
+                    <li>Chem: {backgrounds[selectedBackgroundIndex].chem}</li>
                 {/if}
-                {#if backgrounds[parseInt(selectedBackgroundId) - 1].aid > 0}
-                    <li>Aid: {backgrounds[parseInt(selectedBackgroundId) - 1].aid}</li>
+                {#if backgrounds[selectedBackgroundIndex].aid > 0}
+                    <li>Aid: {backgrounds[selectedBackgroundIndex].aid}</li>
                 {/if}
-                {#if backgrounds[parseInt(selectedBackgroundId) - 1].odd > 0}
-                    <li>Oddities: {backgrounds[parseInt(selectedBackgroundId) - 1].odd}</li>
+                {#if backgrounds[selectedBackgroundIndex].odd > 0}
+                    <li>Oddities: {backgrounds[selectedBackgroundIndex].odd}</li>
                 {/if}
-                {#if backgrounds[parseInt(selectedBackgroundId) - 1].outcast > 0}
-                    <li>Outcast Items: {backgrounds[parseInt(selectedBackgroundId) - 1].outcast}</li>
+                {#if backgrounds[selectedBackgroundIndex].outcast > 0}
+                    <li>Outcast Items: {backgrounds[selectedBackgroundIndex].outcast}</li>
                 {/if}
             </ul>
         </div>

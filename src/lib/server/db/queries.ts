@@ -57,7 +57,7 @@ export async function getBackgroundEquipment(backgroundId: number) {
         ammo = await db
             .select({
                 ammo: schema.ammoInNewContent,
-                quantity: schema.backgroundAmmoInNewContent.quantity
+                ...schema.backgroundAmmoInNewContent,
             })
             .from(schema.backgroundAmmoInNewContent)
             .innerJoin(
@@ -72,37 +72,53 @@ export async function getBackgroundEquipment(backgroundId: number) {
     const [weapons, apparel, consumables, gear, robotModules] = await Promise.all([
 		db.select({
 			weapon: schema.weaponsInNewContent,
+            ...schema.backgroundWeaponsInNewContent,
 		})
 			.from(schema.backgroundWeaponsInNewContent)
-			.innerJoin(schema.weaponsInNewContent, eq(schema.backgroundWeaponsInNewContent.weaponId, schema.weaponsInNewContent.id))
+			.innerJoin(
+                schema.weaponsInNewContent,
+                eq(schema.backgroundWeaponsInNewContent.weaponId, schema.weaponsInNewContent.id)
+            )
 			.where(eq(schema.backgroundWeaponsInNewContent.backgroundId, backgroundId)),
 
 		db.select({
 			apparel: schema.apparelInNewContent,
+            ...schema.backgroundApparelInNewContent,
 		})
 			.from(schema.backgroundApparelInNewContent)
-			.innerJoin(schema.apparelInNewContent, eq(schema.backgroundApparelInNewContent.apparelId, schema.apparelInNewContent.id))
+			.innerJoin(
+                schema.apparelInNewContent, eq(schema.backgroundApparelInNewContent.apparelId, schema.apparelInNewContent.id)
+            )
 			.where(eq(schema.backgroundApparelInNewContent.backgroundId, backgroundId)),
 
 		db.select({
 			consumable: schema.consumablesInNewContent,
+            ...schema.backgroundConsumablesInNewContent,
 		})
 			.from(schema.backgroundConsumablesInNewContent)
-			.innerJoin(schema.consumablesInNewContent, eq(schema.backgroundConsumablesInNewContent.consumableId, schema.consumablesInNewContent.id))
+			.innerJoin(
+                schema.consumablesInNewContent, eq(schema.backgroundConsumablesInNewContent.consumableId, schema.consumablesInNewContent.id)
+            )
 			.where(eq(schema.backgroundConsumablesInNewContent.backgroundId, backgroundId)),
 
 		db.select({
 			gear: schema.gearInNewContent,
+            ...schema.backgroundGearInNewContent,
 		})
 			.from(schema.backgroundGearInNewContent)
-			.innerJoin(schema.gearInNewContent, eq(schema.backgroundGearInNewContent.gearId, schema.gearInNewContent.id))
+			.innerJoin(
+                schema.gearInNewContent, eq(schema.backgroundGearInNewContent.gearId, schema.gearInNewContent.id)
+            )
 			.where(eq(schema.backgroundGearInNewContent.backgroundId, backgroundId)),
 
 		db.select({
 			robotModule: schema.robotModulesInNewContent,
+            ...schema.backgroundRobotModulesInNewContent,
 		})
 			.from(schema.backgroundRobotModulesInNewContent)
-			.innerJoin(schema.robotModulesInNewContent, eq(schema.backgroundRobotModulesInNewContent.robotModuleId, schema.robotModulesInNewContent.id))
+			.innerJoin(
+                schema.robotModulesInNewContent, eq(schema.backgroundRobotModulesInNewContent.robotModuleId, schema.robotModulesInNewContent.id)
+            )
 			.where(eq(schema.backgroundRobotModulesInNewContent.backgroundId, backgroundId)),
 	]);
 

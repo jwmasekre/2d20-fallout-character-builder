@@ -13,6 +13,6 @@ export async function GET({ url }) {
 		.select()
 		.from(backgroundsInNewContent)
 		.where(eq(backgroundsInNewContent.originId, originId));
-
+	console.log(backgrounds);
 	return json(backgrounds);
 }
