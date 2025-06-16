@@ -75,7 +75,6 @@ INSERT INTO background_apparel (background_id,apparel_id) VALUES
 ('22','59'),
 ('22','60'),
 ('22','56'),
-('22','56'),
 ('23','2'),
 ('23','23'),
 ('23','20'),
