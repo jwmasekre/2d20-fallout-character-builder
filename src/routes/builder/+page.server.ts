@@ -172,25 +172,6 @@ export const load = async () => {
 };
 
 /*
-currently, we ship all perks to the client and do filtering on the client. if that's too cumbersome, then we can try doing the filtering at the server; this will probably not be as effective and result in excess requests/data utilization, but we want to at least test it first
-
-export async function getElligiblePerks(character: {
-    level: number;
-    traits: number[];
-    special: Record<string, number>;
-    hasReadBook: boolean;
-}) {
-    const allPerks = await db.select().from(PgSchema.perksInNewContent);
-
-    return allPerks.filter(perk => {
-            const specialTypes = getSpecialRequirementTypes(perk);
-            if (!specialTypes.some(type => specialFilters[type])) return false;
-            if (showEligibleOnly && !isEligibleForPerk(perk)) return false;
-        return true;
-    }
-/*
-
-/*
 
  Handle existing character loading: Update load() to fetch a character if an ID is passed via query or store.
 

@@ -713,6 +713,231 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         return results;
     }
 
+    // Apparel logic is going to function differently than weapon logic because i used a different ruleset for building the apparel table, apparently
+    // this probably needs to be re-written, initial was heavily adapted from weapons since it worked for that, with logic bolted on to handle differences, but correcting for nuance has added so much more that some codes is 100% redundant or practically unused, so it needs to be cleaned up
+    function groupBackgroundApparel (apparel: BackgroundApparel[]) {
+        const idMap = new Map<number, BackgroundApparel>();
+        const apparelIdMap = new Map<number, Apparel>();
+        const fwdLinks = new Map<number, number>();
+        const revLinks = new Map<number, BackgroundApparel[]>();
+        const fwdLinkUniques = new Map<number, number>();
+        const revLinkUniques = new Map<number, BackgroundApparel[]>();
+        const revMap = new Map<BackgroundApparel, number>();
+        const apparelMap = new Map<number, Apparel>();
+        const revApparelMap = new Map<number, number[]>();
+        let isSingleDouble = new Map<BackgroundApparel,boolean>();
+        let single: BackgroundApparel | null = null;
+        let double: BackgroundApparel[][] = [];
+        const normalResults: (BackgroundApparel | BackgroundApparel[])[][] = [];
+
+        for (const a of apparel) {
+            const apparelId = a.apparel.id;
+            if (!apparelIdMap.has(apparelId)) {
+                apparelIdMap.set(apparelId,a.apparel);
+            }
+            idMap.set(a.id, a)
+            revMap.set(a, a.id)
+            let id = a.id
+            let alt = a.altId
+            console.log("checking id/alt/apparel", id, alt, a.apparel);
+            if (alt !== null) {
+                if (!fwdLinks.has(id)) {
+                    fwdLinks.set(id,alt);
+                }
+                if (!revLinks.has(alt)) {
+                    revLinks.set(alt,[a]);
+                } else if (!revLinks.get(alt)!.includes(a)) {
+                    revLinks.get(alt)!.push(a)
+                }
+            } else {
+                //if it doesn't have an alt, then add it as its own array, so it doesn't get grouped with others
+                normalResults.push([a]);
+            }
+            if (!apparelMap.has(id)) {
+                apparelMap.set(id,a.apparel);
+            }
+            if (!revApparelMap.has(apparelId)) {
+                revApparelMap.set(apparelId,[id]);
+            } else if (!revApparelMap.get(apparelId)!.includes(id)) {
+                revApparelMap.get(apparelId)!.push(id);
+            }
+        }
+        console.log("map", idMap);
+        console.log("rmap", revMap);
+        console.log("fwd", fwdLinks);
+        console.log("rev", revLinks);
+        console.log("appmap", apparelMap);
+        console.log("revapp", revApparelMap);
+        
+        let repeatApparel = new Map<BackgroundApparel, BackgroundApparel[]>();
+        let repeatApparelAlts = new Map<BackgroundApparel, BackgroundApparel[]>();
+        for (const a of revApparelMap) {
+            if (a[1].length > 1) {
+                for (const id of a[1]) {
+                    const bgApparel = idMap.get(id);
+                    const bgAppAlt = idMap.get(bgApparel!.altId)!;
+                    if (repeatApparel.size === 0) {
+                        isSingleDouble.set(bgApparel!,true);
+                        single = bgApparel!;
+                        repeatApparel.set(bgApparel!,[]);
+                        repeatApparelAlts.set(bgApparel!,[bgAppAlt]);
+                    } else {
+                        repeatApparel.get(idMap.get(a[1][0])!)!.push(bgApparel!)
+                        repeatApparelAlts.get(idMap.get(a[1][0]!)!)?.push(bgAppAlt)
+                    }
+                }
+            } else {
+                isSingleDouble.set(idMap.get(a[1][0])!,false);
+            }
+        }
+        let flatRepeatApparel: BackgroundApparel[][] = [];
+        for (const repeat of repeatApparel) {
+            const repeatStore = repeat[1];
+            repeatStore.push(repeat[0]);
+            flatRepeatApparel.push(repeatStore);
+        }
+        console.log("repeatApparel:", repeatApparel);
+        console.log("flatRepeatApparel:", flatRepeatApparel);
+        console.log("repeatApparel alts:", repeatApparelAlts);
+        console.log("single double map:",isSingleDouble);
+
+        //building maps that don't include individual items or repeat items
+        for (const a of apparel) {
+            const id = a.id
+            const alt = a.altId
+            let isRepeater = false;
+            for (const repeat of flatRepeatApparel) {
+                if (repeat.includes(a)) {
+                    isRepeater = true;
+                    break;
+                }
+            }
+            if (isRepeater) continue;
+            if (alt !== null) {
+                if (!fwdLinkUniques.has(id)) {
+                    fwdLinkUniques.set(id,alt);
+                }
+                if (!revLinkUniques.has(alt)) {
+                    revLinkUniques.set(alt,[a]);
+                } else if (!revLinkUniques.get(alt)!.includes(a)) {
+                    revLinkUniques.get(alt)!.push(a);
+                }
+            }
+        }
+        console.log("uniquefwd:", fwdLinkUniques);
+        console.log("uniquerev:", revLinkUniques);
+        let isSinglePack = false;
+        let singlePackOption: BackgroundApparel[] = [];
+        for (const repeat of flatRepeatApparel) {
+            for (const id of repeat) {
+                if (revLinkUniques.has(id.id)) {
+                    isSinglePack = true;
+                    break;
+                }
+            }
+            if (isSinglePack) break;
+        }
+
+        let loops = new Map<BackgroundApparel, BackgroundApparel[]>();
+        let flatGroup: BackgroundApparel[][] = [];
+        let clearedIds: BackgroundApparel[] = [];
+        for (const entry of fwdLinkUniques) {
+            const id: BackgroundApparel = idMap.get(entry[0])!;
+            if (repeatApparel.has(id) && isSingleDouble.has(id)) continue;
+            let repeater = false;
+            for (const match of repeatApparel) {
+                if (match[1].includes(id) && isSingleDouble.has(match[0])) repeater = true;
+            }
+            if (repeater) continue;
+            const alt: BackgroundApparel = idMap.get(entry[1])!;
+            let idSet = false;
+            if (loops.size === 0) {
+                loops.set(id,[alt]);
+                continue;
+            }
+            if (loops.has(alt) && loops.get(alt)!.includes(id)) {
+                continue;
+            }
+            if (loops.has(alt) && !loops.get(alt)!.includes(id)) {
+                loops.get(alt)!.push(id)
+                continue;
+            }
+            for (const item of loops) {
+                if (clearedIds.includes(alt)) {
+                    break;
+                }
+                if (item[1].includes(alt)) {
+                    const oldId = item[0];
+                    const oldAlts = item[1];
+                    oldAlts.splice(oldAlts.indexOf(alt),1);
+                    loops.delete(item[0]);
+                    oldAlts.push(oldId);
+                    oldAlts.push(id);
+                    loops.set(alt,oldAlts);
+                    for (const oldAlt of oldAlts) {
+                        clearedIds.push(oldAlt);
+                    }
+                    idSet = true;
+                    break;
+                }
+                if (item[1].includes(id)) {
+                    loops.get(item[0])!.push(alt);
+                    idSet = true;
+                    continue;
+                }
+            }
+            if (!idSet) {
+                loops.set(id,[alt]);
+                idSet = false;
+                continue;
+            }
+        }
+        let pack: {single:BackgroundApparel,pack:BackgroundApparel[]};
+        for (const group of loops) {
+            const id = group[0];
+            let altSet = new Set(group[1]);
+            const alts = [...altSet]
+            alts.push(id);
+            if (fwdLinkUniques.size === revLinkUniques.size && single === null) {
+                normalResults.push(alts);
+            } else if (isSinglePack) {
+                for (const alt of revLinkUniques)
+                    for (const repeat of flatRepeatApparel) {
+                        const singleId = idMap.get(alt[0])!
+                        if (repeat.includes(singleId)) {
+                            pack = { single: singleId, pack: alt[1] }
+                        }
+                    }
+            } else {
+                flatGroup.push(alts);
+            }
+        }
+        if (flatGroup.length > 0 && single === null) {
+            const revGroup: BackgroundApparel[][] = [];
+            for (const group of flatGroup) {
+                for (const alt of group) {
+                    let altId: number | null = null;
+                    if (revMap.has(alt)) altId = revMap.get(alt)!;
+                    if (altId !== null) {
+                        if (revLinks.has(altId)) {
+                            revGroup.push(revLinks.get(revMap.get(alt)!)!)
+                        };
+                    }
+                }
+            }
+            double = revGroup;
+        } else double = flatGroup;
+        if (isSinglePack) {
+            console.log("is single pack");
+            return [normalResults, pack.single, pack.pack, isSinglePack]
+        } else if (single != null && double.length > 0) {
+            console.log("single double");
+            return [normalResults, single, double];
+        }
+        console.log("not single double");
+        return [normalResults];
+    }
+
     let selectWeaponKey: string[] = [];
     let selectedWeaponKey: string[] = [];
     let selectedWeapons: BackgroundWeapon[][] = [];
@@ -768,6 +993,185 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         }
     }
 
+    let selectSingle: string = "";
+    let singleKey: string = "";
+    let singleApparel: BackgroundApparel | undefined;
+    let selectDouble: string[] = [];
+    let doubleKey: string[] = [];
+    let doubleApparel: BackgroundApparel[][] = [];
+    let selectPack: string[] = [];
+    let packKey: string[] = [];
+    let packApparel: BackgroundApparel[] = [];
+    let selectApparelKey: string[] = [];
+    let selectedApparelKey: string[] = [];
+    let selectedApparel: BackgroundApparel[][] = [];
+    $: if (singleDouble === "single" || singlePack === "single") selectSingle = backgroundEquipment.groupApparel[1].id;
+    $: if (singlePack === "pack") {
+        selectPack = [];
+        for (const pack of backgroundEquipment.groupApparel[2]) {
+            selectPack.push(pack.id);
+        }
+    }
+
+    function handleApparelSelect(key: string, index: number) {
+        console.log("key/index:", key, index);
+        console.log("start apparel key:");
+        for (const skey of selectedApparelKey) console.log(index,skey);
+        selectedApparelKey[index] = key;
+        console.log("new apparel key:");
+        for (const skey of selectedApparelKey) console.log(index,skey);        
+        const ids = key.split("-").map(Number);
+        console.log("old selected apparel:");
+        for (const sapp of selectedApparel) {
+            console.log(index);
+            for (const sappitem of sapp) {
+                console.log(sappitem);
+            }   
+        }
+        selectedApparel[index] = [];
+        console.log("cleared index selected apparel:")
+        for (const sapp of selectedApparel) console.log(index,sapp);
+
+        for (const group of backgroundEquipment.groupApparel) {
+            for (const item of group) {
+                if (Array.isArray(item)) {
+                    console.log("item is an array:");
+                    for (const arritem of item) console.log(arritem);
+                    if (item.every(w => ids.includes(w.id))) {
+                        selectedApparel[index].push(item);
+                        console.log("new selected apparel")
+                        for (const sasel of selectedApparel) {
+                            for (const saitem of sasel) {
+                                console.log(saitem);
+                            }
+                        }
+                        return;
+                    }
+                } else {
+                    console.log("item is string:", item);
+                    if (ids.includes(item.id)) {
+                        selectedApparel[index].push([item]);
+                        console.log("new selected apparel")
+                        for (const sasel of selectedApparel) {
+                            for (const saitem of sasel) {
+                                console.log(saitem);
+                            }
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    function handleDoubleSelect(key: string, index: number) {
+        console.log("key/index:", key, index);
+        console.log("start apparel key:");
+        for (const skey of doubleKey) console.log(index,skey);
+        doubleKey[index] = key;
+        console.log("new apparel key:");
+        for (const skey of selectDouble) console.log(index,skey);        
+        const ids = key.split("-").map(Number);
+        console.log("old double apparel:");
+        for (const sapp of doubleApparel) {
+            console.log(index);
+            for (const sappitem of sapp) {
+                console.log(sappitem);
+            }   
+        }
+        singleKey = "";
+        selectSingle = "";
+        singleApparel = undefined;
+        console.log("cleared singleApparel")
+        packKey = []
+        selectPack = [];
+        packApparel = [];
+        console.log("cleared pack")
+        doubleApparel[index] = [];
+        console.log("cleared index double apparel:")
+        for (const sapp of doubleApparel) console.log(index,sapp);
+
+        for (const group of backgroundEquipment.groupApparel) {
+            for (const item of group) {
+                if (Array.isArray(item)) {
+                    console.log("item is an array:");
+                    for (const arritem of item) console.log(arritem);
+                    if (item.every(w => ids.includes(w.id))) {
+                        doubleApparel[index].push(item);
+                        console.log("new double apparel")
+                        for (const sasel of doubleApparel) {
+                            for (const saitem of sasel) {
+                                console.log(saitem);
+                            }
+                        }
+                        return;
+                    }
+                } else {
+                    console.log("item is string:", item);
+                    if (ids.includes(item.id)) {
+                        doubleApparel[index].push([item]);
+                        console.log("new double apparel")
+                        for (const sasel of doubleApparel) {
+                            for (const saitem of sasel) {
+                                console.log(saitem);
+                            }
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    function handlePackSelect(state: string) {
+        doubleKey = [];
+        selectDouble = [];
+        doubleApparel = [];
+        console.log("cleared double")
+        if (state === "single") {
+            packKey = [];
+            packApparel = [];
+            console.log("cleared pack");
+            console.log("start single:", singleKey);
+            singleKey = selectSingle;
+            console.log("single key set:", singleKey);
+            console.log("old single apparel:", singleApparel);
+            singleApparel = backgroundEquipment.groupApparel[1];
+            console.log("new single apparel:", singleApparel);
+        }
+        else if (state === "pack") {
+            selectSingle = ""
+            singleKey = ""
+            singleApparel = undefined;
+            console.log("cleared single");
+            packKey = selectPack;
+            packApparel = backgroundEquipment.groupApparel[2];
+            console.log("pack key:",packKey,"apparel:",packApparel)
+        } else {
+            console.error("what did you do")
+        }
+    }
+
+    function handleSingleSelect(state: string) {
+        if (state === "single") {
+            doubleKey = [];
+            selectDouble = [];
+            doubleApparel = [];
+            console.log("cleared double apparel")
+            packKey = [];
+            selectPack = [];
+            packApparel = [];
+            console.log("cleared pack")
+            console.log("single selected:", selectSingle);
+            console.log("start single:", singleKey);
+            singleKey = selectSingle;
+            console.log("single key set:", singleKey);
+            console.log("old single apparel:", singleApparel);
+            singleApparel = backgroundEquipment.groupApparel[1];
+            console.log("new single apparel:", singleApparel);
+        }
+    }
+
     function formatWeaponName(w: BackgroundWeapon): string {
         return w.weapon.name;
     }
@@ -781,6 +1185,52 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
     }
 
     function getWeaponOptionKey(group: (BackgroundWeapon | BackgroundWeapon[])): string {
+        if (Array.isArray(group)) {
+            return group.map(w => w.id).sort((a, b) => a - b).join("-");
+        } else {
+            return String(group.id);
+        }
+    }
+
+    let doubleText:string = ""
+
+    function formatDoubleText() {
+        doubleText = ""
+        for (const group of backgroundEquipment.groupApparel[2]) {
+            if (doubleText !== "") {
+                doubleText += " and "
+            }
+            doubleText += group[0].apparel.name
+            doubleText += " or "
+            doubleText += group[1].apparel.name
+        }
+    }
+
+    let packText:string = ""
+
+    function formatPackText() {
+        packText = ""
+        for (const group of backgroundEquipment.groupApparel[2]) {
+            if (packText !== "") {
+                packText += " and "
+            }
+            packText += group.apparel.name
+        }
+    }
+
+    function formatApparelName(a: BackgroundApparel): string {
+        return a.apparel.name;
+    }
+
+    function getApparelOptionLabel(group: (BackgroundApparel | BackgroundApparel[])): string {
+        if (Array.isArray(group)) {
+            return group.map(formatApparelName).join(" + ");
+        } else {
+            return formatApparelName(group);
+        }
+    }
+
+    function getApparelOptionKey(group: (BackgroundApparel | BackgroundApparel[])): string {
         if (Array.isArray(group)) {
             return group.map(w => w.id).sort((a, b) => a - b).join("-");
         } else {
@@ -804,154 +1254,44 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         allSelectedWeaponIds = newWeaponKey;
     }
 
-    // Apparel logic is going to function differently than weapon logic because i used a different ruleset for building the apparel table, apparently
-    function groupBackgroundApparel (apparel: BackgroundApparel[]) {
-        const idMap = new Map<number, BackgroundApparel>();
-        const fwdLinks = new Map<number, number>();
-        const revLinks = new Map<number, BackgroundApparel[]>();
-        const revMap = new Map<BackgroundApparel, number>();
-        const apparelMap = new Map<number, Apparel>();
-        const revApparelMap = new Map<Apparel, number[]>();
-        let isSingleDouble = new Map<BackgroundApparel,boolean>();
-        let single: BackgroundApparel | null = null;
-        let double: BackgroundApparel[][] = [];
-        const normalResults: (BackgroundApparel | BackgroundApparel[])[][] = [];
-
-        for (const a of apparel) {
-            idMap.set(a.id, a)
-            revMap.set(a, a.id)
-            let id = a.id
-            let alt = a.altId
-            if (alt !== null) {
-                if (!fwdLinks.has(id)) {
-                    fwdLinks.set(id,alt);
-                }
-                if (!revLinks.has(alt)) {
-                    revLinks.set(alt,[a]);
-                } else if (!revLinks.get(alt)!.includes(a)) {
-                    revLinks.get(alt)!.push(a)
-                }
-            } else {
-                //if it doesn't have an alt, then add it as its own array, so it doesn't get grouped with others
-                normalResults.push([a]);
-            }
-            if (!apparelMap.has(id)) {
-                apparelMap.set(id,a.apparel);
-            }
-            if (!revApparelMap.has(a.apparel)) {
-                revApparelMap.set(a.apparel,[id]);
-            } else if (!revApparelMap.get(a.apparel)!.includes(id)) {
-                revApparelMap.get(a.apparel)!.push(id);
-            }
-        }
-        
-        let repeatApparel = new Map<BackgroundApparel, BackgroundApparel[]>();
-        let repeatApparelAlts = new Map<BackgroundApparel, BackgroundApparel[]>();
-        for (const a of revApparelMap) {
-            if (a[1].length > 1) {
-                for (const id of a[1]) {
-                    const bgApparel = idMap.get(id);
-                    const bgAppAlt = idMap.get(bgApparel!.altId)!;
-                    if (repeatApparel.size === 0) {
-                        isSingleDouble.set(bgApparel!,true);
-                        single = bgApparel!;
-                        repeatApparel.set(bgApparel!,[]);
-                        repeatApparelAlts.set(bgApparel!,[bgAppAlt]);
-                    } else {
-                        repeatApparel.get(idMap.get(a[1][0])!)!.push(bgApparel!)
-                        repeatApparelAlts.get(idMap.get(a[1][0]!)!)?.push(bgAppAlt)
+    let allSelectedApparelIds: string[] = [];
+    $: if (selectedApparelKey.length > 0 || singleKey !== "" || doubleKey.length > 0) {
+        const newApparelKey: string[] = [];
+        if (selectedApparelKey.length > 0) {
+            for (const key of selectedApparelKey) {
+                if (key.includes("-")) {
+                    const tempArr = key.split("-")
+                    for (const str of tempArr) {
+                        newApparelKey.push(str);
                     }
+                } else {
+                    newApparelKey.push(key)
                 }
-            } else {
-                isSingleDouble.set(idMap.get(a[1][0])!,false);
             }
         }
-
-        let loops = new Map<BackgroundApparel, BackgroundApparel[]>();
-        let flatGroup: BackgroundApparel[][] = [];
-        let clearedIds: BackgroundApparel[] = [];
-        for (const entry of fwdLinks) {
-            const id: BackgroundApparel = idMap.get(entry[0])!;
-            if (repeatApparel.has(id) && isSingleDouble.has(id)) continue;
-            let repeater = false;
-            for (const match of repeatApparel) {
-                if (match[1].includes(id) && isSingleDouble.has(match[0])) repeater = true;
-            }
-            if (repeater) continue;
-            const alt: BackgroundApparel = idMap.get(entry[1])!;
-            let idSet = false;
-            if (loops.size === 0) {
-                loops.set(id,[alt]);
-                continue;
-            }
-            if (loops.has(alt) && loops.get(alt)!.includes(id)) {
-                continue;
-            }
-            if (loops.has(alt) && !loops.get(alt)!.includes(id)) {
-                loops.get(alt)!.push(id)
-                continue;
-            }
-            for (const item of loops) {
-                if (clearedIds.includes(alt)) {
-                    break;
-                }
-                if (item[1].includes(alt)) {
-                    const oldId = item[0];
-                    const oldAlts = item[1];
-                    oldAlts.splice(oldAlts.indexOf(alt),1);
-                    loops.delete(item[0]);
-                    oldAlts.push(oldId);
-                    oldAlts.push(id);
-                    loops.set(alt,oldAlts);
-                    for (const oldAlt of oldAlts) {
-                        clearedIds.push(oldAlt);
+        if (singleKey !== "") newApparelKey.push(singleKey);
+        if (doubleKey.length > 0) {
+            for (const key of doubleKey) {
+                if (key.includes("-")) {
+                    const tempArr = key.split("-")
+                    for (const str of tempArr) {
+                        newApparelKey.push(str);
                     }
-                    idSet = true;
-                    break;
-                }
-                if (item[1].includes(id)) {
-                    loops.get(item[0])!.push(alt);
-                    idSet = true;
-                    continue;
+                } else {
+                    newApparelKey.push(key)
                 }
             }
-            if (!idSet) {
-                loops.set(id,[alt]);
-                idSet = false;
-                continue;
+        }
+        if (packKey.length > 0) {
+            for (const key of packKey) {
+                newApparelKey.push(key);
             }
         }
-        for (const group of loops) {
-            const id = group[0];
-            let altSet = new Set(group[1]);
-            const alts = [...altSet]
-            alts.push(id);
-            if (fwdLinks.size === revLinks.size) {
-                normalResults.push(alts);
-            } else {
-                flatGroup.push(alts);
-            }
-        }
-        if (flatGroup.length > 0) {
-            const revGroup: BackgroundApparel[][] = [];
-            for (const group of flatGroup) {
-                for (const alt of group) {
-                    let altId: number | null = null;
-                    if (revMap.has(alt)) altId = revMap.get(alt)!;
-                    if (altId !== null) {
-                        if (revLinks.has(altId)) {
-                            revGroup.push(revLinks.get(revMap.get(alt)!)!)
-                        };
-                    }
-                }
-            }
-            double = revGroup;   
-        }
-        if (single != null && double.length > 0) return [normalResults, single, double];
-        return [normalResults];
+        allSelectedApparelIds = newApparelKey;
     }
 
-    let singleDouble: "single" | "double" | "" = ""
+    let singleDouble: "single" | "double" | "" = "";
+    let singlePack: "single" | "pack" | "" = "";
 
     let isEquipmentValid = false;
     let isWeaponSelectValid = false;
@@ -966,6 +1306,15 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             }
         }
         isWeaponSelectValid = valid;
+    }
+    $: if (selectedApparel.length > 0) {
+        let valid = true;
+        for (const selectedItem of selectedApparel) {
+            if (selectedItem.length === 0) {
+                valid = false;
+            }
+        }
+        isApparelSelectValid = valid;
     }
     $: isEquipmentValid = isWeaponSelectValid && isApparelSelectValid && isConsumableSelectValid && isRobotModuleSelectValid && selectedBackgroundId.length > 0;
 
@@ -1704,6 +2053,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
 
     {#if backgroundEquipment}
         <!--{console.log("bgid:",selectedBackgroundId,"bgEquip",backgroundEquipment,"bgs",backgrounds)}-->
+        {console.log("bgid:",selectedBackgroundId,"bgEquip",backgroundEquipment,"bgs",backgrounds)}
         <div class="equipment-list">
             <h3>Starting Equipment</h3>
             <h4>Weapons</h4>
@@ -1727,31 +2077,23 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             <h4>Apparel</h4>
             {#each backgroundEquipment.groupApparel[0] as group, index}
                 <select id="apparel-select-{index}" bind:value={selectApparelKey[index]} on:change={() => handleApparelSelect(selectApparelKey[index],index)}>
-                    <option hidden disabled selected value>Apparel {index + 1}</option>
+                    <option hidden disabled selected value="">Apparel {index + 1}</option>
                     {#each group as choice}
-                        <option value={getApparelOptionKey(choice)}>{getWeaponOptionLable(choice)}</option>
+                        <option value={getApparelOptionKey(choice)}>{getApparelOptionLabel(choice)}</option>
                     {/each}
+                </select>
             {/each}
             {#if backgroundEquipment.groupApparel.length === 3}
-                {
-                    let doubleText: string = ""
-                    for (const group of backgroundEquipment.groupApparel[2]) {
-                        if (doubleText !== "") {
-                            doubleText += " and "
-                        }
-                        doubleText += group[0].name
-                        doubleText += " or "
-                        doubleText += group[1].name
-                    }
-                }
+                {formatDoubleText()}
                 <select id="singleDouble" bind:value={singleDouble} on:change={() => handleSingleSelect(singleDouble)}>
-                    <option hidden disabled selected value>Pick One</option>
-                    <option value="single">{backgroundEquipment.groupApparel[1].name}</option>
+                    <option hidden disabled selected value="">Pick One</option>
+                    <option value="single">{backgroundEquipment.groupApparel[1].apparel.name}</option>
                     <option value="double">{doubleText}</option>
                 </select>
                 {#if singleDouble === "double"}
                     {#each backgroundEquipment.groupApparel[2] as group, index}
-                        <select id="double-select-{index}" bind:value={doubleKey[index]} on:change={() => handleDoubleSelect[doubleKey[index],index]}>
+                        <select id="double-select-{index}" bind:value={doubleKey[index]} on:change={() => handleDoubleSelect(doubleKey[index],index)}>
+                            <option hidden disabled selected value="">Left or Right</option>
                             {#each group as choice}
                                 <option value={getApparelOptionKey(choice)}>{getApparelOptionLabel(choice)}</option>
                             {/each}
@@ -1759,7 +2101,15 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
                     {/each}
                 {/if}
             {/if}
-
+            {#if backgroundEquipment.groupApparel.length === 4}
+                {formatPackText()}
+                <select id="singlePack" bind:value={singlePack} on:change={() => handlePackSelect(singlePack)}>
+                    <option hidden disabled selected value="">Pick One</option>
+                    <option value="single">{backgroundEquipment.groupApparel[1].apparel.name}</option>
+                    <option value="pack">{packText}</option>
+                </select>
+            {/if}
+            <p>IDs: {allSelectedApparelIds} - {allSelectedApparelIds.length}</p>
             <h4>Consumables</h4>
             <ul>{#each backgroundEquipment.consumables as item}<li>{item.consumable.name}</li>{/each}</ul>
             <h4>Gear</h4>
