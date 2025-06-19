@@ -658,6 +658,7 @@ export const weaponModsInNewContentRelations = relations(weaponModsInNewContent,
 	characterWeaponModsInNewContents: many(characterWeaponModsInNewContent),
 	weaponRecipesInNewContents: many(weaponRecipesInNewContent),
 	coreRangedLootInNewContents: many(coreRangedLootInNewContent),
+	backgroundWeaponsInNewContents: many(backgroundWeaponsInNewContent),
 }));
 
 export const qualitiesInNewContentRelations = relations(qualitiesInNewContent, ({one, many}) => ({

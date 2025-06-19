@@ -153,7 +153,7 @@ export const actions = {
             return { data: { success: true, characterId: newCharacterId } };
         } catch (error) {
             console.error(error)
-            return { data: { error: 'Error saving character, see console for details' } };
+            return { data: { success: false, error: 'Error saving character, see console for details' } };
         }
     }
 }

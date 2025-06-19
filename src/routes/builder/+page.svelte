@@ -1,13 +1,15 @@
 <script lang="ts">
-    import { enhance } from '$app/forms';
-	import { resolveRoute } from '$app/paths';
+
     import { onMount } from 'svelte';
 
-    let characterId = null;
+    /*
+    let characterId: number | null = null;
+    
     let saveResult;
-    $: if (saveResult?.data?.success && saveResult.data.characterId) {
+    $: if (saveResult.data.success && saveResult.data.characterId) {
         characterId = saveResult.data.characterId
     }
+    */
 
     type Trait = {
         id: number;
@@ -41,7 +43,8 @@
         //backgrounds;
     };
 
-/**
+/*
+
 "font": https://patorjk.com/software/taag/#p=display&h=0&f=AMC%20AAA01&t=ORIGIN
 
   sSSs_sSSs     .S_sSSs     .S    sSSSSs   .S   .S_sSSs    
@@ -61,7 +64,6 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
                                                            
 */
 
-
     let charName = '';
     let level = 1;
 
@@ -74,9 +76,7 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
     $: selectedOriginData = allOrigins.find(o => o.id.toString() === selectedOrigin.toString());
     $: ghoulOrigin = allOrigins.find(o => o.name?.toLowerCase() === 'ghoul');
     $: traitCount = selectedOriginData?.traits?.length ?? 0;
-    $: if (selectedOriginData && traitCount === 1) {
-        selectedTraits = [selectedOriginData.traits[0].id.toString()];
-    }
+
     $: traitDescriptions = selectedTraits.map(id => {
         const trait = selectedOriginData?.traits.find(t => t.id.toString() === id.toString());
         return trait?.description ?? '';
@@ -84,17 +84,28 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
     $: if (selectedOriginData && !(selectedOriginData.canGhoul)) {
         isGhoul = false;
     }
+    $: selectedTraits = handleGhouls(isGhoul);
 
-    let isOriginValid = false;
-    $: isOriginValid = (
-        charName.trim().length > 0 &&
-        level > 0 &&
-        selectedOrigin &&
-        (
-            traitCount <= 1 ||
-            selectedTraits.length == 2
-        )
-    )
+    function handleGhouls(ghoul:boolean):string[] {
+        if (selectedOriginData) {
+            return ghoul ? [ghoulOrigin.traits[0].id.toString()] : [selectedOriginData.traits[0].id.toString()];
+        } else return [];
+    }
+
+    function handleOriginSelect(origin: string) {
+        currentPage = "origin";
+        resetEquipment();
+        resetPerks();
+        resetSkills();        
+        resetSpecial();
+        selectedBackgroundIndex = null;
+        backgroundEquipment = undefined;
+        fetchBackgrounds(origin);
+        selectedTraits = [];
+        if (selectedOriginData && traitCount == 1) {
+            selectedTraits = [selectedOriginData.traits[0].id.toString()];
+        }
+    }
 
 /*
 
@@ -115,13 +126,35 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
 
 */
 
-
     $: isSuperMutant = selectedTraits.includes('3');
     $: isNightkin = selectedTraits.includes('25');
     $: isGifted = selectedTraits.includes('7');
 
     $: giftedSelected = {};
     $: giftedCount = Object.values(giftedSelected).filter(Boolean).length;
+
+    function resetSpecial() {
+        selectedArray = ""
+        giftedSelected = {};
+        specialStats = {
+            strength: 5,
+            perception: 5,
+            endurance: 5,
+            charisma: 5,
+            intelligence: 5,
+            agility: 5,
+            luck: 5
+        };
+        customStats = {
+            strength: 5,
+            perception: 5,
+            endurance: 5,
+            charisma: 5,
+            intelligence: 5,
+            agility: 5,
+            luck: 5
+        };
+    }
 
     function getStatMax(stat) {
         if (isSuperMutant || isNightkin) {
@@ -154,7 +187,7 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
         agility: 5,
         luck: 5
     };
-    let selectedArray = 'Balanced';
+    let selectedArray = "";
     let customStats = {
         strength: 5,
         perception: 5,
@@ -169,7 +202,6 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
         Focused: [8,7,6,6,5,4,4],
         Specialized: [9,8,5,5,5,4,4]
     };
-    let isSpecialValid = false;
 
     function updateArray() {
         if (selectedArray === 'Custom') {
@@ -194,12 +226,6 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
             }
         }
     }
-
-    $: isSpecialValid =
-        Object.entries(selectedArray === 'Custom' ? customStats : specialStats)
-            .every(([key, val]) => val >= 4 && (isGifted && giftedSelected[key] ? val < getStatMax(key) : val <= getStatMax(key))) &&
-        remainingSpecialPoints === 0 &&
-        (!isGifted || giftedCount === 2);
 
 /*
 
@@ -238,50 +264,54 @@ YSS'    S*S     SS  S*S    YSSP    YSSP  YSS'
     let limitedSkillCap = 4;
     let baseTagSkills = 3;
     let totalTagSkillsAllowed = 3;
-    let currentTraits = selectedTraits;
-    $: if (currentTraits != selectedTraits) {
+
+    function resetSkills() {
+        skillPoints = {};
         skills.forEach(skill => {
             skillPoints[skill] = 0;
         });
-        extraTagSkills = 0;
         extraTagSkillSelections = {};
         baseTagSkillSelections = {};
-        forcedTagSkills = '';
-        forbiddenTagSkills = '';
-        extraTagSkillOptions = skills;
-        limitedSkills = [];
-        limitedSkillCap = 4;
-        baseTagSkills = 3;
-        totalTagSkillsAllowed = 3;
-        currentTraits = selectedTraits;
     }
-    $: if (selectedTraits.includes('1') || selectedTraits.includes('24')) {
-        extraTagSkills = 1;
-        extraTagSkillOptions = ["Energy Weapons", "Repair", "Science"];
-    } else if (selectedTraits.includes('12')) {
-        extraTagSkills = 1;
-        extraTagSkillOptions = ['Small Guns', 'Energy Weapons'];
-    } else if (selectedTraits.includes('13')) {
-        extraTagSkills = 2;
-        extraTagSkillOptions = ['Speech', 'Medicine', 'Repair', 'Science', 'Barter'];
-        limitedSkills = ['Athletics', 'Big Guns', 'Energy Weapons', 'Explosives', 'Lockpick', 'Melee Weapons', 'Pilot', 'Small Guns', 'Sneak', 'Survival', 'Throwing', 'Unarmed']
-    } else if (selectedTraits.includes('5') || selectedTraits.includes('11') || selectedTraits.includes('21')) {
-        extraTagSkills = 1;
-    } else if (selectedTraits.includes('2')) {
-        extraTagSkills = 1;
-        extraTagSkillOptions = ['Survival'];
-        forcedTagSkills = 'Survival';
-        extraTagSkillSelections['Survival'] = true;
-        toggleTagSkill('Survival');
-    } else if (selectedTraits.includes('3') || selectedTraits.includes('25')) {
-        limitedSkills = ['Athletics', 'Big Guns', 'Energy Weapons', 'Explosives', 'Lockpick', 'Melee Weapons', 'Pilot', 'Small Guns', 'Sneak', 'Survival', 'Throwing', 'Unarmed']
-    }       
 
-    $: if (selectedTraits.includes('27')) {
-        forbiddenTagSkills = 'Science';
-    } else {
-        forbiddenTagSkills = '';
+    $: updateExtraTagSkills(selectedTraits);
+    
+    function updateExtraTagSkills(traits: string[]) {
+        extraTagSkills = 0;
+        extraTagSkillOptions = [];
+        limitedSkills = [];
+        forcedTagSkills = null;
+        extraTagSkillSelections = {};
+
+        if (traits.includes('1') || traits.includes('24')) {
+            extraTagSkills = 1;
+            extraTagSkillOptions = ["Energy Weapons", "Repair", "Science"];
+        } else if (traits.includes('12')) {
+            extraTagSkills = 1;
+            extraTagSkillOptions = ['Small Guns', 'Energy Weapons'];
+        } else if (traits.includes('13')) {
+            extraTagSkills = 2;
+            extraTagSkillOptions = ['Speech', 'Medicine', 'Repair', 'Science', 'Barter'];
+            limitedSkills = ['Athletics', 'Big Guns', 'Energy Weapons', 'Explosives', 'Lockpick', 'Melee Weapons', 'Pilot', 'Small Guns', 'Sneak', 'Survival', 'Throwing', 'Unarmed'];
+        } else if (traits.includes('5') || traits.includes('11') || traits.includes('21')) {
+            extraTagSkills = 1;
+            extraTagSkillOptions = skills;
+        } else if (traits.includes('2')) {
+            extraTagSkills = 1;
+            extraTagSkillOptions = ['Survival'];
+            forcedTagSkills = 'Survival';
+            extraTagSkillSelections['Survival'] = true;
+            toggleTagSkill('Survival');
+        } else if (traits.includes('3') || traits.includes('25')) {
+            limitedSkills = ['Athletics', 'Big Guns', 'Energy Weapons', 'Explosives', 'Lockpick', 'Melee Weapons', 'Pilot', 'Small Guns', 'Sneak', 'Survival', 'Throwing', 'Unarmed'];
+        }
+        if (selectedTraits.includes('27')) {
+            forbiddenTagSkills = 'Science';
+        } else {
+            forbiddenTagSkills = '';
+        }
     }
+
     $: totalTagSkillsAllowed = baseTagSkills + extraTagSkills;
   
     let tagSkills = {};
@@ -318,18 +348,6 @@ YSS'    S*S     SS  S*S    YSSP    YSSP  YSS'
 
     $: skillPointsRemaining = 9 + specialStats.intelligence + Object.values(tagSkills).filter(Boolean).length*2 - Object.values(skillPoints).reduce((acc, val) => acc + val, 0);
 
-    let isSkillsValid = false;
-
-    $: isSkillsValid = (
-        skillPointsRemaining === 0 &&
-        Object.entries(skillPoints).every(([skill, points]) => 
-            points <= maxSkillCap
-        ) && 
-        Object.values(extraTagSkillSelections).filter(Boolean).length === extraTagSkills
-        && Object.values(baseTagSkillSelections).filter(Boolean).length === baseTagSkills
-        && (!forbiddenTagSkills || !tagSkills[forbiddenTagSkills])
-    );
-
 /*
 
  .S_sSSs      sSSs   .S_sSSs     .S    S.     sSSs  
@@ -365,6 +383,10 @@ Y                   Y           Y
         L: true
     };
     let special = Object.keys(specialStats)
+
+    function resetPerks() {
+        selectedPerks = [];
+    }
 
     function getSpecialRequirementTypes(perk) {
         const statReqs = (perk.reqs || []).filter(r => r.includes(':'));
@@ -525,37 +547,14 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
 
 */
 
-    let backgrounds = [];
-    async function fetchBackgrounds(originId) {
+    let backgrounds: Background[] = [];
+    async function fetchBackgrounds(originId:string) {
+        backgrounds = [];
         const res = await fetch(`/builder/api/backgrounds?originId=${originId}`, { method: 'GET' });
         if (!res.ok) {
             console.error('Failed to fetch backgrounds:', await res.text());
         }
         backgrounds = await res.json();
-    }
-    let selectedBackgroundId: string = "";
-    $: selectedBackgroundIndex = (backgrounds.length > 0 ? parseInt(selectedBackgroundId) - backgrounds[0].id : 0);
-    let backgroundEquipment;
-    let newGroupWeapons: (BackgroundWeapon | BackgroundWeapon[])[][] = [];
-    let groupApparel;
-
-    async function fetchBackgroundEquipment(id: string) {
-        if (!id) return;
-        selectedWeaponKey = [];
-        selectedWeapons = [];
-        const res = await fetch(`/builder/api/background-equipment?backgroundId=${id}`);
-        const data = await res.json();
-        backgroundEquipment = data;
-        //groupedWeaponChoices = groupBackgroundWeapons(data.weapons);
-        newGroupWeapons = newGroupBackgroundWeapons(data.weapons);
-        //console.log('Grouped Weapon Choices',newGroupWeapons);
-        groupApparel = groupBackgroundApparel(data.apparel);
-
-        backgroundEquipment = {
-            ...data,
-            newGroupWeapons,
-            groupApparel
-        };
     }
 
     type Weapon = {
@@ -573,13 +572,41 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         wgt: number;
     }
 
+    type WeaponMod = {
+        id: number;
+        name: string;
+        prefix: string;
+        effects: string[];
+        slot: number;
+        wgt: number;
+        cost: number;
+    }
+
     type BackgroundWeapon = {
         id: number;
         backgroundId: number;
         weaponId: number;
-        modId: number;
+        modId: number | number[];
         altId: number;
         weapon: Weapon;
+        mod: WeaponMod | WeaponMod[];
+    }
+
+    type Ammo = {
+        id: number;
+        name: string;
+        rarity: number;
+        rollQuantity: string;
+        wgt: number;
+        sourcebookId: number;
+    }
+
+    type BackgroundAmmo = {
+        id: number;
+        bgWeaponId: number;
+        ammoId: number;
+        quantity: string;
+        ammo: Ammo;
     }
 
     type Apparel = {
@@ -606,8 +633,166 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         apparel: Apparel;
     }
 
+    type Consumable = {
+        id: number;
+        name: string;
+        type: number;
+        heals: number;
+        eff: string[];
+        rads: number;
+        wgt: number;
+        cost: number;
+        rarity: number;
+        duration: string;
+        addiction: string;
+        sourcebookId: number;
+    }
+
+    type BackgroundConsumable = {
+        id: number;
+        backgroundId: number;
+        consumableId: number;
+        altId: number;
+        consumable: Consumable;
+    }
+
+    type Gear = {
+        id: number;
+        name: string;
+        eff: string[];
+        cost: number;
+        rarity: number;
+        wgt: number;
+        sourcebookId: number;
+    }
+
+    type BackgroundGear = {
+        id: number;
+        backgroundId: number;
+        gearId: number;
+        gear: Gear;
+    }
+
+    type RobotModule = {
+        id: number;
+        name: string;
+        eff: string[];
+        wgt: number;
+        cost: number;
+        rarity: number;
+        sourcebookId: number;
+    }
+
+    type BackgroundRobotModule = {
+        id: number;
+        backgroundId: number;
+        robotModuleId: number;
+        altId: number;
+        robotModule: RobotModule;
+    }
+
+
+    type BackgroundEquipment = {
+        weapons: BackgroundWeapon[];
+        ammo: BackgroundAmmo[];
+        apparel: BackgroundApparel[];
+        consumables: BackgroundConsumable[];
+        gear: BackgroundGear[];
+        robotModules: BackgroundRobotModule[];
+        groupWeapons: GroupWeapons;
+        groupApparel: GroupApparel;
+        groupConsumables: GroupConsumables;
+        groupRobotModules: GroupRobotModules;
+    } | undefined
+
+    type Background = {
+        id: number;
+        name: string;
+        originId: number;
+        caps: number;
+        misc: string;
+        trinket: number;
+        food: number;
+        forage: number;
+        bev: number;
+        chem: number;
+        ammo: number;
+        aid: number;
+        odd: number;
+        outcast: number;
+        junk: number;
+        sourcebookId: number;
+    }
+
+    type GroupWeapons = (BackgroundWeapon | BackgroundWeapon[])[][];
+    type GroupApparel = (boolean | BackgroundApparel | BackgroundApparel[] | (BackgroundApparel | BackgroundApparel[])[][])[];
+    type GroupConsumables = (BackgroundConsumable | BackgroundConsumable[])[][];
+    type GroupRobotModules = (BackgroundRobotModule | BackgroundRobotModule[])[][];
+
+    let selectedBackgroundId: string = "";
+    let selectedBackgroundIndex: number | null;
+    $: if (backgrounds.length > 0) {
+        selectedBackgroundIndex = parseInt(selectedBackgroundId) - backgrounds[0].id
+    } else {selectedBackgroundIndex = 0}
+    let backgroundEquipment: BackgroundEquipment;
+    let groupWeapons: GroupWeapons = [];
+    let groupApparel: GroupApparel = [];
+    //this might be the exact structure of groupApparel
+    let test: [BackgroundApparel[][],BackgroundApparel,(BackgroundApparel[] | BackgroundApparel[][]),boolean] | BackgroundApparel[][][] = [];
+    let groupConsumables: GroupConsumables = [];
+    let groupRobotModules: GroupRobotModules = [];
+
+    function resetEquipment() {
+        selectWeaponKey = [];
+        selectedWeaponKey = [];
+        selectedWeapons = [];
+        selectSingle = "";
+        singleKey = "";
+        singleApparel = undefined;
+        selectDouble = [];
+        doubleKey = [];
+        doubleApparel = [];
+        selectPack = [];
+        packKey = [];
+        packApparel = [];
+        selectApparelKey = [];
+        selectedApparelKey = [];
+        selectedApparel = [];
+        selectConsumableKey = [];
+        selectedConsumableKey = [];
+        selectedConsumables = [];
+        selectRobotModuleKey = [];
+        selectedRobotModuleKey = [];
+        selectedRobotModules = [];
+        allSelectedWeaponIds = [];
+        allSelectedApparelIds = [];
+        allSelectedConsumableIds = [];
+        allSelectedRobotModuleIds = [];
+    }
+
+    async function fetchBackgroundEquipment(id: string) {
+        if (!id) return;
+        resetEquipment();
+        const res = await fetch(`/builder/api/background-equipment?backgroundId=${id}`);
+        const data = await res.json();
+        backgroundEquipment = data;
+        groupWeapons = groupBackgroundWeapons(data.weapons);
+        groupApparel = groupBackgroundApparel(data.apparel);
+        groupConsumables = groupBackgroundConsumables(data.consumables)
+        groupRobotModules = groupBackgroundRobotModules(data.robotModules)
+        groupWeapons
+
+        backgroundEquipment = {
+            ...data,
+            groupWeapons,
+            groupApparel,
+            groupConsumables,
+            groupRobotModules
+        };
+    }
+
     //quite proud of this one, handles all the logic of choices, including many for one swaps
-    function newGroupBackgroundWeapons(weapons: BackgroundWeapon[]): (BackgroundWeapon | BackgroundWeapon[])[][] {
+    function groupBackgroundWeapons(weapons: BackgroundWeapon[]): (BackgroundWeapon | BackgroundWeapon[])[][] {
         const idMap = new Map<number, BackgroundWeapon>();
         const fwdLinks = new Map<number, number>();
         const revLinks = new Map<number, BackgroundWeapon[]>();
@@ -684,15 +869,114 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
                 continue;
             }
         }
+        //loop cleanup, in case of out-of-order long loops that form two partial loops
+        const fixedLoops:BackgroundWeapon[][] = [];
         for (const group of loops) {
             const id = group[0];
             let altSet = new Set(group[1]);
-            const alts = [...altSet]
-            alts.push(id);
-            if (fwdLinks.size === revLinks.size) {
-                results.push(alts);
+            const alts = [...altSet];
+            alts.push(id)
+            if (fixedLoops.length === 0) {
+                fixedLoops.push(alts);
             } else {
-                flatGroup.push(alts);
+                let isLoopMember = false;
+                for (const loop of fixedLoops) {
+                    for (const item of alts) {
+                        if ((loop.includes(item))) {
+                            isLoopMember = true;
+                        }
+                        if (isLoopMember) break;
+                    }
+                    if (isLoopMember) {
+                        const fullLoop = [...loop, ...alts];
+                        let loopSet = new Set(fullLoop);
+                        fixedLoops[fixedLoops.indexOf(loop)] = [...loopSet];
+                    }
+                }
+                if (!isLoopMember) {
+                    fixedLoops.push(alts);
+                }
+            }
+        }
+        //check for multi-mod weapons
+        const modCheck:BackgroundWeapon[][] = []
+        let modGroups:number[] = [];
+        for (const [gindex, group] of fixedLoops.entries()) {
+            if (group.length !== 1) continue;
+            if (group[0].modId === null) continue;
+            if (modCheck.length === 0) {
+                modCheck.push(group);
+                continue;
+            }
+            let isMultiMod = false;
+            for (const [index, check] of modCheck.entries()) {
+                for (const weapon of check) {
+                    if (weapon.weaponId === group[0].weaponId) {
+                        modCheck[index].push(group[0]);
+                        isMultiMod = true;
+                        modGroups.push(gindex);
+                        break;
+                    }
+                }
+                if (isMultiMod) break;
+            }
+        }
+        //clear non-multi-mod
+        const multiMod:BackgroundWeapon[][] = []
+        for (const check of modCheck) {
+            if (check.length !== 0) multiMod.push(check);
+        }
+        //map weapons to a new, unified id
+        let revId = new Map<number, number>();
+        for (const [index, group] of multiMod.entries()) {
+            for (const weapon of group) {
+                if (!revId.has(weapon.id)) {
+                    revId.set(weapon.id, index);
+                }
+            }
+        }
+        //map mods to the new id
+        let modMap = new Map<number,WeaponMod>();
+        let consolidatedMods = new Map<number,number[]>();
+        for (const [index,group] of multiMod.entries()) {
+            for (const weapon of group) {
+                if (Array.isArray(weapon.modId)) continue;
+                if (Array.isArray(weapon.mod)) continue;
+                if (modMap.has(weapon.modId)) continue;
+                modMap.set(weapon.modId,weapon.mod)
+                if (!consolidatedMods.has(index)) {
+                    consolidatedMods.set(index,[weapon.modId])
+                } else {
+                    consolidatedMods.get(index)!.push(weapon.modId)
+                }
+            }
+        }
+        //replace fixedLoops entries with the consolidated versions
+        const writtenWeapons:number[] = [];
+        const finalLoops:BackgroundWeapon[][] = [];
+        for (const [index, group] of fixedLoops.entries()) {
+            if (!modGroups.includes(index)) {
+                finalLoops.push(group);
+                continue;
+            } else {
+                let newWeapon = group[0];
+                const newWeapId = revId.get(newWeapon.id)
+                if (writtenWeapons.includes(newWeapId)) continue;
+                const newWeapModIds = consolidatedMods.get(newWeapId);
+                const newWeapMods:WeaponMod[] = []
+                for (const modId of newWeapModIds) {
+                    newWeapMods.push(modMap.get(modId));
+                }
+                newWeapon.modId = newWeapModIds;
+                newWeapon.mod = newWeapMods;
+                finalLoops.push([newWeapon]);
+            }
+        }
+        for (const group of finalLoops) {
+            if (fwdLinks.size === revLinks.size) {
+                results.push(group);
+            } else {
+                flatGroup.push(group);
             }
         }
         if (flatGroup.length > 0) {
@@ -739,7 +1023,6 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             revMap.set(a, a.id)
             let id = a.id
             let alt = a.altId
-            console.log("checking id/alt/apparel", id, alt, a.apparel);
             if (alt !== null) {
                 if (!fwdLinks.has(id)) {
                     fwdLinks.set(id,alt);
@@ -762,12 +1045,6 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
                 revApparelMap.get(apparelId)!.push(id);
             }
         }
-        console.log("map", idMap);
-        console.log("rmap", revMap);
-        console.log("fwd", fwdLinks);
-        console.log("rev", revLinks);
-        console.log("appmap", apparelMap);
-        console.log("revapp", revApparelMap);
         
         let repeatApparel = new Map<BackgroundApparel, BackgroundApparel[]>();
         let repeatApparelAlts = new Map<BackgroundApparel, BackgroundApparel[]>();
@@ -796,10 +1073,6 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             repeatStore.push(repeat[0]);
             flatRepeatApparel.push(repeatStore);
         }
-        console.log("repeatApparel:", repeatApparel);
-        console.log("flatRepeatApparel:", flatRepeatApparel);
-        console.log("repeatApparel alts:", repeatApparelAlts);
-        console.log("single double map:",isSingleDouble);
 
         //building maps that don't include individual items or repeat items
         for (const a of apparel) {
@@ -824,8 +1097,6 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
                 }
             }
         }
-        console.log("uniquefwd:", fwdLinkUniques);
-        console.log("uniquerev:", revLinkUniques);
         let isSinglePack = false;
         let singlePackOption: BackgroundApparel[] = [];
         for (const repeat of flatRepeatApparel) {
@@ -928,64 +1199,251 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             double = revGroup;
         } else double = flatGroup;
         if (isSinglePack) {
-            console.log("is single pack");
             return [normalResults, pack.single, pack.pack, isSinglePack]
         } else if (single != null && double.length > 0) {
-            console.log("single double");
             return [normalResults, single, double];
         }
-        console.log("not single double");
         return [normalResults];
+    }
+
+    // consumables are mostly straightforward, but the nuka selections add complexity
+    function groupBackgroundConsumables(consumables: BackgroundConsumable[]): (BackgroundConsumable | BackgroundConsumable[])[][] {
+        const idMap = new Map<number, BackgroundConsumable>();
+        const fwdLinks = new Map<number, number>();
+        const revLinks = new Map<number, BackgroundConsumable[]>();
+        const revMap = new Map<BackgroundConsumable, number>();
+        const results: (BackgroundConsumable | BackgroundConsumable[])[][] = [];
+        
+        for (const w of consumables) {
+            idMap.set(w.id, w)
+            revMap.set(w, w.id)
+            let id = w.id
+            let alt = w.altId
+            if (alt !== null) {
+                if (!fwdLinks.has(id)) {
+                    fwdLinks.set(id,alt);
+                }
+                if (!revLinks.has(alt)) {
+                    revLinks.set(alt,[w]);
+                } else if (!revLinks.get(alt)!.includes(w)) {
+                    revLinks.get(alt)!.push(w)
+                }
+            } else {
+                //if it doesn't have an alt, then add it as its own array, so it doesn't get grouped with others
+                results.push([w]);
+            }
+        }
+
+        let loops = new Map<BackgroundConsumable, BackgroundConsumable[]>();
+        let flatGroup: BackgroundConsumable[][] = [];
+        let clearedIds: BackgroundConsumable[] = [];
+        for (const entry of fwdLinks) {
+            const id: BackgroundConsumable = idMap.get(entry[0])!;
+            const alt: BackgroundConsumable = idMap.get(entry[1])!;
+            let idSet = false;
+            if (loops.size === 0) {
+                loops.set(id,[alt]);
+                continue;
+            }
+            if (loops.has(alt) && loops.get(alt)!.includes(id)) {
+                continue;
+            }
+            if (loops.has(alt) && !loops.get(alt)!.includes(id)) {
+                loops.get(alt)!.push(id)
+                continue;
+            }
+            for (const item of loops) {
+                if (clearedIds.includes(alt)) {
+                    break;
+                }
+                if (item[1].includes(alt)) {
+                    const oldId = item[0];
+                    const oldAlts = item[1];
+                    oldAlts.splice(oldAlts.indexOf(alt),1);
+                    loops.delete(item[0]);
+                    oldAlts.push(oldId);
+                    oldAlts.push(id);
+                    loops.set(alt,oldAlts);
+                    for (const oldAlt of oldAlts) {
+                        clearedIds.push(oldAlt);
+                    }
+                    idSet = true;
+                    break;
+                }
+                if (item[1].includes(id)) {
+                    loops.get(item[0])!.push(alt);
+                    idSet = true;
+                    continue;
+                }
+            }
+            if (!idSet) {
+                loops.set(id,[alt]);
+                idSet = false;
+                continue;
+            }
+        }
+        for (const group of loops) {
+            const id = group[0];
+            let altSet = new Set(group[1]);
+            const alts = [...altSet]
+            alts.push(id);
+            if (fwdLinks.size === revLinks.size) {
+                results.push(alts);
+            } else {
+                flatGroup.push(alts);
+            }
+        }
+        if (flatGroup.length > 0) {
+            for (const group of flatGroup) {
+                const revGroup: (BackgroundConsumable | BackgroundConsumable[])[] = [];
+                for (const alt of group) {
+                    let altId: number | null = null;
+                    if (revMap.has(alt)) altId = revMap.get(alt)!;
+                    if (altId !== null) {
+                        if (revLinks.has(altId)) {
+                            revGroup.push(revLinks.get(revMap.get(alt)!)!)
+                        };
+                    }
+                }
+                results.push(revGroup);
+            }
+        }
+        return results;
+    }
+
+    // robot modules have no complexity, just basic choices
+    function groupBackgroundRobotModules(robotModules: BackgroundRobotModule[]): (BackgroundRobotModule | BackgroundRobotModule[])[][] {
+        const idMap = new Map<number, BackgroundRobotModule>();
+        const fwdLinks = new Map<number, number>();
+        const revLinks = new Map<number, BackgroundRobotModule[]>();
+        const revMap = new Map<BackgroundRobotModule, number>();
+        const results: (BackgroundRobotModule | BackgroundRobotModule[])[][] = [];
+        
+        for (const w of robotModules) {
+            idMap.set(w.id, w)
+            revMap.set(w, w.id)
+            let id = w.id
+            let alt = w.altId
+            if (alt !== null) {
+                if (!fwdLinks.has(id)) {
+                    fwdLinks.set(id,alt);
+                }
+                if (!revLinks.has(alt)) {
+                    revLinks.set(alt,[w]);
+                } else if (!revLinks.get(alt)!.includes(w)) {
+                    revLinks.get(alt)!.push(w)
+                }
+            } else {
+                //if it doesn't have an alt, then add it as its own array, so it doesn't get grouped with others
+                results.push([w]);
+            }
+        }
+
+        let loops = new Map<BackgroundRobotModule, BackgroundRobotModule[]>();
+        let flatGroup: BackgroundRobotModule[][] = [];
+        let clearedIds: BackgroundRobotModule[] = [];
+        for (const entry of fwdLinks) {
+            const id: BackgroundRobotModule = idMap.get(entry[0])!;
+            const alt: BackgroundRobotModule = idMap.get(entry[1])!;
+            let idSet = false;
+            if (loops.size === 0) {
+                loops.set(id,[alt]);
+                continue;
+            }
+            if (loops.has(alt) && loops.get(alt)!.includes(id)) {
+                continue;
+            }
+            if (loops.has(alt) && !loops.get(alt)!.includes(id)) {
+                loops.get(alt)!.push(id)
+                continue;
+            }
+            for (const item of loops) {
+                if (clearedIds.includes(alt)) {
+                    break;
+                }
+                if (item[1].includes(alt)) {
+                    const oldId = item[0];
+                    const oldAlts = item[1];
+                    oldAlts.splice(oldAlts.indexOf(alt),1);
+                    loops.delete(item[0]);
+                    oldAlts.push(oldId);
+                    oldAlts.push(id);
+                    loops.set(alt,oldAlts);
+                    for (const oldAlt of oldAlts) {
+                        clearedIds.push(oldAlt);
+                    }
+                    idSet = true;
+                    break;
+                }
+                if (item[1].includes(id)) {
+                    loops.get(item[0])!.push(alt);
+                    idSet = true;
+                    continue;
+                }
+            }
+            if (!idSet) {
+                loops.set(id,[alt]);
+                idSet = false;
+                continue;
+            }
+        }
+        for (const group of loops) {
+            const id = group[0];
+            let altSet = new Set(group[1]);
+            const alts = [...altSet]
+            alts.push(id);
+            if (fwdLinks.size === revLinks.size) {
+                results.push(alts);
+            } else {
+                flatGroup.push(alts);
+            }
+        }
+        if (flatGroup.length > 0) {
+            const revGroup: (BackgroundRobotModule | BackgroundRobotModule[])[] = [];
+            for (const group of flatGroup) {
+                for (const alt of group) {
+                    let altId: number | null = null;
+                    if (revMap.has(alt)) altId = revMap.get(alt)!;
+                    if (altId !== null) {
+                        if (revLinks.has(altId)) {
+                            revGroup.push(revLinks.get(revMap.get(alt)!)!)
+                        };
+                    }
+                }
+            }
+            results.push(revGroup);
+        }
+        return results;
     }
 
     let selectWeaponKey: string[] = [];
     let selectedWeaponKey: string[] = [];
     let selectedWeapons: BackgroundWeapon[][] = [];
+    $: if (backgroundEquipment?.groupWeapons?.length > 0) {
+        backgroundEquipment.groupWeapons.forEach((group, index) => {
+            if (group.length === 1) {
+                const key = getWeaponOptionKey(group[0]);
+                selectWeaponKey[index] = key;
+                handleWeaponSelect(key, index);
+            }
+        });
+    }
 
     function handleWeaponSelect(key: string, index: number) {
-        console.log("key/index:", key, index);
-        console.log("start weapon key:");
-        for (const skey of selectedWeaponKey) console.log(index,skey);
         selectedWeaponKey[index] = key;
-        console.log("new weapon key:");
-        for (const skey of selectedWeaponKey) console.log(index,skey);        
         const ids = key.split("-").map(Number);
-        console.log("old selected weapons:")
-        for (const sweap of selectedWeapons) {
-            console.log(index);
-            for (const sweapitem of sweap) {
-                console.log(sweapitem)
-            }   
-        }
         selectedWeapons[index] = [];
-        console.log("cleared index selected weapons:")
-        for (const sweap of selectedWeapons) console.log(index,sweap);
 
-        for (const group of backgroundEquipment.newGroupWeapons) {
+        for (const group of backgroundEquipment.groupWeapons) {
             for (const item of group) {
                 if (Array.isArray(item)) {
-                    console.log("item is an array:");
-                    for (const arritem of item) console.log(arritem);
                     if (item.every(w => ids.includes(w.id))) {
                         selectedWeapons[index].push(item);
-                        console.log("new selected weapons")
-                        for (const swsel of selectedWeapons) {
-                            for (const switem of swsel) {
-                                console.log(switem);
-                            }
-                        }
                         return;
                     }
                 } else {
-                    console.log("item is string:", item);
                     if (ids.includes(item.id)) {
                         selectedWeapons[index].push([item]);
-                        console.log("new selected weapons")
-                        for (const swsel of selectedWeapons) {
-                            for (const switem of swsel) {
-                                console.log(switem);
-                            }
-                        }
                         return;
                     }
                 }
@@ -1005,58 +1463,43 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
     let selectApparelKey: string[] = [];
     let selectedApparelKey: string[] = [];
     let selectedApparel: BackgroundApparel[][] = [];
-    $: if (singleDouble === "single" || singlePack === "single") selectSingle = backgroundEquipment.groupApparel[1].id;
+    $: if ((singleDouble === "single" || singlePack === "single") && backgroundEquipment.groupApparel) {
+        selectSingle = backgroundEquipment.groupApparel[1].id;
+    }
+    $: if (singleDouble === "double") {
+        singleKey = "";
+    }
     $: if (singlePack === "pack") {
         selectPack = [];
         for (const pack of backgroundEquipment.groupApparel[2]) {
             selectPack.push(pack.id);
         }
     }
+    $: if (backgroundEquipment?.groupApparel?.length > 0) {
+        backgroundEquipment.groupApparel[0].forEach((group, index) => {
+            if (group.length === 1) {
+                const key = getApparelOptionKey(group[0]);
+                selectApparelKey[index] = key;
+                handleApparelSelect(key, index);
+            }
+        });
+    }
 
     function handleApparelSelect(key: string, index: number) {
-        console.log("key/index:", key, index);
-        console.log("start apparel key:");
-        for (const skey of selectedApparelKey) console.log(index,skey);
         selectedApparelKey[index] = key;
-        console.log("new apparel key:");
-        for (const skey of selectedApparelKey) console.log(index,skey);        
         const ids = key.split("-").map(Number);
-        console.log("old selected apparel:");
-        for (const sapp of selectedApparel) {
-            console.log(index);
-            for (const sappitem of sapp) {
-                console.log(sappitem);
-            }   
-        }
         selectedApparel[index] = [];
-        console.log("cleared index selected apparel:")
-        for (const sapp of selectedApparel) console.log(index,sapp);
 
         for (const group of backgroundEquipment.groupApparel) {
             for (const item of group) {
                 if (Array.isArray(item)) {
-                    console.log("item is an array:");
-                    for (const arritem of item) console.log(arritem);
                     if (item.every(w => ids.includes(w.id))) {
                         selectedApparel[index].push(item);
-                        console.log("new selected apparel")
-                        for (const sasel of selectedApparel) {
-                            for (const saitem of sasel) {
-                                console.log(saitem);
-                            }
-                        }
                         return;
                     }
                 } else {
-                    console.log("item is string:", item);
                     if (ids.includes(item.id)) {
                         selectedApparel[index].push([item]);
-                        console.log("new selected apparel")
-                        for (const sasel of selectedApparel) {
-                            for (const saitem of sasel) {
-                                console.log(saitem);
-                            }
-                        }
                         return;
                     }
                 }
@@ -1065,61 +1508,37 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
     }
 
     function handleDoubleSelect(key: string, index: number) {
-        console.log("key/index:", key, index);
-        console.log("start apparel key:");
-        for (const skey of doubleKey) console.log(index,skey);
-        doubleKey[index] = key;
-        console.log("new apparel key:");
-        for (const skey of selectDouble) console.log(index,skey);        
-        const ids = key.split("-").map(Number);
-        console.log("old double apparel:");
-        for (const sapp of doubleApparel) {
-            console.log(index);
-            for (const sappitem of sapp) {
-                console.log(sappitem);
-            }   
-        }
         singleKey = "";
         selectSingle = "";
         singleApparel = undefined;
-        console.log("cleared singleApparel")
         packKey = []
         selectPack = [];
         packApparel = [];
-        console.log("cleared pack")
+        doubleKey[index] = key;
+        const ids = key.split("-").map(Number);
         doubleApparel[index] = [];
-        console.log("cleared index double apparel:")
-        for (const sapp of doubleApparel) console.log(index,sapp);
 
         for (const group of backgroundEquipment.groupApparel) {
-            for (const item of group) {
-                if (Array.isArray(item)) {
-                    console.log("item is an array:");
-                    for (const arritem of item) console.log(arritem);
-                    if (item.every(w => ids.includes(w.id))) {
-                        doubleApparel[index].push(item);
-                        console.log("new double apparel")
-                        for (const sasel of doubleApparel) {
-                            for (const saitem of sasel) {
-                                console.log(saitem);
-                            }
+            if (Array.isArray(group)) {
+                for (const item of group) {
+                    if (Array.isArray(item)) {
+                        if (item.every(w => ids.includes(w.id))) {
+                            doubleApparel[index].push(item);
+                            return;
                         }
-                        return;
-                    }
-                } else {
-                    console.log("item is string:", item);
-                    if (ids.includes(item.id)) {
-                        doubleApparel[index].push([item]);
-                        console.log("new double apparel")
-                        for (const sasel of doubleApparel) {
-                            for (const saitem of sasel) {
-                                console.log(saitem);
-                            }
+                    } else {
+                        if (ids.includes(item.id)) {
+                            doubleApparel[index].push([item]);
+                            return;
                         }
-                        return;
                     }
                 }
-            }
+            } else {
+                if (ids.includes(group.apparel.id)) {
+                    doubleApparel[index].push([group]);
+                    return;
+                }
+            } 
         }
     }
 
@@ -1127,26 +1546,18 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         doubleKey = [];
         selectDouble = [];
         doubleApparel = [];
-        console.log("cleared double")
         if (state === "single") {
             packKey = [];
             packApparel = [];
-            console.log("cleared pack");
-            console.log("start single:", singleKey);
             singleKey = selectSingle;
-            console.log("single key set:", singleKey);
-            console.log("old single apparel:", singleApparel);
             singleApparel = backgroundEquipment.groupApparel[1];
-            console.log("new single apparel:", singleApparel);
         }
         else if (state === "pack") {
             selectSingle = ""
             singleKey = ""
             singleApparel = undefined;
-            console.log("cleared single");
             packKey = selectPack;
             packApparel = backgroundEquipment.groupApparel[2];
-            console.log("pack key:",packKey,"apparel:",packApparel)
         } else {
             console.error("what did you do")
         }
@@ -1157,23 +1568,95 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             doubleKey = [];
             selectDouble = [];
             doubleApparel = [];
-            console.log("cleared double apparel")
             packKey = [];
             selectPack = [];
             packApparel = [];
-            console.log("cleared pack")
-            console.log("single selected:", selectSingle);
-            console.log("start single:", singleKey);
             singleKey = selectSingle;
-            console.log("single key set:", singleKey);
-            console.log("old single apparel:", singleApparel);
             singleApparel = backgroundEquipment.groupApparel[1];
-            console.log("new single apparel:", singleApparel);
+        }
+    }
+
+    let selectConsumableKey: string[] = [];
+    let selectedConsumableKey: string[] = [];
+    let selectedConsumables: BackgroundConsumable[][] = [];
+    $: if (backgroundEquipment?.groupConsumables?.length > 0) {
+        backgroundEquipment.groupConsumables.forEach((group, index) => {
+            if (group.length === 1) {
+                const key = getConsumableOptionKey(group[0]);
+                selectConsumableKey[index] = key;
+                handleConsumableSelect(key, index);
+            }
+        });
+    }
+
+    function handleConsumableSelect(key: string, index: number) {
+        selectedConsumableKey[index] = key;
+        const ids = key.split("-").map(Number);
+        selectedConsumables[index] = [];
+
+        for (const group of backgroundEquipment.groupConsumables) {
+            for (const item of group) {
+                if (Array.isArray(item)) {
+                    if (item.every(w => ids.includes(w.id))) {
+                        selectedConsumables[index].push(item);
+                        return;
+                    }
+                } else {
+                    if (ids.includes(item.id)) {
+                        selectedConsumables[index].push([item]);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    let selectRobotModuleKey: string[] = [];
+    let selectedRobotModuleKey: string[] = [];
+    let selectedRobotModules: BackgroundRobotModule[][] = [];
+    $: if (backgroundEquipment?.groupRobotModules?.length > 0) {
+        backgroundEquipment.groupRobotModules.forEach((group, index) => {
+            if (group.length === 1) {
+                const key = getRobotModuleOptionKey(group[0]);
+                selectRobotModuleKey[index] = key;
+                handleRobotModuleSelect(key, index);
+            }
+        });
+    }
+
+    function handleRobotModuleSelect(key: string, index: number) {
+        selectedRobotModuleKey[index] = key;
+        const ids = key.split("-").map(Number);
+        selectedRobotModules[index] = [];
+
+        for (const group of backgroundEquipment.groupRobotModules) {
+            for (const item of group) {
+                if (Array.isArray(item)) {
+                    if (item.every(w => ids.includes(w.id))) {
+                        selectedRobotModules[index].push(item);
+                        return;
+                    }
+                } else {
+                    if (ids.includes(item.id)) {
+                        selectedRobotModules[index].push([item]);
+                        return;
+                    }
+                }
+            }
         }
     }
 
     function formatWeaponName(w: BackgroundWeapon): string {
-        return w.weapon.name;
+        let weaponName:string = ""
+        if (Array.isArray(w.mod)) {
+            for (const mod of w.mod) {
+                weaponName += mod.prefix + " "
+            }
+            weaponName += w.weapon.name
+        } else if (w.modId !== null) {
+            weaponName = w.mod.name + " " + w.weapon.name;
+        } else weaponName = w.weapon.name;
+        return weaponName;
     }
 
     function getWeaponOptionLabel(group: (BackgroundWeapon | BackgroundWeapon[])): string {
@@ -1238,6 +1721,46 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         }
     }
 
+    function formatConsumableName(w: BackgroundConsumable): string {
+        return w.consumable.name;
+    }
+
+    function getConsumableOptionLabel(group: (BackgroundConsumable | BackgroundConsumable[])): string {
+        if (Array.isArray(group)) {
+            return group.map(formatConsumableName).join(" + ");
+        } else {
+            return formatConsumableName(group);
+        }
+    }
+
+    function getConsumableOptionKey(group: (BackgroundConsumable | BackgroundConsumable[])): string {
+        if (Array.isArray(group)) {
+            return group.map(w => w.id).sort((a, b) => a - b).join("-");
+        } else {
+            return String(group.id);
+        }
+    }
+
+    function formatRobotModuleName(w: BackgroundRobotModule): string {
+        return w.robotModule.name;
+    }
+
+    function getRobotModuleOptionLabel(group: (BackgroundRobotModule | BackgroundRobotModule[])): string {
+        if (Array.isArray(group)) {
+            return group.map(formatRobotModuleName).join(" + ");
+        } else {
+            return formatRobotModuleName(group);
+        }
+    }
+
+    function getRobotModuleOptionKey(group: (BackgroundRobotModule | BackgroundRobotModule[])): string {
+        if (Array.isArray(group)) {
+            return group.map(w => w.id).sort((a, b) => a - b).join("-");
+        } else {
+            return String(group.id);
+        }
+    }
+
     let allSelectedWeaponIds: string[] = [];
     $: if (selectedWeaponKey.length > 0) {
         const newWeaponKey: string[] = [];
@@ -1289,11 +1812,42 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         }
         allSelectedApparelIds = newApparelKey;
     }
+    
+    let allSelectedConsumableIds: string[] = [];
+    $: if (selectedConsumableKey.length > 0) {
+        const newConsumableKey: string[] = [];
+        for (const key of selectedConsumableKey) {
+            if (key.includes("-")) {
+                const tempArr = key.split("-")
+                for (const str of tempArr) {
+                    newConsumableKey.push(str);
+                }
+            } else {
+                newConsumableKey.push(key)
+            }
+        }
+        allSelectedConsumableIds = newConsumableKey;
+    }
+
+    let allSelectedRobotModuleIds: string[] = [];
+    $: if (selectedRobotModuleKey.length > 0) {
+        const newRobotModuleKey: string[] = [];
+        for (const key of selectedRobotModuleKey) {
+            if (key.includes("-")) {
+                const tempArr = key.split("-")
+                for (const str of tempArr) {
+                    newRobotModuleKey.push(str);
+                }
+            } else {
+                newRobotModuleKey.push(key)
+            }
+        }
+        allSelectedRobotModuleIds = newRobotModuleKey;
+    }
 
     let singleDouble: "single" | "double" | "" = "";
     let singlePack: "single" | "pack" | "" = "";
 
-    let isEquipmentValid = false;
     let isWeaponSelectValid = false;
     let isApparelSelectValid = false;
     let isConsumableSelectValid = false;
@@ -1306,7 +1860,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             }
         }
         isWeaponSelectValid = valid;
-    }
+    } else if (backgroundEquipment?.weapons.length === 0) isWeaponSelectValid = true;
     $: if (selectedApparel.length > 0) {
         let valid = true;
         for (const selectedItem of selectedApparel) {
@@ -1315,8 +1869,25 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             }
         }
         isApparelSelectValid = valid;
-    }
-    $: isEquipmentValid = isWeaponSelectValid && isApparelSelectValid && isConsumableSelectValid && isRobotModuleSelectValid && selectedBackgroundId.length > 0;
+    } else if (backgroundEquipment?.apparel.length === 0) isApparelSelectValid = true;
+    $: if (selectedConsumables.length > 0) {
+        let valid = true;
+        for (const selectedItem of selectedConsumables) {
+            if (selectedItem.length === 0) {
+                valid = false;
+            }
+        }
+        isConsumableSelectValid = valid;
+    } else if (backgroundEquipment?.consumables.length === 0) isConsumableSelectValid = true;
+    $: if (selectedRobotModules.length > 0) {
+        let valid = true;
+        for (const selectedItem of selectedRobotModules) {
+            if (selectedItem.length === 0) {
+                valid = false;
+            }
+        }
+        isRobotModuleSelectValid = valid;
+    } else if (backgroundEquipment?.robotModules.length === 0) isRobotModuleSelectValid = true;
 
 /*
 
@@ -1356,58 +1927,78 @@ Y                  Y
 
 */
 
+    let currentPage = "";
+    const pages = ['origin','special','skills','perks','stats','equipment','review','character'];
+    onMount(() => {
+        navigateTo("origin");
+    })
+    let nextPage = "";
+    let pastPages:string[] = []
 
-    let currentPage = 'origin';
-
-    function navigateTo(page) {
-        currentPage = page;
-        if (page === 'special') {
-            updateArray();
+    $: if (pages.includes(currentPage)) {
+        pastPages = []
+        for (const page of pages) {
+            if (isPageValid(page) || page === currentPage) {
+                pastPages = [...pastPages,page]
+            } else break;
         }
     }
 
-    function goToSpecialPage() {
-        if (isOriginValid) {
-            navigateTo('special')
-        }
-    }
-    function goToSkillsPage() {
-        if (isSpecialValid) {
-            navigateTo('skills')
-        }
-    }
-    function goToPerksPage() {
-        navigateTo('perks')
-    }
-    function goToStatsPage() {
-        navigateTo('stats')
-    }
-    function goToEquipmentPage() {
-        navigateTo('equipment')
-    }
-    function goToCharacterSheet() {
-        if (isEquipmentValid) {
-            navigateTo('character')
+    $: nextPage = (pages.indexOf(currentPage) < pages.length - 1) ? pages[pages.indexOf(currentPage)+1] : "";
+
+    function isPageValid(page:string):boolean {
+        switch (page) {
+            case "origin":
+                return charName.trim().length > 0 && level > 0 && selectedOrigin != '' && (traitCount <= 1 || selectedTraits.length == 2);
+            case "special":
+                return Object.entries(selectedArray === 'Custom' ? customStats : specialStats).every(([key, val]) => val >= 4 && (isGifted && giftedSelected[key] ? val < getStatMax(key) : val <= getStatMax(key))) && remainingSpecialPoints === 0 && (!isGifted || giftedCount === 2);
+            case "skills":
+                return (skillPointsRemaining === 0 && Object.entries(skillPoints).every(([skill, points]) => points <= maxSkillCap) && Object.values(extraTagSkillSelections).filter(Boolean).length === extraTagSkills && Object.values(baseTagSkillSelections).filter(Boolean).length === baseTagSkills && (!forbiddenTagSkills || !tagSkills[forbiddenTagSkills]));
+            case "perks":
+                return perkPointsRemaining === 0;
+            case "stats":
+                return ['stats','equipment','review'].includes(currentPage) || isPageValid("perks");
+            case "equipment":
+                return isWeaponSelectValid && isApparelSelectValid && isConsumableSelectValid && isRobotModuleSelectValid && selectedBackgroundId !== "";
+            case "review":
+                return isPageValid("equipment");
+            default:
+                console.error("isPageValid received an unhandled string:",page)
+                return false;
         }
     }
 
-    function goBackOriginPage() {
-        navigateTo('origin');
+    let pageValid = false;
+    $: {
+        switch (currentPage) {
+            case "origin":
+                pageValid = charName.trim().length > 0 && level > 0 && selectedOrigin != '' && (traitCount <= 1 || selectedTraits.length == 2);
+                break;
+            case "special":
+                pageValid = Object.entries(selectedArray === 'Custom' ? customStats : specialStats).every(([key, val]) => val >= 4 && (isGifted && giftedSelected[key] ? val < getStatMax(key) : val <= getStatMax(key))) && remainingSpecialPoints === 0 && (!isGifted || giftedCount === 2);
+                break;
+            case "skills":
+                pageValid = skillPointsRemaining === 0 && Object.entries(skillPoints).every(([skill, points]) => points <= maxSkillCap) && Object.values(extraTagSkillSelections).filter(Boolean).length === extraTagSkills && Object.values(baseTagSkillSelections).filter(Boolean).length === baseTagSkills && (!forbiddenTagSkills || !tagSkills[forbiddenTagSkills]);
+				break;
+            case "perks":
+                pageValid = perkPointsRemaining === 0;
+				break;
+            case "stats":
+                pageValid = ['stats','equipment','review'].includes(currentPage) || isPageValid("perks");
+				break;
+            case "equipment":
+                pageValid = isWeaponSelectValid && isApparelSelectValid && isConsumableSelectValid && isRobotModuleSelectValid && selectedBackgroundId !== "";
+				break;
+            case "review":
+                pageValid = isPageValid("equipment");
+				break;
+            default:
+                pageValid = false;
+        }
     }
-    function goBackSpecialPage() {
-        navigateTo('special')
-    }
-    function goBackSkillsPage() {
-        navigateTo('origin');
-    }
-    function goBackPerksPage() {
-        navigateTo('special')
-    }
-    function goBackStatsPage() {
-        navigateTo('stats');
-    }
-    function goBackEquipmentPage() {
-        navigateTo('equipment')
+
+    function navigateTo(page:string) {
+        if (pages.includes(page)) currentPage = page;
     }
     
 </script>
@@ -1432,34 +2023,18 @@ S*S.      .S*P    .S*P
 <style>
     .page {
         position: absolute;
-        top: 12vh;
+        top: 17vh;
         left: 0;
         width: 100%;
-        height: 88vh;
+        height: 78vh;
         transition: transform 0.5s ease-in-out;
+        overflow-y: auto;
+        scrollbar-width: none;
     }
-    .page-origin {
-        transform: translateY(0);
+    .page::-webkit-scrollbar {
+        display: none;
     }
-    .page-special {
-        transform: translateY(0);
-    }
-    .page-skills {
-        transform: translateY(0);
-    }
-    .page-perks {
-        transform: translateY(0);
-    }
-    .page-stats {
-        transform: translateY(0);
-    }
-    .page-equipment {
-        transform: translateY(0);
-    }
-    .page-charactersheet {
-        transform: translateY(0);
-    }
-    .page-enter {
+    .page-active {
         transform: translateY(0);
     }
     .page-leave {
@@ -1504,10 +2079,32 @@ S*S.      .S*P    .S*P
     button[disabled] {
         filter: invert(25%);
     }
-    .transition {
-        display:block;
+    .forward-block {
+        position:absolute;
+        height: 5vh;
+        width: 100vw;
+        top: 95vh;
+        left: 0vw;
+        background-color:#1115;
     }
-
+    .reverse-block {
+        position:absolute;
+        height: 5vh;
+        width: 100vw;
+        top: 12vh;
+        left: 0vw;
+        background-color:#1113;
+    }
+    .reverse-button {
+        display:inline-block;
+        height: 5vh;
+        margin-left: 1vw;
+    }
+    .forward-button {
+        display:block;
+        height: 5vh;
+        margin-left: 5vw;
+    }
 
     .perk-list {
         display: grid;
@@ -1560,6 +2157,18 @@ S*S.      .S*P    .S*P
 
 </style>
 
+<div class="reverse-block">
+    {#if pastPages.length > 0}
+        {#each pastPages as page}
+            <button class="reverse-button" disabled={page === currentPage} on:click={() => navigateTo(page)}>{page.substring(0,1).toUpperCase()+page.substring(1)}</button>
+        {/each}
+    {/if}
+</div>
+
+<div class="forward-block">
+    <button class="forward-button" disabled={!pageValid} on:click={() => navigateTo(nextPage)}>{nextPage.substring(0,1).toUpperCase()+nextPage.substring(1)}</button>
+</div>
+
 <!--
 
   sSSs   .S_SSSs     .S    S.     sSSs  
@@ -1579,8 +2188,9 @@ YSS'    SSS    S*S    YSSP~SSS    YSSP
 
 -->
 
+<!--
 <form method="POST" use:enhance={(res) => { res.then(r => saveResult = r); }}>
-    <!-- origin fields -->
+    
     <input type="hidden" name="originId" value={selectedOriginData?.id} />
     <input type="hidden" name="isGhoul" value={isGhoul ? 'on' : ''} />
     <input type="hidden" name="charName" value={charName} />
@@ -1589,7 +2199,7 @@ YSS'    SSS    S*S    YSSP~SSS    YSSP
     {#each selectedTraits as trait}
         <input type="hidden" name="selectedTraits" value={trait} />
     {/each}
-    <!-- special fields -->
+    
     {#if isSpecialValid}
         <input type="hidden" name="specialValid" value="true" />
         {#each Object.keys(specialStats) as stat}
@@ -1600,7 +2210,7 @@ YSS'    SSS    S*S    YSSP~SSS    YSSP
             />
         {/each}
     {/if}
-    <!-- skill fields -->
+    
     {#if isSkillsValid}
         {#each Object.entries(skillPoints) as [skill, value]}
             <input type="hidden" name={`skillPoints[${skill}]`} value={value} />
@@ -1609,8 +2219,9 @@ YSS'    SSS    S*S    YSSP~SSS    YSSP
             <input type="hidden" name={`tagSkills[${skill}]`} value={isTagged ? 'on' : ''} />
         {/each}
     {/if}
-
+-->
     <button type="submit" name="action" value="saveCharacter" class="saveButton">Save Character</button>
+<!--
 </form>
 
 {#if saveResult?.data?.success}
@@ -1618,6 +2229,9 @@ YSS'    SSS    S*S    YSSP~SSS    YSSP
 {:else if saveResult?.data?.error}
     <p>Error: {saveResult.data.error}</p>
 {/if}
+-->
+
+
 
 <!--
 
@@ -1638,14 +2252,14 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
 
 -->
 
-<div class={`page ${currentPage === 'origin' ? 'page-origin' : 'page-leave'}`}>
+<div class={`page ${currentPage === 'origin' ? 'page-active' : 'page-leave'}`}>
     <h1>Origin</h1>
     <label for="char-name">Name: </label>
     <input type="text" id="char-name" bind:value={charName} title="char-name">
     <label for="level-select">Level: </label>
     <input type="number" min="1" bind:value={level} id="level-select" title="level-select">
     <label for="origin-select">Origin: </label>
-    <select name="origin-select" id="origin-select" bind:value={selectedOrigin} on:change={() => fetchBackgrounds(selectedOrigin)} class="origin-select">
+    <select name="origin-select" id="origin-select" bind:value={selectedOrigin} on:change={() => handleOriginSelect(selectedOrigin)} class="origin-select">
         {#each Object.entries(data.groupedOrigins) as [sourcebookId, origins]}
             <optgroup label={data.sourcebookMap[sourcebookId]}>
                 {#each origins as origin}
@@ -1682,7 +2296,7 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
 
     {#if traitDescriptions.length > 0 && !isGhoul}
         <div style="display:inline-block">
-            {#each selectedTraits as traitId, index}
+            {#each selectedTraits as traitId}
                 {#if selectedOriginData}
                     {#each selectedOriginData.traits as trait}
                         {#if trait.id.toString() === traitId.toString()}
@@ -1696,8 +2310,6 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
             {/each}
         </div>
     {/if}
-
-    <button class="transition" disabled={!isOriginValid} on:click={goToSpecialPage}>Special</button>
 </div>
 
 <!--
@@ -1719,12 +2331,12 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
 
 -->
 
-<div class={`page ${currentPage === 'special' ? 'page-special' : 'page-leave'}`}>
-    <button on:click={goBackOriginPage}>Origin</button>
+<div class={`page ${currentPage === 'special' ? 'page-active' : 'page-leave'}`}>
 
     <h1>SPECIAL</h1>
     <label for="array-select">Array:</label>
     <select id="array-select" bind:value={selectedArray} on:change={updateArray}>
+        <option hidden disabled selected value="">Select SPECIAL array</option>
         <option value="Balanced">Balanced (6,6,6,6,6,5,5)</option>
         <option value="Focused">Focused (8,7,6,6,5,4,4)</option>
         <option value="Specialized">Specialized (9,8,5,5,5,4,4)</option>
@@ -1786,7 +2398,7 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
         </div>
     {/if}
 
-    <button class="transition" disabled={!isSpecialValid} on:click={goToSkillsPage}>Skills</button>
+
 </div>
 
 <!--
@@ -1807,13 +2419,12 @@ YSS'    S*S     SS  S*S    YSSP    YSSP  YSS'
 
 -->
 
-<div class={`page ${currentPage === 'skills' ? 'page-skills' : 'page-leave'}`}>
-    <button on:click={goBackSpecialPage}>Special</button>
+<div class={`page ${currentPage === 'skills' ? 'page-active' : 'page-leave'}`}>
+
 
     <h1>Skills</h1>
     <p>Remaining Skill Points: {skillPointsRemaining}</p>
     <p>Tag Skills: {Object.values(tagSkills).filter(Boolean).length}/{totalTagSkillsAllowed}</p>
-
     {#if extraTagSkills > 0}
         <h3>Extra Tag Skills ({Object.values(extraTagSkillSelections).filter(Boolean).length}/{extraTagSkills})</h3>
         {#each extraTagSkillOptions as skill}
@@ -1869,7 +2480,6 @@ YSS'    S*S     SS  S*S    YSSP    YSSP  YSS'
             </div>
         {/each}
     </div>
-    <button class="transition" disabled={!isSkillsValid} on:click={goToPerksPage}>Perks</button>
 </div>
 
 <!--
@@ -1890,8 +2500,9 @@ SP                  SP          SP
 Y                   Y           Y                   
 
 -->
-<div class={`page ${currentPage === 'perks' ? 'page-perks' : 'page-leave'}`}>
-    <button on:click={goBackSkillsPage}>Skills</button>
+
+<div class={`page ${currentPage === 'perks' ? 'page-active' : 'page-leave'}`}>
+
     <h1>Perks</h1>
     <p>Perks: {maxPerks - perkPointsRemaining}/{maxPerks}</p>
 
@@ -1957,7 +2568,7 @@ Y                   Y           Y
         {/each}
     </div>
 
-    <button class="transition" disabled={perkPointsRemaining !== 0} on:click={goToStatsPage}>Stats</button>
+
 </div>
 
 <!--
@@ -1979,8 +2590,8 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
 
 -->
 
-<div class={`page ${currentPage === 'stats' ? 'page-stats' : 'page-leave'}`}>
-    <button on:click={goBackPerksPage}>Perks</button>
+<div class={`page ${currentPage === 'stats' ? 'page-active' : 'page-leave'}`}>
+
     <h1>Stats</h1>
     <div>
         <p><strong>Carry Weight</strong>: {150 + 10 * specialStats.strength}</p>
@@ -2021,7 +2632,7 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
             {/each}
         </ul>
     </div>
-    <button class="transition" on:click={goToEquipmentPage}>Equipment</button>
+
 </div>
 
 <!--
@@ -2041,8 +2652,8 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
                                       SP   SP          
                                       Y    Y           
 -->
-<div class={`page ${currentPage === 'equipment' ? 'page-equipment' : 'page-leave'}`}>
-    <button on:click={goBackStatsPage}>Stats</button>
+<div class={`page ${currentPage === 'equipment' ? 'page-active' : 'page-leave'}`}>
+
     <h1>Equipment</h1>
     <label for="background-select">Background:</label>
     <select id="background-select" bind:value={selectedBackgroundId} on:change={() => fetchBackgroundEquipment(parseInt(selectedBackgroundId))}>
@@ -2052,20 +2663,22 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
     </select>
 
     {#if backgroundEquipment}
-        <!--{console.log("bgid:",selectedBackgroundId,"bgEquip",backgroundEquipment,"bgs",backgrounds)}-->
-        {console.log("bgid:",selectedBackgroundId,"bgEquip",backgroundEquipment,"bgs",backgrounds)}
         <div class="equipment-list">
             <h3>Starting Equipment</h3>
             <h4>Weapons</h4>
-            {#each backgroundEquipment.newGroupWeapons as group, index}
-                <select id="weapon-select-{index}" bind:value={selectWeaponKey[index]} on:change={() => handleWeaponSelect(selectWeaponKey[index],index)}>
-                    <option hidden disabled selected value>Weapon {index + 1}</option>
-                    {#each group as choice}
-                        <option value={getWeaponOptionKey(choice)}>{getWeaponOptionLabel(choice)}</option>
-                    {/each}
-                </select>
+            {#each backgroundEquipment.groupWeapons as group, index}
+                {#if group.length === 1}
+                    <p>{getWeaponOptionLabel(group[0])}</p>
+                {:else}
+                    <select id="weapon-select-{index}" bind:value={selectWeaponKey[index]} on:change={() => handleWeaponSelect(selectWeaponKey[index],index)}>
+                        <option hidden disabled selected value>Weapon {index + 1}</option>
+                        {#each group as choice}
+                            <option value={getWeaponOptionKey(choice)}>{getWeaponOptionLabel(choice)}</option>
+                        {/each}
+                    </select>
+                {/if}
             {/each}
-            <p>IDs: {allSelectedWeaponIds} - {allSelectedWeaponIds.length}</p>
+            <p style="background-color:#1114">IDs: {allSelectedWeaponIds} - {allSelectedWeaponIds.length}</p>
             <h4>Ammo</h4>
             <ul>
                 {#each backgroundEquipment.ammo as item}
@@ -2076,12 +2689,16 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             </ul>
             <h4>Apparel</h4>
             {#each backgroundEquipment.groupApparel[0] as group, index}
-                <select id="apparel-select-{index}" bind:value={selectApparelKey[index]} on:change={() => handleApparelSelect(selectApparelKey[index],index)}>
-                    <option hidden disabled selected value="">Apparel {index + 1}</option>
-                    {#each group as choice}
-                        <option value={getApparelOptionKey(choice)}>{getApparelOptionLabel(choice)}</option>
-                    {/each}
-                </select>
+                {#if group.length === 1}
+                    <p>{getApparelOptionLabel(group[0])}</p>
+                {:else}
+                    <select id="apparel-select-{index}" bind:value={selectApparelKey[index]} on:change={() => handleApparelSelect(selectApparelKey[index],index)}>
+                        <option hidden disabled selected value="">Apparel {index + 1}</option>
+                        {#each group as choice}
+                            <option value={getApparelOptionKey(choice)}>{getApparelOptionLabel(choice)}</option>
+                        {/each}
+                    </select>
+                {/if}
             {/each}
             {#if backgroundEquipment.groupApparel.length === 3}
                 {formatDoubleText()}
@@ -2109,13 +2726,39 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
                     <option value="pack">{packText}</option>
                 </select>
             {/if}
-            <p>IDs: {allSelectedApparelIds} - {allSelectedApparelIds.length}</p>
+            <p style="background-color:#1114">IDs: {allSelectedApparelIds} - {allSelectedApparelIds.length}</p>
             <h4>Consumables</h4>
-            <ul>{#each backgroundEquipment.consumables as item}<li>{item.consumable.name}</li>{/each}</ul>
+            {#each backgroundEquipment.groupConsumables as group, index}
+                {#if group.length === 1}
+                    <p>{getConsumableOptionLabel(group[0])}</p>
+                {:else}
+                    <select id="Consumable-select-{index}" bind:value={selectConsumableKey[index]} on:change={() => handleConsumableSelect(selectConsumableKey[index],index)}>
+                        <option hidden disabled selected value>Consumable {index + 1}</option>
+                        {#each group as choice}
+                            <option value={getConsumableOptionKey(choice)}>{getConsumableOptionLabel(choice)}</option>
+                        {/each}
+                    </select>
+                {/if}
+            {/each}
+            <p style="background-color:#1114">IDs: {allSelectedConsumableIds} - {allSelectedConsumableIds.length}</p>
             <h4>Gear</h4>
-            <ul>{#each backgroundEquipment.gear as item}<li>{item.gear.name}</li>{/each}</ul>
+            {#each backgroundEquipment.gear as item}
+                <p>{item.gear.name}</p>
+            {/each}
             <h4>Robot Modules</h4>
-            <ul>{#each backgroundEquipment.robotModules as item}<li>{item.robotModule.name}</li>{/each}</ul>
+            {#each backgroundEquipment.groupRobotModules as group, index}
+                {#if group.length === 1}
+                    <p>{getRobotModuleOptionLabel(group[0])}</p>
+                {:else}
+                    <select id="RobotModule-select-{index}" bind:value={selectRobotModuleKey[index]} on:change={() => handleRobotModuleSelect(selectRobotModuleKey[index],index)}>
+                        <option hidden disabled selected value>RobotModule {index + 1}</option>
+                        {#each group as choice}
+                            <option value={getRobotModuleOptionKey(choice)}>{getRobotModuleOptionLabel(choice)}</option>
+                        {/each}
+                    </select>
+                {/if}
+            {/each}
+            <p style="background-color:#1114">IDs: {allSelectedRobotModuleIds} - {allSelectedRobotModuleIds.length}</p>
             <h4>Caps: {backgrounds[selectedBackgroundIndex].caps}</h4>
             <h4>Misc</h4>
             <p>{backgrounds[selectedBackgroundIndex].misc}</p>
@@ -2154,7 +2797,6 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             </ul>
         </div>
     {/if}
-    <button class="transition" disabled={!isEquipmentValid} on:click={goToStatsPage}>Stats</button>
 </div>
 
 <!--
@@ -2175,3 +2817,9 @@ SP                              SP
 Y                               Y                         
 
 -->
+
+<div class={`page ${currentPage === 'review' ? 'page-active' : 'page-leave'}`}>
+
+
+
+</div>

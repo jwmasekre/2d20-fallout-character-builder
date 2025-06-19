@@ -23,7 +23,7 @@ export async function getOriginsSourcesTraits() {
         const key = row.origin_traits.originId.toString();
         if (!traitsByOrigin[key]) traitsByOrigin[key] = [];
         traitsByOrigin[key].push(row.traits);
-    }
+    } 
 
     const groupedOrigins = origins.reduce((acc, origin) => {
         if (!origin.sourcebookId) return acc;
@@ -72,12 +72,17 @@ export async function getBackgroundEquipment(backgroundId: number) {
     const [weapons, apparel, consumables, gear, robotModules] = await Promise.all([
 		db.select({
 			weapon: schema.weaponsInNewContent,
+            mod: schema.weaponModsInNewContent,
             ...schema.backgroundWeaponsInNewContent,
 		})
 			.from(schema.backgroundWeaponsInNewContent)
 			.innerJoin(
                 schema.weaponsInNewContent,
                 eq(schema.backgroundWeaponsInNewContent.weaponId, schema.weaponsInNewContent.id)
+            )
+            .leftJoin(
+                schema.weaponModsInNewContent,
+                eq(schema.backgroundWeaponsInNewContent.modId, schema.weaponModsInNewContent.id)
             )
 			.where(eq(schema.backgroundWeaponsInNewContent.backgroundId, backgroundId)),
 

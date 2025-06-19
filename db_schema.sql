@@ -1227,6 +1227,8 @@ ALTER TABLE "background_weapons" ADD FOREIGN KEY ("background_id") REFERENCES "b
 
 ALTER TABLE "background_weapons" ADD FOREIGN KEY ("weapon_id") REFERENCES "weapons" ("id");
 
+ALTER TABLE "background_weapons" ADD FOREIGN KEY ("mod_id") REFERENCES "weapon_mods" ("id");
+
 ALTER TABLE "background_weapons" ADD FOREIGN KEY ("alt_id") REFERENCES "background_weapons" ("id");
 
 ALTER TABLE "background_ammo" ADD FOREIGN KEY ("ammo_id") REFERENCES "ammo" ("id");
@@ -1542,5 +1544,3 @@ ALTER TABLE "settlement_npc_creatures" ADD FOREIGN KEY ("creature_id") REFERENCE
 ALTER TABLE "settlement_npc_characters" ADD FOREIGN KEY ("settlement_id") REFERENCES "settlements" ("id");
 
 ALTER TABLE "settlement_npc_characters" ADD FOREIGN KEY ("character_id") REFERENCES "active_npc_characters" ("id");
-
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA new_content TO svelte;

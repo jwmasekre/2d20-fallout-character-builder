@@ -455,6 +455,11 @@ export const backgroundWeaponsInNewContent = newContent.table("background_weapon
 			foreignColumns: [table.id],
 			name: "background_weapons_alt_id_fkey"
 		}),
+	foreignKey({
+			columns: [table.modId],
+			foreignColumns: [weaponModsInNewContent.id],
+			name: "background_weapons_mod_id_fkey"
+		}),
 ]);
 
 export const backgroundApparelInNewContent = newContent.table("background_apparel", {
