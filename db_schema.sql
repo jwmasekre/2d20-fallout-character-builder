@@ -11,6 +11,7 @@ CREATE TABLE "characters" (
   "origin" smallint,
   "luck_points" smallint,
   "current_health" smallint,
+  "rad_points" smallint,
   "head_hp" smallint,
   "head_inj" smallint,
   "la_hp" smallint,

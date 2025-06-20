@@ -170,7 +170,9 @@ INSERT INTO background_weapons (background_id,weapon_id,mod_id) VALUES
 ('49','34',NULL),
 ('43','94',NULL),
 ('4','62',NULL),
-('16','62',NULL);
+('16','62',NULL),
+('24','2',''),
+('24','34','');
 
 UPDATE background_weapons AS b SET alt_id = a.alt_id FROM (VALUES
 (2,3),
@@ -268,5 +270,7 @@ UPDATE background_weapons AS b SET alt_id = a.alt_id FROM (VALUES
 (163,164),
 (164,165),
 (165,163),
-(166,163)
+(166,163),
+(173,174),
+(174,173)
 ) AS a(id,alt_id) WHERE a.id = b.id;

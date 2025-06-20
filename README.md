@@ -151,15 +151,16 @@ copy over drizzle/*.ts to lib/server/db
 
 * builder fixes
     * review page with final calculations
-    * readme update
-    * limit special array options with trait limitations
-    * update stats logic to handle traits and perks
-    * clean up text for misc data
+    * ~~readme update~~
+    * ~~limit special array options with trait limitations~~
+    * ~~update stats logic to handle traits and perks~~
+    * ~~clean up text for misc data~~
     * clearly comment code
-    * add ncr trooper's second weapon selection (missing from db)
-    * hide equipment headings if no equipment of that type
+    * ~~add ncr trooper's second weapon selection (missing from db)~~
+    * ~~hide equipment headings if no equipment of that type~~
     * figure out why too many changes starts creating errors with pulling data (need to purge data?)
-    * fix the builder nav logic to show every page that's been visited and is also valid
+    * ~~fix the builder nav logic to show every page that's been visited and is also valid~~
+    * ~~add rad points for children of atom~~
     * un-monolith builder page
         * break up pagination
         * consolidate types

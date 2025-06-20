@@ -1,5 +1,4 @@
 <script lang="ts">
-
     import { onMount } from 'svelte';
 
     /*
@@ -105,6 +104,9 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
         if (selectedOriginData && traitCount == 1) {
             selectedTraits = [selectedOriginData.traits[0].id.toString()];
         }
+        visitedPages = [];
+        currentPage = "";
+        currentPage = "origin";
     }
 
 /*
@@ -187,6 +189,15 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
         agility: 5,
         luck: 5
     };
+    let arrayStats = {
+        strength: 5,
+        perception: 5,
+        endurance: 5,
+        charisma: 5,
+        intelligence: 5,
+        agility: 5,
+        luck: 5
+    };
     let selectedArray = "";
     let customStats = {
         strength: 5,
@@ -208,8 +219,8 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
             remainingSpecialPoints = specialPoints - Object.values(customStats).reduce((acc, val) => acc + val, 0);
         } else {
             const selected = arrays[selectedArray];
-            Object.keys(specialStats).forEach((key, index) => {
-                specialStats[key] = selected[index];
+            Object.keys(arrayStats).forEach((key, index) => {
+                arrayStats[key] = selected[index];
             });
 
             remainingSpecialPoints = specialPoints - selected.reduce((acc, val) => acc + val, 0);
@@ -222,9 +233,15 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
             if (selectedArray === 'Custom') {
                 customStats[stat] = parsedValue;
             } else {
-                specialStats[stat] = parsedValue;
+                arrayStats[stat] = parsedValue;
             }
         }
+    }
+
+    $: if (selectedArray) {
+        if (selectedArray === 'Custom') specialStats = customStats;
+        else specialStats = arrayStats;
+        if (isGifted) for (const stat of Object.entries(specialStats)) specialStats[stat[0]] = getDisplayStat(stat[0],stat[1]);
     }
 
 /*
@@ -386,6 +403,7 @@ Y                   Y           Y
 
     function resetPerks() {
         selectedPerks = [];
+        showEligibleOnly = false;
     }
 
     function getSpecialRequirementTypes(perk) {
@@ -408,7 +426,8 @@ Y                   Y           Y
     }
 
     let hasReadRequiredBook = false; //once more character tables are built i'll work this one out
-    let hasCompanion = false; //same with this one
+    let hasCompanion = false;
+    $: hasCompanion = (selectedPerks.includes('28') || selectedPerks.includes('105'));
 
     function isEligibleForPerk(perk) {
         //has perk already
@@ -528,6 +547,182 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
 
 */
 
+    //this calculation comes up too much to not turn into a function
+    function getStaggeredBonus(stat:number):number {
+        if (stat === 7 || stat === 8) return 1;
+        if (stat === 9 || stat === 10) return 2;
+        if (stat > 10) return 3;
+        return 0;
+    }
+
+    //carry weight calculation
+    let carryWeight: number;
+    //checking all four of these to trigger recalc on a change of any of them
+    $: if (selectedTraits.length !== 0 || selectedPerks.length !== 0 || specialStats || customStats) {
+        let isRobot = false;
+        //mister handy, robobrain, securitron, and assaultron have flat carry weights
+        if (selectedTraits.includes('4') || selectedTraits.includes('19') || selectedTraits.includes('20') || selectedTraits.includes('23')) carryWeight = 150, isRobot = true;
+        //protectrons are even bulkier
+        else if (selectedTraits.includes('18')) carryWeight = 225, isRobot = true;
+        //small frame halves str bonus to carry weight
+        else if (selectedTraits.includes('9')) carryWeight = 150 + 5 * specialStats.strength
+        //default calculation
+        else carryWeight = 150 + 10 * specialStats.strength;
+        //strong back adds 25 per rank to non-robots
+        carryWeight += isRobot ? 0 : selectedPerks.filter(p => p === '91').length * 25;
+    }
+
+    //damage resistance calculation
+    let baseDr = {
+        phys: 0,
+        enrg: 0,
+        rads: 0,
+        pois: 0
+    }
+    //checking all four of these to trigger recalc on a change of any of them
+    $: if (selectedTraits.length !== 0 || selectedPerks.length !== 0 || specialStats) {
+        //rads
+        //immune to rads
+        if (['2','3','4','18','19','20','21','23','25'].some(t => selectedTraits.includes(t))) baseDr.rads = 99;
+        //add dr for child of atom trait and rad resistance perk
+        else baseDr.rads += selectedTraits.filter(t => t === '22').length + selectedPerks.filter(p => p === '73').length;
+        
+        //poison
+        //immune to poison
+        if (['3','4','18','19','20','21','23','25'].some(t => selectedTraits.includes(t))) baseDr.rads = 99;
+        //add dr for snakeeater perk
+        else baseDr.pois += selectedPerks.filter(p => p === '87').length * 2;
+
+        //physical
+        //add dr like melee damage for barbarian perk
+        if (selectedPerks.includes('8')) {
+            baseDr.phys += getStaggeredBonus(specialStats.strength);
+        }
+        //add dr for toughness perk
+        baseDr.phys += selectedPerks.filter(p => p === '94').length;
+
+        //energy
+        //add dr for refractor perk
+        baseDr.enrg += selectedPerks.filter(p => p === '74').length;
+
+        //evasive adding to physical and energy like melee damage
+        if (selectedPerks.includes('167')) {
+            const bonus = getStaggeredBonus(specialStats.agility);
+            baseDr.phys += bonus;
+            baseDr.enrg += bonus;
+        }
+    }
+    
+    //defense
+    let defense = 0;
+    $: specialStats.agility >= 9 ? 2 : 1;
+
+    //initiative
+    let initiative = 0;
+    $: initiative = specialStats.perception + specialStats.agility;
+
+    //max health adjustments
+    let maxHealth = 0;
+    //calculate and add health for life giver perk
+    $: maxHealth = specialStats.endurance + specialStats.luck + selectedPerks.filter(p => p === '51').length * specialStats.endurance;
+    //will help us determine if we need to report different health at night for nocturnal fortitude perk
+    $: isNocturnal = selectedPerks.includes('111');
+
+    //melee damage modifier calculation
+    let meleeDamage = 0;
+    let unarmedBonus = false;
+    let sneakBonus = false;
+    //checking all four of these to trigger recalc on a change of any of them
+    $: if (selectedTraits.length > 0 || selectedPerks.length > 0 || specialStats) {
+        //base calculation
+        meleeDamage = getStaggeredBonus(specialStats.strength)
+        //heavy handed and assaultron traits
+        if (selectedTraits.includes('8') || selectedTraits.includes('23')) meleeDamage += 1;
+        //will help us determine if we need to report different modifier for unarmed via iron fist perk
+        unarmedBonus = selectedPerks.includes('46');
+        //will help us determine if we need to report different modifier for sneak attacks via ninja
+        sneakBonus = selectedPerks.includes('61');
+    }
+
+    //luck points
+    let maxLuckPoints = 0;
+    //max luck points are luck or minus one for gifted trait
+    $: maxLuckPoints = specialStats.luck - selectedTraits.filter(t => t === '7').length;
+
+    //companion statblock
+    let companion = {
+        name: "",
+        special: {} = {},
+        skills: {} = {},
+        hp: 0,
+        def: 0,
+        cw: 0,
+        meleeDamage: 0,
+        dr: {
+            phys: 0,
+            enrg: 0,
+            rads: 0,
+            pois: 0
+        },
+        weapons: [] = [],
+        abilities: [] = [],
+        apparel: [] = [],
+        wealth: 0
+    };
+    let isDog = false;
+    $: if (selectedPerks.length > 0 && hasCompanion) {
+        isDog = selectedPerks.includes('28');
+        companion.name = isDog ? "Dogmeat" : "undefined npc"
+        companion.special = isDog ? {
+            body: 5,
+            mind: 4
+        } : {
+            strength: 5,
+            perception: 5,
+            endurance: 5,
+            charisma: 5,
+            intelligence: 5,
+            agility: 5,
+            luck: 5
+        }
+        companion.skills = isDog ? {
+            melee: 2,
+            guns: 0,
+            other: 1
+        } : {
+            'Athletics': 0,
+			'Barter': 0,
+			'Big Guns': 0,
+			'Energy Weapons': 0,
+			'Explosives': 0,
+			'Lockpick': 0,
+			'Medicine': 0,
+			'Melee Weapons': 0,
+			'Pilot': 0,
+			'Repair': 0,
+			'Science': 0,
+			'Small Guns': 0,
+			'Sneak': 0,
+			'Speech': 0,
+			'Survival': 0,
+			'Throwing': 0,
+			'Unarmed': 0
+        }
+        companion.hp = isDog ? 6 : 0;
+        companion.def = isDog ? 1 : 0;
+        companion.cw = isDog ? 50 : 150 + 10 * companion.strength;
+        companion.meleeDamage = isDog ? 1 : getStaggeredBonus(companion.special.strength);
+        companion.dr = {
+            phys: 0,
+            enrg: 0,
+            rads: 0,
+            pois: 0
+        }
+        companion.weapons = isDog ? ["Bite: Body+Melee (TN 7) 2CD Vicious Physical"] : [];
+        companion.abilities = isDog ? ["Keen Senses","Attack Dog","Companion"] : [];
+        companion.wealth = 0;
+    }
+
 /*
 
   sSSs    sSSs_sSSs     .S       S.    .S   .S_sSSs    
@@ -556,6 +751,21 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         }
         backgrounds = await res.json();
     }
+
+    let backgroundStuff: {
+        caps: number;
+        misc: string;
+        trinket: number;
+        food: number;
+        forage: number;
+        bev: number;
+        chem: number;
+        ammo: number;
+        aid: number;
+        odd: number;
+        outcast: number;
+        junk: number;
+    } | {};
 
     type Weapon = {
         ammo: number;
@@ -789,6 +999,27 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             groupConsumables,
             groupRobotModules
         };
+        console.log(selectedBackgroundIndex);
+        if (selectedBackgroundIndex === null) return;
+        const background = backgrounds[selectedBackgroundIndex];
+        console.log(JSON.stringify(backgrounds));
+        console.log(JSON.stringify(background));
+        backgroundStuff = {};
+        backgroundStuff = {
+            caps: background.caps,
+            misc: background.misc.substring(2,background.misc.length-2).split('”,”').join(', ').replace("\{\}",""),
+            trinket: background.trinket,
+            food: background.food,
+            forage: background.forage,
+            bev: background.bev,
+            chem: background.chem,
+            ammo: background.ammo,
+            aid: background.aid,
+            odd: background.odd,
+            outcast: background.outcast,
+            junk: background.junk
+        };
+        console.log(JSON.stringify(backgroundStuff));
     }
 
     //quite proud of this one, handles all the logic of choices, including many for one swaps
@@ -1933,13 +2164,20 @@ Y                  Y
         navigateTo("origin");
     })
     let nextPage = "";
+    let visitedPages:string[] = [];
+    $: if (pages.includes(currentPage)) {
+        if (!visitedPages.includes(currentPage)) visitedPages.push(currentPage);
+    }
+
     let pastPages:string[] = []
 
-    $: if (pages.includes(currentPage)) {
+    $: if (pages.includes(currentPage) && (pageValid || !pageValid)) {
         pastPages = []
+        let previousPage = ""
         for (const page of pages) {
-            if (isPageValid(page) || page === currentPage) {
-                pastPages = [...pastPages,page]
+            if ((isPageValid(page) || page === currentPage || isPageValid(previousPage)) && visitedPages.includes(page)) {
+                pastPages = [...pastPages,page];
+                previousPage = page;
             } else break;
         }
     }
@@ -1949,7 +2187,7 @@ Y                  Y
     function isPageValid(page:string):boolean {
         switch (page) {
             case "origin":
-                return charName.trim().length > 0 && level > 0 && selectedOrigin != '' && (traitCount <= 1 || selectedTraits.length == 2);
+                return charName.trim().length > 0 && level > 0 && selectedOrigin != '' && (traitCount <= 1 || selectedTraits.length == 2 || isGhoul);
             case "special":
                 return Object.entries(selectedArray === 'Custom' ? customStats : specialStats).every(([key, val]) => val >= 4 && (isGifted && giftedSelected[key] ? val < getStatMax(key) : val <= getStatMax(key))) && remainingSpecialPoints === 0 && (!isGifted || giftedCount === 2);
             case "skills":
@@ -1972,7 +2210,7 @@ Y                  Y
     $: {
         switch (currentPage) {
             case "origin":
-                pageValid = charName.trim().length > 0 && level > 0 && selectedOrigin != '' && (traitCount <= 1 || selectedTraits.length == 2);
+                pageValid = charName.trim().length > 0 && level > 0 && selectedOrigin != '' && (traitCount <= 1 || selectedTraits.length == 2 || isGhoul);
                 break;
             case "special":
                 pageValid = Object.entries(selectedArray === 'Custom' ? customStats : specialStats).every(([key, val]) => val >= 4 && (isGifted && giftedSelected[key] ? val < getStatMax(key) : val <= getStatMax(key))) && remainingSpecialPoints === 0 && (!isGifted || giftedCount === 2);
@@ -2156,6 +2394,25 @@ S*S.      .S*P    .S*P
     }
 
 </style>
+
+<!--
+
+ .S_sSSs     .S_SSSs     .S    S.   
+.SS~YS%%b   .SS~SSSSS   .SS    SS.  
+S%S   `S%b  S%S   SSSS  S%S    S%S  
+S%S    S%S  S%S    S%S  S%S    S%S  
+S%S    S&S  S%S SSSS%S  S&S    S%S  
+S&S    S&S  S&S  SSS%S  S&S    S&S  
+S&S    S&S  S&S    S&S  S&S    S&S  
+S&S    S&S  S&S    S&S  S&S    S&S  
+S*S    S*S  S*S    S&S  S*b    S*S  
+S*S    S*S  S*S    S*S  S*S.   S*S  
+S*S    S*S  S*S    S*S   SSSbs_S*S  
+S*S    SSS  SSS    S*S    YSSP~SSS  
+SP                 SP               
+Y                  Y                
+
+-->
 
 <div class="reverse-block">
     {#if pastPages.length > 0}
@@ -2370,15 +2627,15 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
     {:else}
         <div>
             <p>Remaining Points: {remainingSpecialPoints}</p>
-            {#each Object.keys(specialStats) as stat}
+            {#each Object.keys(arrayStats) as stat}
                 <div>
                     <label for={stat}>{stat.toUpperCase()}:</label>
                     <select
-                        bind:value={specialStats[stat]}
+                        bind:value={arrayStats[stat]}
                         on:change={(e) => handleStatChange(stat, e.target.value)}
                     >
                         {#each arrays[selectedArray] as value, index}
-                            <option value={value}>{value}</option>
+                            <option disabled={value>getStatMax(stat)} value={value}>{value}</option>
                         {/each}
 
                     </select>
@@ -2392,7 +2649,7 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
                             }}
                         />
                     {/if}
-                    <span>→ {getDisplayStat(stat, specialStats[stat])}</span>
+                    <span>→ {getDisplayStat(stat, arrayStats[stat])}</span>
                 </div>
             {/each}
         </div>
@@ -2593,46 +2850,123 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
 <div class={`page ${currentPage === 'stats' ? 'page-active' : 'page-leave'}`}>
 
     <h1>Stats</h1>
-    <div>
-        <p><strong>Carry Weight</strong>: {150 + 10 * specialStats.strength}</p>
-        <p><strong>Damage Resistance</strong>: 0</p>
-        <p><strong>Defense</strong>: {specialStats.agility >= 9 ? 2 : 1}</p>
-        <p><strong>Initiative</strong>: {specialStats.perception + specialStats.agility}</p>
-        <p><strong>Health</strong>: {specialStats.endurance + specialStats.luck}</p>
-        <p><strong>Melee Damage</strong>
-            {#if specialStats.strength < 7}: +0cd
-            {:else if specialStats.strength <= 8}: +1cd
-            {:else if specialStats.strength <= 10}: +2cd
-            {:else}: +3cd
-            {/if}    
-        </p>
+    <div class="character" style={hasCompanion ? "display:inline-block;margin-right:1rem" : "display:block"}>
+        <div class="character-stats">
+            <p><strong>Carry Weight</strong>: {carryWeight}</p>
+            <p><strong>Base Damage Resistance</strong>:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Physical</th>
+                        <th scope="col">Energy</th>
+                        <th scope="col">Radiation</th>
+                        <th scope="col">Poison</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{baseDr.phys}</td>
+                        <td>{baseDr.enrg}</td>
+                        <td>{baseDr.rads === 99 ? "immune" : baseDr.rads}</td>
+                        <td>{baseDr.pois === 99 ? "immune" : baseDr.pois}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p><strong>Defense</strong>: {defense}</p>
+            <p><strong>Initiative</strong>: {initiative}</p>
+            <p><strong>Health</strong>: {maxHealth}{#if isNocturnal} ({maxHealth + specialStats.endurance} at night){/if}</p>
+            <p><strong>Melee Damage</strong>: +{meleeDamage}CD{#if unarmedBonus} (+{meleeDamage + 1}CD unarmed) {/if}{#if sneakBonus} (+{meleeDamage + 2}CD sneak attacks){/if}{#if unarmedBonus && sneakBonus} (+{meleeDamage + 3}CD unarmed sneak attacks){/if}</p>
+            <p><strong>Luck Points</strong>: {maxLuckPoints}</p>
+        </div>
+        <div class="character-special" style={!hasCompanion ? "display:inline-block;margin-right:1rem" : "display:block"}>
+            <h2>SPECIAL</h2>
+            {#each ['strength', 'perception', 'endurance', 'charisma', 'intelligence', 'agility', 'luck'] as stat}
+                <div>
+                    <strong>{stat.toUpperCase()}</strong>: {specialStats[stat]}
+                </div>
+            {/each}
+        </div>
+        <div class="character-skills" style="display:inline-block">
+            <h2>Skills</h2>
+            <ul>
+                {#each Object.keys(skillPoints) as skill}
+                    {#if skillPoints[skill] > 0}
+                        <li>
+                            {skillPoints[skill]} {skill} {tagSkills[skill] ? '(Tag)' : ''}
+                        </li>
+                    {/if}
+                {/each}
+            </ul>
+            <ul>
+                {#each Object.values(selectedPerks) as perkId}
+                    <li>{(allPerks.find(perk => perk.id.toString() === perkId)).name}</li>
+                {/each}
+            </ul>
+        </div>
     </div>
-    <div class="special-stats-row" style="display:inline-block;margin-right:1rem">
-        <h2>SPECIAL</h2>
-        {#each ['strength', 'perception', 'endurance', 'charisma', 'intelligence', 'agility', 'luck'] as stat}
-            <div>
-                <strong>{stat.toUpperCase()}</strong>: {specialStats[stat]}
+    {#if hasCompanion}
+        <div class="companion" style="display:inline-block">
+            <h2>Companion</h2>
+            <h3>{companion.name}</h3>
+            <div class="companion-attr" style="display:inline-block;margin-right:1rem">
+                <h4>{isDog ? "Attributes" : "Special"}</h4>
+                {#each Object.entries(companion.special) as stat}
+                    <p><strong>{stat[0]}</strong>: {stat[1]}</p>
+                {/each}
             </div>
-        {/each}
-    </div>
-    <div style="display:inline-block">
-        <h2>Skills</h2>
-        <ul>
-            {#each Object.keys(skillPoints) as skill}
-                {#if skillPoints[skill] > 0}
-                    <li>
-                        {skillPoints[skill]} {skill} {tagSkills[skill] ? '(Tag)' : ''}
-                    </li>
+            <div class="companion-skill">
+                <h4>Skills</h4>
+                {#each Object.entries(companion.skills) as skill}
+                    <p><strong>{skill[0]}</strong>: {skill[1]}</p>
+                {/each}
+            </div>
+            <div class="companion-stat" style="display:inline-block;margin-right:1rem">
+                <h4>Stats</h4>
+                <p><strong>Carry Weight</strong>: {companion.cw}</p>
+                <p><strong>Base Damage Resistance</strong>:</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Physical</th>
+                            <th scope="col">Energy</th>
+                            <th scope="col">Radiation</th>
+                            <th scope="col">Poison</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{companion.dr.phys}</td>
+                            <td>{companion.dr.enrg}</td>
+                            <td>{companion.dr.rads === 99 ? "immune" : companion.dr.rads}</td>
+                            <td>{companion.dr.pois === 99 ? "immune" : companion.dr.pois}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p><strong>Defense</strong>: {companion.def}</p>
+                <p><strong>Initiative</strong>: {initiative}</p>
+                <p><strong>Health</strong>: {companion.hp}</p>
+                <p><strong>Melee Damage</strong>: +{companion.meleeDamage}CD</p>
+            </div>
+            <div class="companion-gear">
+                <h4>{isDog ? "Attacks" : "Weapons"}</h4>
+                {#each companion.weapons as weapon}
+                    <p>{weapon}</p>
+                {/each}
+                {#if !isDog}
+                    <h4>Apparel</h4>
+                    {#each companion.apparel as apparel}
+                        <p>{apparel}</p>
+                    {/each}
                 {/if}
-            {/each}
-        </ul>
-        <ul>
-            {#each Object.values(selectedPerks) as perkId}
-                <li>{(allPerks.find(perk => perk.id.toString() === perkId)).name}</li>
-            {/each}
-        </ul>
-    </div>
-
+                <h4>Special Abilities</h4>
+                {#each companion.abilities as ability}
+                    <p>{ability}</p>
+                {/each}
+                <h4>Wealth</h4>
+                <p>{companion.wealth}</p>
+            </div>
+        </div>
+    {/if}
 </div>
 
 <!--
@@ -2665,136 +2999,153 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
     {#if backgroundEquipment}
         <div class="equipment-list">
             <h3>Starting Equipment</h3>
-            <h4>Weapons</h4>
-            {#each backgroundEquipment.groupWeapons as group, index}
-                {#if group.length === 1}
-                    <p>{getWeaponOptionLabel(group[0])}</p>
-                {:else}
-                    <select id="weapon-select-{index}" bind:value={selectWeaponKey[index]} on:change={() => handleWeaponSelect(selectWeaponKey[index],index)}>
-                        <option hidden disabled selected value>Weapon {index + 1}</option>
-                        {#each group as choice}
-                            <option value={getWeaponOptionKey(choice)}>{getWeaponOptionLabel(choice)}</option>
-                        {/each}
-                    </select>
-                {/if}
-            {/each}
-            <p style="background-color:#1114">IDs: {allSelectedWeaponIds} - {allSelectedWeaponIds.length}</p>
-            <h4>Ammo</h4>
-            <ul>
-                {#each backgroundEquipment.ammo as item}
-                    {#if allSelectedWeaponIds.includes(item.bgWeaponId.toString())}
-                        <li>{item.ammo.name} ({item.quantity})</li>
+            {#if backgroundEquipment.groupWeapons.length > 0}
+                <h4>Weapons</h4>
+                {#each backgroundEquipment.groupWeapons as group, index}
+                    {#if group.length === 1}
+                        <p>{getWeaponOptionLabel(group[0])}</p>
+                    {:else}
+                        <select id="weapon-select-{index}" bind:value={selectWeaponKey[index]} on:change={() => handleWeaponSelect(selectWeaponKey[index],index)}>
+                            <option hidden disabled selected value>Weapon {index + 1}</option>
+                            {#each group as choice}
+                                <option value={getWeaponOptionKey(choice)}>{getWeaponOptionLabel(choice)}</option>
+                            {/each}
+                        </select>
                     {/if}
                 {/each}
-            </ul>
-            <h4>Apparel</h4>
-            {#each backgroundEquipment.groupApparel[0] as group, index}
-                {#if group.length === 1}
-                    <p>{getApparelOptionLabel(group[0])}</p>
-                {:else}
-                    <select id="apparel-select-{index}" bind:value={selectApparelKey[index]} on:change={() => handleApparelSelect(selectApparelKey[index],index)}>
-                        <option hidden disabled selected value="">Apparel {index + 1}</option>
-                        {#each group as choice}
-                            <option value={getApparelOptionKey(choice)}>{getApparelOptionLabel(choice)}</option>
-                        {/each}
-                    </select>
-                {/if}
-            {/each}
-            {#if backgroundEquipment.groupApparel.length === 3}
-                {formatDoubleText()}
-                <select id="singleDouble" bind:value={singleDouble} on:change={() => handleSingleSelect(singleDouble)}>
-                    <option hidden disabled selected value="">Pick One</option>
-                    <option value="single">{backgroundEquipment.groupApparel[1].apparel.name}</option>
-                    <option value="double">{doubleText}</option>
-                </select>
-                {#if singleDouble === "double"}
-                    {#each backgroundEquipment.groupApparel[2] as group, index}
-                        <select id="double-select-{index}" bind:value={doubleKey[index]} on:change={() => handleDoubleSelect(doubleKey[index],index)}>
-                            <option hidden disabled selected value="">Left or Right</option>
+                <p style="background-color:#1114">IDs: {allSelectedWeaponIds} - {allSelectedWeaponIds.length}</p>
+                <h4>Ammo</h4>
+                <ul>
+                    {#each backgroundEquipment.ammo as item}
+                        {#if allSelectedWeaponIds.includes(item.bgWeaponId.toString())}
+                            <li>{item.ammo.name} ({item.quantity})</li>
+                        {/if}
+                    {/each}
+                </ul>
+            {/if}
+            {#if backgroundEquipment.groupApparel.length > 0}
+                <h4>Apparel</h4>
+                {#each backgroundEquipment.groupApparel[0] as group, index}
+                    {#if group.length === 1}
+                        <p>{getApparelOptionLabel(group[0])}</p>
+                    {:else}
+                        <select id="apparel-select-{index}" bind:value={selectApparelKey[index]} on:change={() => handleApparelSelect(selectApparelKey[index],index)}>
+                            <option hidden disabled selected value="">Apparel {index + 1}</option>
                             {#each group as choice}
                                 <option value={getApparelOptionKey(choice)}>{getApparelOptionLabel(choice)}</option>
                             {/each}
                         </select>
-                    {/each}
-                {/if}
-            {/if}
-            {#if backgroundEquipment.groupApparel.length === 4}
-                {formatPackText()}
-                <select id="singlePack" bind:value={singlePack} on:change={() => handlePackSelect(singlePack)}>
-                    <option hidden disabled selected value="">Pick One</option>
-                    <option value="single">{backgroundEquipment.groupApparel[1].apparel.name}</option>
-                    <option value="pack">{packText}</option>
-                </select>
-            {/if}
-            <p style="background-color:#1114">IDs: {allSelectedApparelIds} - {allSelectedApparelIds.length}</p>
-            <h4>Consumables</h4>
-            {#each backgroundEquipment.groupConsumables as group, index}
-                {#if group.length === 1}
-                    <p>{getConsumableOptionLabel(group[0])}</p>
-                {:else}
-                    <select id="Consumable-select-{index}" bind:value={selectConsumableKey[index]} on:change={() => handleConsumableSelect(selectConsumableKey[index],index)}>
-                        <option hidden disabled selected value>Consumable {index + 1}</option>
-                        {#each group as choice}
-                            <option value={getConsumableOptionKey(choice)}>{getConsumableOptionLabel(choice)}</option>
+                    {/if}
+                {/each}
+                {#if backgroundEquipment.groupApparel.length === 3}
+                    {formatDoubleText()}
+                    <select id="singleDouble" bind:value={singleDouble} on:change={() => handleSingleSelect(singleDouble)}>
+                        <option hidden disabled selected value="">Pick One</option>
+                        <option value="single">{backgroundEquipment.groupApparel[1].apparel.name}</option>
+                        <option value="double">{doubleText}</option>
+                    </select>
+                    {#if singleDouble === "double"}
+                        {#each backgroundEquipment.groupApparel[2] as group, index}
+                            <select id="double-select-{index}" bind:value={doubleKey[index]} on:change={() => handleDoubleSelect(doubleKey[index],index)}>
+                                <option hidden disabled selected value="">Left or Right</option>
+                                {#each group as choice}
+                                    <option value={getApparelOptionKey(choice)}>{getApparelOptionLabel(choice)}</option>
+                                {/each}
+                            </select>
                         {/each}
+                    {/if}
+                {/if}
+                {#if backgroundEquipment.groupApparel.length === 4}
+                    {formatPackText()}
+                    <select id="singlePack" bind:value={singlePack} on:change={() => handlePackSelect(singlePack)}>
+                        <option hidden disabled selected value="">Pick One</option>
+                        <option value="single">{backgroundEquipment.groupApparel[1].apparel.name}</option>
+                        <option value="pack">{packText}</option>
                     </select>
                 {/if}
-            {/each}
-            <p style="background-color:#1114">IDs: {allSelectedConsumableIds} - {allSelectedConsumableIds.length}</p>
-            <h4>Gear</h4>
-            {#each backgroundEquipment.gear as item}
-                <p>{item.gear.name}</p>
-            {/each}
-            <h4>Robot Modules</h4>
-            {#each backgroundEquipment.groupRobotModules as group, index}
-                {#if group.length === 1}
-                    <p>{getRobotModuleOptionLabel(group[0])}</p>
-                {:else}
-                    <select id="RobotModule-select-{index}" bind:value={selectRobotModuleKey[index]} on:change={() => handleRobotModuleSelect(selectRobotModuleKey[index],index)}>
-                        <option hidden disabled selected value>RobotModule {index + 1}</option>
-                        {#each group as choice}
-                            <option value={getRobotModuleOptionKey(choice)}>{getRobotModuleOptionLabel(choice)}</option>
-                        {/each}
-                    </select>
-                {/if}
-            {/each}
+                <p style="background-color:#1114">IDs: {allSelectedApparelIds} - {allSelectedApparelIds.length}</p>
+            {/if}
+            {#if backgroundEquipment.groupConsumables.length > 0}
+                <h4>Consumables</h4>
+                {#each backgroundEquipment.groupConsumables as group, index}
+                    {#if group.length === 1}
+                        <p>{getConsumableOptionLabel(group[0])}</p>
+                    {:else}
+                        <select id="Consumable-select-{index}" bind:value={selectConsumableKey[index]} on:change={() => handleConsumableSelect(selectConsumableKey[index],index)}>
+                            <option hidden disabled selected value>Consumable {index + 1}</option>
+                            {#each group as choice}
+                                <option value={getConsumableOptionKey(choice)}>{getConsumableOptionLabel(choice)}</option>
+                            {/each}
+                        </select>
+                    {/if}
+                {/each}
+                <p style="background-color:#1114">IDs: {allSelectedConsumableIds} - {allSelectedConsumableIds.length}</p>
+            {/if}
+            {#if backgroundEquipment.gear.length > 0}
+                <h4>Gear</h4>
+                {#each backgroundEquipment.gear as item}
+                    <p>{item.gear.name}</p>
+                {/each}
+            {/if}
+            {#if backgroundEquipment.groupRobotModules.length > 0}
+                <h4>Robot Modules</h4>
+                {#each backgroundEquipment.groupRobotModules as group, index}
+                    {#if group.length === 1}
+                        <p>{getRobotModuleOptionLabel(group[0])}</p>
+                    {:else}
+                        <select id="RobotModule-select-{index}" bind:value={selectRobotModuleKey[index]} on:change={() => handleRobotModuleSelect(selectRobotModuleKey[index],index)}>
+                            <option hidden disabled selected value>RobotModule {index + 1}</option>
+                            {#each group as choice}
+                                <option value={getRobotModuleOptionKey(choice)}>{getRobotModuleOptionLabel(choice)}</option>
+                            {/each}
+                        </select>
+                    {/if}
+                {/each}
             <p style="background-color:#1114">IDs: {allSelectedRobotModuleIds} - {allSelectedRobotModuleIds.length}</p>
-            <h4>Caps: {backgrounds[selectedBackgroundIndex].caps}</h4>
-            <h4>Misc</h4>
-            <p>{backgrounds[selectedBackgroundIndex].misc}</p>
-
-            {#if (backgrounds[selectedBackgroundIndex].junk > 0 || backgrounds[selectedBackgroundIndex].trinket > 0 || backgrounds[selectedBackgroundIndex].food > 0 || backgrounds[selectedBackgroundIndex].forage > 0 || backgrounds[selectedBackgroundIndex].bev > 0 || backgrounds[selectedBackgroundIndex].chem > 0 || backgrounds[selectedBackgroundIndex].aid > 0 || backgrounds[selectedBackgroundIndex].odd > 0 || backgrounds[selectedBackgroundIndex].outcast > 0)}
-                <h4>Random Loot Rolls</h4>
             {/if}
-            <ul>
-                {#if backgrounds[selectedBackgroundIndex].junk > 0}
-                    <li>Junk: {backgrounds[selectedBackgroundIndex].junk}</li>
+            {#if Object.keys(backgroundStuff).length > 0}
+                <h4>Caps: {backgroundStuff.caps}</h4>
+                {#if backgroundStuff.misc !== ''}
+                    <h4>Misc</h4>
+                    <p>{backgroundStuff.misc}</p>
                 {/if}
-                {#if backgrounds[selectedBackgroundIndex].trinket > 0}
-                    <li>Trinkets: {backgrounds[selectedBackgroundIndex].trinket}</li>
+
+                {#if (backgroundStuff.junk > 0 || backgroundStuff.trinket > 0 || backgroundStuff.food > 0 || backgroundStuff.forage > 0 || backgroundStuff.bev > 0 || backgroundStuff.chem > 0 || backgroundStuff.ammo > 0 || backgroundStuff.aid > 0 || backgroundStuff.odd > 0 || backgroundStuff.outcast > 0)}
+                    <h4>Random Loot Rolls</h4>
                 {/if}
-                {#if backgrounds[selectedBackgroundIndex].food > 0}
-                    <li>Food: {backgrounds[selectedBackgroundIndex].food}</li>
-                {/if}
-                {#if backgrounds[selectedBackgroundIndex].forage > 0}
-                    <li>Forage: {backgrounds[selectedBackgroundIndex].forage}</li>
-                {/if}
-                {#if backgrounds[selectedBackgroundIndex].bev > 0}
-                    <li>Beverages: {backgrounds[selectedBackgroundIndex].bev}</li>
-                {/if}
-                {#if backgrounds[selectedBackgroundIndex].chem > 0}
-                    <li>Chem: {backgrounds[selectedBackgroundIndex].chem}</li>
-                {/if}
-                {#if backgrounds[selectedBackgroundIndex].aid > 0}
-                    <li>Aid: {backgrounds[selectedBackgroundIndex].aid}</li>
-                {/if}
-                {#if backgrounds[selectedBackgroundIndex].odd > 0}
-                    <li>Oddities: {backgrounds[selectedBackgroundIndex].odd}</li>
-                {/if}
-                {#if backgrounds[selectedBackgroundIndex].outcast > 0}
-                    <li>Outcast Items: {backgrounds[selectedBackgroundIndex].outcast}</li>
-                {/if}
-            </ul>
+                <ul>
+                    {#if backgroundStuff.junk > 0}
+                        <li>Junk: {backgroundStuff.junk}</li>
+                    {/if}
+                    {#if backgroundStuff.trinket > 0}
+                        <li>Trinkets: {backgroundStuff.trinket}</li>
+                    {/if}
+                    {#if backgroundStuff.food > 0}
+                        <li>Food: {backgroundStuff.food}</li>
+                    {/if}
+                    {#if backgroundStuff.forage > 0}
+                        <li>Forage: {backgroundStuff.forage}</li>
+                    {/if}
+                    {#if backgroundStuff.bev > 0}
+                        <li>Beverages: {backgroundStuff.bev}</li>
+                    {/if}
+                    {#if backgroundStuff.chem > 0}
+                        <li>Chem: {backgroundStuff.chem}</li>
+                    {/if}
+                    {#if backgroundStuff.ammo > 0}
+                        <li>Ammo: {backgroundStuff.ammo}</li>
+                    {/if}
+                    {#if backgroundStuff.aid > 0}
+                        <li>Aid: {backgroundStuff.aid}</li>
+                    {/if}
+                    {#if backgroundStuff.odd > 0}
+                        <li>Oddities: {backgroundStuff.odd}</li>
+                    {/if}
+                    {#if backgroundStuff.outcast > 0}
+                        <li>Outcast Items: {backgroundStuff.outcast}</li>
+                    {/if}
+                </ul>
+            {/if}
         </div>
     {/if}
 </div>

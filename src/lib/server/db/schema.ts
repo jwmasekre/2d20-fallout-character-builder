@@ -247,6 +247,7 @@ export const charactersInNewContent = newContent.table("characters", {
 	origin: smallint(),
 	luckPoints: smallint("luck_points"),
 	currentHealth: smallint("current_health"),
+	radPoints: smallint("rad_points"),
 	headHp: smallint("head_hp"),
 	headInj: smallint("head_inj"),
 	laHp: smallint("la_hp"),
