@@ -161,6 +161,8 @@ copy over drizzle/*.ts to lib/server/db
     * figure out why too many changes starts creating errors with pulling data (need to purge data?)
     * ~~fix the builder nav logic to show every page that's been visited and is also valid~~
     * ~~add rad points for children of atom~~
+    * handle roll table choice for synths (val === 9)
+    * add tag skill equipment to equipment page
     * un-monolith builder page
         * break up pagination
         * consolidate types

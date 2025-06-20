@@ -65,6 +65,8 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
 
     let charName = '';
     let level = 1;
+    let xp = 0;
+    $: if (level > 0) xp = !isNaN(level) && level >= 1 ? level * (level - 1) * 50 : 0;
 
     let selectedOrigin: string = '';
     let isGhoul = false;
@@ -2139,6 +2141,8 @@ Y                               Y
 
 */
 
+
+
 /*
 
  .S_sSSs     .S_SSSs     .S    S.   
@@ -2851,6 +2855,7 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
 
     <h1>Stats</h1>
     <div class="character" style={hasCompanion ? "display:inline-block;margin-right:1rem" : "display:block"}>
+        {#if hasCompanion}<h3>{charName}</h3>{/if}
         <div class="character-stats">
             <p><strong>Carry Weight</strong>: {carryWeight}</p>
             <p><strong>Base Damage Resistance</strong>:</p>
@@ -3170,7 +3175,26 @@ Y                               Y
 -->
 
 <div class={`page ${currentPage === 'review' ? 'page-active' : 'page-leave'}`}>
-
-
-
+    {#if isPageValid('equipment')}
+        <div class="review-header" style="display:flex;align-items:center;justify-content:center;">
+            <div class="char-name" style="display:inline-block;margin-right:5rem;">
+                <h1>{charName}</h1>
+            </div>
+            <div class="xp-origin" style="display:inline-block;margin-right:2rem;">
+                <h2>XP: {xp}</h2>
+                <h2>Origin: {selectedOriginData.name}</h2>
+            </div>
+            <div class="char-lvl" style="display:inline-block;margin-right:5rem;">
+                <h1>{level}</h1>
+            </div>
+        </div>
+        <div class="special-bar" style="display:flex;justify-content:center;position:relative;">
+            {#each Object.entries(specialStats) as stat}
+                <div class="special-stat" id="special-{stat[0]}" style="display:inline-block;height:9vw;width:9vw;max-height:10vh;max-width:10vh;border-radius:50%;border:1px solid #ffbf00;margin:1rem;position:relative;">
+                    <div class="special-char" id="special-{stat[0][0]}" style="font-size:12px"><p>{stat[0][0].toUpperCase()}</p></div>
+                    <div class="special-val" id="special-{stat[0]}-val" style="display:flex;align-items:center;justify-content:center;font-size:min(9vw,10vh);position:absolute;top:0;left:0;line-height:1;height:100%;width:100%;"><p>{stat[1]}</p></div>
+                </div>
+            {/each}
+        </div>
+    {/if}
 </div>
