@@ -287,7 +287,7 @@ YSS'    S*S     SS  S*S    YSSP    YSSP  YSS'
     function resetSkills() {
         skillPoints = {};
         skills.forEach(skill => {
-            skillPoints[skill] = 0;
+              skillPoints[skill] = 0;
         });
         extraTagSkillSelections = {};
         baseTagSkillSelections = {};
@@ -617,7 +617,7 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
     
     //defense
     let defense = 0;
-    $: specialStats.agility >= 9 ? 2 : 1;
+    $: defense = specialStats.agility >= 9 ? 2 : 1;
 
     //initiative
     let initiative = 0;
@@ -2247,160 +2247,6 @@ Y                  Y
 
 <!--
 
-  sSSs    sSSs    sSSs  
- d%%SP   d%%SP   d%%SP  
-d%S'    d%S'    d%S'    
-S%S     S%|     S%|     
-S&S     S&S     S&S     
-S&S     Y&Ss    Y&Ss    
-S&S     `S&&S   `S&&S   
-S&S       `S*S    `S*S  
-S*b        l*S     l*S  
-S*S.      .S*P    .S*P  
- SSSbs  sSS*S   sSS*S   
-  YSSP  YSS'    YSS'    
-
--->
-
-<style>
-    .page {
-        position: absolute;
-        top: 17vh;
-        left: 0;
-        width: 100%;
-        height: 78vh;
-        transition: transform 0.5s ease-in-out;
-        overflow-y: auto;
-        scrollbar-width: none;
-    }
-    .page::-webkit-scrollbar {
-        display: none;
-    }
-    .page-active {
-        transform: translateY(0);
-    }
-    .page-leave {
-        transform: translateY(-100vh);
-    }
-    .page.hidden {
-        visibility: hidden;
-    }
-
-    .skills-page {
-        margin-top: 2em;
-    }
-    .skill-list {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-    .skill-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .skill-input {
-        width: 50px;
-        text-align: center;
-    }
-    .tag-skill-checkbox {
-        margin-left: 0.5rem;
-    }
-    .forced-tag {
-        font-weight: bold;
-        color: green;
-    }
-    .forbidden-tag {
-        text-decoration: line-through;
-        color: gray;
-    }
-    input[type=checkbox][disabled] {
-        filter: invert(25%);
-    }
-    button[disabled] {
-        filter: invert(25%);
-    }
-    .forward-block {
-        position:absolute;
-        height: 5vh;
-        width: 100vw;
-        top: 95vh;
-        left: 0vw;
-        background-color:#1115;
-    }
-    .reverse-block {
-        position:absolute;
-        height: 5vh;
-        width: 100vw;
-        top: 12vh;
-        left: 0vw;
-        background-color:#1113;
-    }
-    .reverse-button {
-        display:inline-block;
-        height: 5vh;
-        margin-left: 1vw;
-    }
-    .forward-button {
-        display:block;
-        height: 5vh;
-        margin-left: 5vw;
-    }
-
-    .perk-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-        padding: 5px;
-        overflow-y: auto;
-        height: 60vh;
-    }
-    .perk-unavailable {
-        border: 1px solid #ccc;
-        padding: 1rem;
-        border-radius: 0.5rem;
-    }
-    .perk-available {
-        border: 1px solid #cc2;
-        padding: 1rem;
-        border-radius: 0.5rem;
-    }
-    .perk-taken {
-        border: 1px solid #2c2;
-        padding: 1rem;
-        border-radius: 0.5rem;
-    }
-    .rank-available {
-        border: 1px solid #2cc;
-        padding: 1rem;
-        border-radius: 0.5rem;
-    }
-
-    .perk-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .perk-description {
-        margin-top: 10px;
-        font-size: 0.9rem;
-    }
-    .perk-checkbox {
-        margin-left: 1rem;
-    }
-    .perk-description-box {
-        display: none;
-    }
-    .perk-description-box.show {
-        display: block;
-    }
-
-</style>
-
-<!--
-
  .S_sSSs     .S_SSSs     .S    S.   
 .SS~YS%%b   .SS~SSSSS   .SS    SS.  
 S%S   `S%b  S%S   SSSS  S%S    S%S  
@@ -2481,7 +2327,13 @@ YSS'    SSS    S*S    YSSP~SSS    YSSP
         {/each}
     {/if}
 -->
-    <button type="submit" name="action" value="saveCharacter" class="saveButton">Save Character</button>
+
+<!--
+    <div class="save-button">
+        <button type="submit" name="action" value="saveCharacter" class="saveButton">Save Character</button>
+    </div>
+-->
+
 <!--
 </form>
 
@@ -2545,8 +2397,8 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
         <pre>{ghoulOrigin.traits[0]?.description}</pre>
     {:else if selectedOriginData}
         {#if traitCount > 1}
-            <div style="display:inline-block">
-                <select multiple bind:value={selectedTraits} style="height:11.5em">
+            <div class="multi-trait">
+                <select multiple bind:value={selectedTraits} class="multi-trait-select">
                     {#each selectedOriginData.traits as trait}
                         <option value={trait.id.toString()}>{trait.name}</option>
                     {/each}
@@ -2556,7 +2408,7 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
     {/if}
 
     {#if traitDescriptions.length > 0 && !isGhoul}
-        <div style="display:inline-block">
+        <div class="trait-display">
             {#each selectedTraits as traitId}
                 {#if selectedOriginData}
                     {#each selectedOriginData.traits as trait}
@@ -2626,7 +2478,7 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
                     }}
                 />
             {/if}
-            <span style="margin-right:1em;">→ {getDisplayStat(stat, customStats[stat])}</span>
+            <span class="special-display">→ {getDisplayStat(stat, customStats[stat])}</span>
         {/each}
     {:else}
         <div>
@@ -2794,7 +2646,7 @@ Y                   Y           Y
                 <p><b>Lvl:</b> {perk.levelReq} | <b>Ranks:</b> {perk.ranks}</p>
                 <pre>{perk.description.replace(/\\n/g, "\n")}</pre>
                 <p><b>Requires:</b> {#if perk.reqs.length > 0}{#each perk.reqs as req}/{req}/{/each}{:else} None{/if} | <b>Limits:</b> {#if perk.limits.length > 0}{perk.limits}{:else} None{/if}</p>
-                <div class="perk-buttons" style="display:inline-block">
+                <div class="perk-buttons">
                     <button
                         disabled={(selectedPerks.length >= maxPerks) || selectedPerks.includes(perk.id.toString())}
                         on:click={() => addPerk(perk.id.toString())}
@@ -2808,7 +2660,7 @@ Y                   Y           Y
                         Drop Perk
                     </button>
                 </div>
-                <div class="perk-buttons" style="display:inline-block">
+                <div class="perk-buttons">
                     <button
                         disabled={(selectedPerks.length >= maxPerks) || (selectedPerks.filter(id => id === perk.id.toString()).length === 0) || (selectedPerks.filter(id => id === perk.id.toString()).length === perk.ranks)}
                         on:click={() => selectedPerks = [...selectedPerks, perk.id.toString()]}
@@ -2891,7 +2743,7 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
                 </div>
             {/each}
         </div>
-        <div class="character-skills" style="display:inline-block">
+        <div class="character-skills">
             <h2>Skills</h2>
             <ul>
                 {#each Object.keys(skillPoints) as skill}
@@ -2910,10 +2762,10 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
         </div>
     </div>
     {#if hasCompanion}
-        <div class="companion" style="display:inline-block">
+        <div class="companion">
             <h2>Companion</h2>
             <h3>{companion.name}</h3>
-            <div class="companion-attr" style="display:inline-block;margin-right:1rem">
+            <div class="companion-attr">
                 <h4>{isDog ? "Attributes" : "Special"}</h4>
                 {#each Object.entries(companion.special) as stat}
                     <p><strong>{stat[0]}</strong>: {stat[1]}</p>
@@ -2925,7 +2777,7 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
                     <p><strong>{skill[0]}</strong>: {skill[1]}</p>
                 {/each}
             </div>
-            <div class="companion-stat" style="display:inline-block;margin-right:1rem">
+            <div class="companion-stat">
                 <h4>Stats</h4>
                 <p><strong>Carry Weight</strong>: {companion.cw}</p>
                 <p><strong>Base Damage Resistance</strong>:</p>
@@ -3018,7 +2870,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
                         </select>
                     {/if}
                 {/each}
-                <p style="background-color:#1114">IDs: {allSelectedWeaponIds} - {allSelectedWeaponIds.length}</p>
+                <p class="id-print">IDs: {allSelectedWeaponIds} - {allSelectedWeaponIds.length}</p>
                 <h4>Ammo</h4>
                 <ul>
                     {#each backgroundEquipment.ammo as item}
@@ -3068,7 +2920,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
                         <option value="pack">{packText}</option>
                     </select>
                 {/if}
-                <p style="background-color:#1114">IDs: {allSelectedApparelIds} - {allSelectedApparelIds.length}</p>
+                <p class="id-print">IDs: {allSelectedApparelIds} - {allSelectedApparelIds.length}</p>
             {/if}
             {#if backgroundEquipment.groupConsumables.length > 0}
                 <h4>Consumables</h4>
@@ -3084,7 +2936,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
                         </select>
                     {/if}
                 {/each}
-                <p style="background-color:#1114">IDs: {allSelectedConsumableIds} - {allSelectedConsumableIds.length}</p>
+                <p class="id-print">IDs: {allSelectedConsumableIds} - {allSelectedConsumableIds.length}</p>
             {/if}
             {#if backgroundEquipment.gear.length > 0}
                 <h4>Gear</h4>
@@ -3106,7 +2958,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
                         </select>
                     {/if}
                 {/each}
-            <p style="background-color:#1114">IDs: {allSelectedRobotModuleIds} - {allSelectedRobotModuleIds.length}</p>
+            <p class="id-print">IDs: {allSelectedRobotModuleIds} - {allSelectedRobotModuleIds.length}</p>
             {/if}
             {#if Object.keys(backgroundStuff).length > 0}
                 <h4>Caps: {backgroundStuff.caps}</h4>
@@ -3176,25 +3028,80 @@ Y                               Y
 
 <div class={`page ${currentPage === 'review' ? 'page-active' : 'page-leave'}`}>
     {#if isPageValid('equipment')}
-        <div class="review-header" style="display:flex;align-items:center;justify-content:center;">
-            <div class="char-name" style="display:inline-block;margin-right:5rem;">
-                <h1>{charName}</h1>
+        <div class="review-header">
+            <div class="char-name">
+                <p><strong>{charName}</strong></p>
             </div>
-            <div class="xp-origin" style="display:inline-block;margin-right:2rem;">
-                <h2>XP: {xp}</h2>
-                <h2>Origin: {selectedOriginData.name}</h2>
+            <div class="xp-origin">
+                <p>XP: {xp}</p>
+                <p>Origin: {selectedOriginData.name}</p>
             </div>
-            <div class="char-lvl" style="display:inline-block;margin-right:5rem;">
-                <h1>{level}</h1>
+            <div class="char-lvl">
+                <p>{level}</p>
             </div>
         </div>
-        <div class="special-bar" style="display:flex;justify-content:center;position:relative;">
+        <div class="special-bar">
             {#each Object.entries(specialStats) as stat}
-                <div class="special-stat" id="special-{stat[0]}" style="display:inline-block;height:9vw;width:9vw;max-height:10vh;max-width:10vh;border-radius:50%;border:1px solid #ffbf00;margin:1rem;position:relative;">
-                    <div class="special-char" id="special-{stat[0][0]}" style="font-size:12px"><p>{stat[0][0].toUpperCase()}</p></div>
-                    <div class="special-val" id="special-{stat[0]}-val" style="display:flex;align-items:center;justify-content:center;font-size:min(9vw,10vh);position:absolute;top:0;left:0;line-height:1;height:100%;width:100%;"><p>{stat[1]}</p></div>
+                <div class="special-spacer">
+                    <div class="special-char" id="special-{stat[0][0]}"><p>{stat[0][0].toUpperCase()}</p></div>
+                    <div class="special-stat" id="special-{stat[0]}">
+                        <div class="special-val" id="special-{stat[0]}-val"><p>{stat[1]}</p></div>
+                    </div>
                 </div>
             {/each}
+        </div>
+        <div class="skills-stats-dr">
+            <div class="char-skills">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="thead-skill" scope="col">Skill</th>
+                            <th class="thead-value" scope="col">Value</th>
+                            <th class="thead-tag" scope="col">Tag</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {#each Object.entries(skillPoints) as skill}
+                            <tr>
+                                <td class="tdat-skill">{skill[0]}</td>
+                                <td class="tdat-value">{skill[1]}</td>
+                                <td class="tdat-tag"><!--{#if tagSkills[skill[0]]}☑{:else}☐{/if}</td>
+                                <td>-->{#if tagSkills[skill[0]]}✅{/if}</td>
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            </div>
+            <div class="char-stats-dr">
+                <div class="char-stats">
+                    {#if selectedTraits.includes('22')}
+                        <div class="char-radpts">
+                            <p class="stat-val">0</p>
+                            <p class="stat-label">Rad Points</p>
+                        </div>
+                    {/if}
+                    <div class="char-hp">
+                        <p class="stat-val" id="char-hp-value">{maxHealth}/{maxHealth}</p>
+                        <p class="stat-label">Max Health</p>
+                    </div>
+                    <div class="char-def">
+                        <p class="stat-val">{defense}</p>
+                        <p class="stat-label">Defense</p>
+                    </div>
+                    <div class="char-melee">
+                        <p class="stat-val">{meleeDamage}</p>
+                        <p class="stat-label">Melee</p>
+                    </div>
+                    <div class="char-init">
+                        <p class="stat-val">{initiative}</p>
+                        <p class="stat-label">Init</p>
+                    </div>
+                    <div class="char-luckpts">
+                        <p class="stat-val">{maxLuckPoints}</p>
+                        <p class="stat-label">Luck</p>
+                    </div>
+                </div>
+            </div>
         </div>
     {/if}
 </div>
