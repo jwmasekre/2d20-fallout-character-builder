@@ -2141,7 +2141,140 @@ Y                               Y
 
 */
 
+type limbDr = {
+    phys: number;
+    enrg: number;
+    rads: number;
+}
 
+type stdDr = {
+    head: limbDr;
+    larm: limbDr;
+    rarm: limbDr;
+    body: limbDr;
+    lleg: limbDr;
+    rleg: limbDr;
+}
+type handyDr = {
+    optics: limbDr;
+    arm1: limbDr;
+    arm2: limbDr;
+    arm3: limbDr;
+    body: limbDr;
+    thruster: limbDr;
+}
+type securDr = {
+    head: limbDr;
+    larm: limbDr;
+    rarm: limbDr;
+    body: limbDr;
+    wheel: limbDr;
+}
+
+let charDr: stdDr | handyDr | securDr;
+let bodyParts:string[] = [];
+
+let isHandy = false;
+$: if (selectedTraits.includes('4')) isHandy = true;
+let isSecuritron = false;
+$: if (selectedTraits.includes('20')) isSecuritron = true;
+
+$: if (selectedTraits) {
+    if (isHandy) {
+        charDr = {
+            optics: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+            arm1: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+            arm2: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+            arm3: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+            body: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+            thruster: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+        }
+    } else if (isSecuritron) {
+        charDr = {
+            head: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+            larm: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+            rarm: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+            body: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+            wheel: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+        }
+    } else charDr = {
+        head: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+        larm: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+        rarm: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+        body: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+        lleg: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+        rleg: {
+				phys: 0,
+				enrg: 0,
+				rads: 0,
+			},
+    }
+    bodyParts = Object.keys(charDr);
+}
 
 /*
 
@@ -3051,26 +3184,28 @@ Y                               Y
             {/each}
         </div>
         <div class="skills-stats-dr">
-            <div class="char-skills">
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="thead-skill" scope="col">Skill</th>
-                            <th class="thead-value" scope="col">Value</th>
-                            <th class="thead-tag" scope="col">Tag</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {#each Object.entries(skillPoints) as skill}
+            <div class="skill-col">
+                <div class="char-skills">
+                    <table>
+                        <thead>
                             <tr>
-                                <td class="tdat-skill">{skill[0]}</td>
-                                <td class="tdat-value">{skill[1]}</td>
-                                <td class="tdat-tag"><!--{#if tagSkills[skill[0]]}☑{:else}☐{/if}</td>
-                                <td>-->{#if tagSkills[skill[0]]}✅{/if}</td>
+                                <th class="thead-skill" scope="col">Skill</th>
+                                <th class="thead-value" scope="col">Value</th>
+                                <th class="thead-tag" scope="col">Tag</th>
                             </tr>
-                        {/each}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {#each Object.entries(skillPoints) as skill}
+                                <tr>
+                                    <td class="tdat-skill">{skill[0].replace("ons","")}</td>
+                                    <td class="tdat-value">{skill[1]}</td>
+                                    <td class="tdat-tag"><!--{#if tagSkills[skill[0]]}☑{:else}☐{/if}</td>
+                                    <td>-->{#if tagSkills[skill[0]]}✅{/if}</td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="char-stats-dr">
                 <div class="char-stats">
@@ -3099,6 +3234,230 @@ Y                               Y
                     <div class="char-luckpts">
                         <p class="stat-val">{maxLuckPoints}</p>
                         <p class="stat-label">Luck</p>
+                    </div>
+                </div>
+                <div class="char-dr-block">
+                    <div class="head-block">
+                        {#if isHandy}
+                            <table class="dr-table" id="dr-optics">
+                                <caption>Optics</caption>
+                                <thead>
+                                    <tr>
+                                        <th class="phys-header" scope="col">Phys</th>
+                                        <th class="enrg-header" scope="col">Enrg</th>
+                                        <th class="rads-header" scope="col">Rads</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="phys-data">{charDr.optics.phys}</td>
+                                        <td class="enrg-data">{charDr.optics.enrg}</td>
+                                        <td class="rads-data">{charDr.optics.rads}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        {:else}
+                            <table class="dr-table" id="dr-head">
+                                <caption>Head</caption>
+                                <thead>
+                                    <tr>
+                                        <th class="phys-header" scope="col">Phys</th>
+                                        <th class="enrg-header" scope="col">Enrg</th>
+                                        <th class="rads-header" scope="col">Rads</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="phys-data">{charDr.head.phys}</td>
+                                        <td class="enrg-data">{charDr.head.enrg}</td>
+                                        <td class="rads-data">{charDr.head.rads}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        {/if}
+                    </div>
+                    <div class="arms-block">
+                        {#if isHandy}
+                            <table class="dr-table" id="dr-arm1">
+                                <caption>Arm 1</caption>
+                                <thead>
+                                    <tr>
+                                        <th class="phys-header" scope="col">Phys</th>
+                                        <th class="enrg-header" scope="col">Enrg</th>
+                                        <th class="rads-header" scope="col">Rads</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="phys-data">{charDr.arm1.phys}</td>
+                                        <td class="enrg-data">{charDr.arm1.enrg}</td>
+                                        <td class="rads-data">{charDr.arm1.rads}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <table class="dr-table" id="dr-arm2">
+                                <caption>Arm 2</caption>
+                                <thead>
+                                    <tr>
+                                        <th class="phys-header" scope="col">Phys</th>
+                                        <th class="enrg-header" scope="col">Enrg</th>
+                                        <th class="rads-header" scope="col">Rads</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="phys-data">{charDr.arm2.phys}</td>
+                                        <td class="enrg-data">{charDr.arm2.enrg}</td>
+                                        <td class="rads-data">{charDr.arm2.rads}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <table class="dr-table" id="dr-arm3">
+                                <caption>Arm 3</caption>
+                                <thead>
+                                    <tr>
+                                        <th class="phys-header" scope="col">Phys</th>
+                                        <th class="enrg-header" scope="col">Enrg</th>
+                                        <th class="rads-header" scope="col">Rads</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="phys-data">{charDr.arm3.phys}</td>
+                                        <td class="enrg-data">{charDr.arm3.enrg}</td>
+                                        <td class="rads-data">{charDr.arm3.rads}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        {:else}
+                            <table class="dr-table" id="dr-larm">
+                                <caption>Left Arm</caption>
+                                <thead>
+                                    <tr>
+                                        <th class="phys-header" scope="col">Phys</th>
+                                        <th class="enrg-header" scope="col">Enrg</th>
+                                        <th class="rads-header" scope="col">Rads</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="phys-data">{charDr.larm.phys}</td>
+                                        <td class="enrg-data">{charDr.larm.enrg}</td>
+                                        <td class="rads-data">{charDr.larm.rads}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <table class="dr-table" id="dr-rarm">
+                                <caption>Right Arm</caption>
+                                <thead>
+                                    <tr>
+                                        <th class="phys-header" scope="col">Phys</th>
+                                        <th class="enrg-header" scope="col">Enrg</th>
+                                        <th class="rads-header" scope="col">Rads</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="phys-data">{charDr.rarm.phys}</td>
+                                        <td class="enrg-data">{charDr.rarm.enrg}</td>
+                                        <td class="rads-data">{charDr.rarm.rads}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        {/if}
+                    </div>
+                    <div class="body-block">
+                        <table class="dr-table" id="dr-body">
+                            <caption>Body</caption>
+                            <thead>
+                                <tr>
+                                    <th class="phys-header" scope="col">Phys</th>
+                                    <th class="enrg-header" scope="col">Enrg</th>
+                                    <th class="rads-header" scope="col">Rads</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="phys-data">{charDr.body.phys}</td>
+                                    <td class="enrg-data">{charDr.body.enrg}</td>
+                                    <td class="rads-data">{charDr.body.rads}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="legs-block">
+                        {#if isHandy}
+                            <table class="dr-table" id="dr-thruster">
+                                <caption>Thruster</caption>
+                                <thead>
+                                    <tr>
+                                        <th class="phys-header" scope="col">Phys</th>
+                                        <th class="enrg-header" scope="col">Enrg</th>
+                                        <th class="rads-header" scope="col">Rads</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="phys-data">{charDr.thruster.phys}</td>
+                                        <td class="enrg-data">{charDr.thruster.enrg}</td>
+                                        <td class="rads-data">{charDr.thruster.rads}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        {:else if isSecuritron}
+                            <table class="dr-table" id="dr-wheel">
+                                <caption>Wheel</caption>
+                                <thead>
+                                    <tr>
+                                        <th class="phys-header" scope="col">Phys</th>
+                                        <th class="enrg-header" scope="col">Enrg</th>
+                                        <th class="rads-header" scope="col">Rads</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="phys-data">{charDr.wheel.phys}</td>
+                                        <td class="enrg-data">{charDr.wheel.enrg}</td>
+                                        <td class="rads-data">{charDr.wheel.rads}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        {:else}
+                            <table class="dr-table" id="dr-lleg">
+                                <caption>Left Leg</caption>
+                                <thead>
+                                    <tr>
+                                        <th class="phys-header" scope="col">Phys</th>
+                                        <th class="enrg-header" scope="col">Enrg</th>
+                                        <th class="rads-header" scope="col">Rads</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="phys-data">{charDr.lleg.phys}</td>
+                                        <td class="enrg-data">{charDr.lleg.enrg}</td>
+                                        <td class="rads-data">{charDr.lleg.rads}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <table class="dr-table" id="dr-rleg">
+                                <caption>Right Leg</caption>
+                                <thead>
+                                    <tr>
+                                        <th class="phys-header" scope="col">Phys</th>
+                                        <th class="enrg-header" scope="col">Enrg</th>
+                                        <th class="rads-header" scope="col">Rads</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="phys-data">{charDr.rleg.phys}</td>
+                                        <td class="enrg-data">{charDr.rleg.enrg}</td>
+                                        <td class="rads-data">{charDr.rleg.rads}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        {/if}
                     </div>
                 </div>
             </div>
