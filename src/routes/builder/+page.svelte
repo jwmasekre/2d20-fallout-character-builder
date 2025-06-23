@@ -2011,14 +2011,17 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
     }
 
     let allSelectedApparelIds: string[] = [];
+    let allSelectedApparel:Apparel[] = [];
     $: if (selectedApparelKey.length > 0 || singleKey !== "" || doubleKey.length > 0) {
         const newApparelKey: string[] = [];
+        allSelectedApparel = [];
         if (selectedApparelKey.length > 0) {
             for (const key of selectedApparelKey) {
                 if (key.includes("-")) {
                     const tempArr = key.split("-")
                     for (const str of tempArr) {
                         newApparelKey.push(str);
+                        allSelectedApparel.push(backgroundEquipment?.groupApparel[parseInt(str)].apparel)
                     }
                 } else {
                     newApparelKey.push(key)
@@ -2275,6 +2278,24 @@ $: if (selectedTraits) {
     }
     bodyParts = Object.keys(charDr);
 }
+
+let isRobot = false;
+$: if (['4','18','19','20','23'].some(robotId => selectedTraits.includes(robotId))) isRobot = true;
+
+//max(clothing(arms,legs,torso),armor)
+//outfit replaces clothing and armor
+//robots have standard unless otherwise stated
+let equippedApparel = {};
+$: if (bodyParts) {
+    equippedApparel = {};
+    bodyParts.forEach(part => {
+        equippedApparel[part] = null;
+    });
+    if (isRobot) equippedApparel.hat = null;
+    else equippedApparel.clothing = null,equippedApparel.outfit = null;
+}
+
+for (const item of apparel)
 
 /*
 
