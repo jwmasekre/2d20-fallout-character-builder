@@ -93,6 +93,8 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
         } else return [];
     }
 
+    let isHandy = false;
+    let isSecuritron = false;
     function handleOriginSelect(origin: string) {
         currentPage = "origin";
         resetEquipment();
@@ -106,6 +108,9 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
         if (selectedOriginData && traitCount == 1) {
             selectedTraits = [selectedOriginData.traits[0].id.toString()];
         }
+        if (selectedTraits.includes('4')) isHandy = true; else isHandy = false;
+        if (selectedTraits.includes('20')) isSecuritron = true; else isSecuritron = false;
+        setBodyParts();
         visitedPages = [];
         currentPage = "";
         currentPage = "origin";
@@ -837,12 +842,19 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         sourcebookId: number;
     }
 
+    type ApparelType = {
+        id: number;
+        name: string;
+    }
+
     type BackgroundApparel = {
         id: number;
         backgroundId: number;
         apparelId: number;
         altId: number;
         apparel: Apparel;
+        covers: string[];
+        type: ApparelType;
     }
 
     type Consumable = {
@@ -982,6 +994,8 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         allSelectedRobotModuleIds = [];
     }
 
+    const bgApparelIdtoApparelId = new Map<number,Apparel>();
+
     async function fetchBackgroundEquipment(id: string) {
         if (!id) return;
         resetEquipment();
@@ -1001,6 +1015,10 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             groupConsumables,
             groupRobotModules
         };
+
+        for (const apparel of data.apparel) {
+            bgApparelIdtoApparelId.set(apparel.id, apparel.apparel)
+        }
         console.log(selectedBackgroundIndex);
         if (selectedBackgroundIndex === null) return;
         const background = backgrounds[selectedBackgroundIndex];
@@ -2177,12 +2195,9 @@ type securDr = {
 let charDr: stdDr | handyDr | securDr;
 let bodyParts:string[] = [];
 
-let isHandy = false;
-$: if (selectedTraits.includes('4')) isHandy = true;
-let isSecuritron = false;
-$: if (selectedTraits.includes('20')) isSecuritron = true;
 
-$: if (selectedTraits) {
+
+function setBodyParts() {
     if (isHandy) {
         charDr = {
             optics: {
@@ -2277,16 +2292,7 @@ $: if (selectedTraits) {
 			},
     }
     bodyParts = Object.keys(charDr);
-}
-
-let isRobot = false;
-$: if (['4','18','19','20','23'].some(robotId => selectedTraits.includes(robotId))) isRobot = true;
-
-//max(clothing(arms,legs,torso),armor)
-//outfit replaces clothing and armor
-//robots have standard unless otherwise stated
-let equippedApparel = {};
-$: if (bodyParts) {
+    console.log("bodyParts set:",JSON.stringify(bodyParts));
     equippedApparel = {};
     bodyParts.forEach(part => {
         equippedApparel[part] = null;
@@ -2295,8 +2301,102 @@ $: if (bodyParts) {
     else equippedApparel.clothing = null,equippedApparel.outfit = null;
 }
 
-for (const item of apparel)
 
+let isRobot = false;
+$: if (['4','18','19','20','23'].some(robotId => selectedTraits.includes(robotId))) isRobot = true;
+
+//max(clothing(arms,legs,torso),armor)
+//outfit replaces clothing and armor
+//robots have standard unless otherwise stated
+let equippedApparel = {};
+function calculateDr() {
+    console.log("equipped apparel changed:",JSON.stringify(equippedApparel));
+    for (const part of bodyParts) {
+        isRobot ? charDr[part].phys = 2 : charDr[part].phys = 0, charDr[part].enrg = 0, charDr[part].rads = 0;
+    }
+    if (equippedApparel.hasOwnProperty("outfit") && equippedApparel.outfit != null) {
+        equippedApparel.larm = null, equippedApparel.rarm = null, equippedApparel.lleg = null, equippedApparel.rleg = null, equippedApparel.clothing = null;
+        for (const part of bodyParts) {
+            console.log("part:",part)
+            console.log("apparel cover:", JSON.stringify(apparelCoversMap.get(equippedApparel.outfit.id)))
+            console.log("equipped return:", JSON.stringify(equippedApparel[part]))
+            if (apparelCoversMap.get(equippedApparel.outfit.id)?.includes(part)) charDr[part].phys = equippedApparel.outfit.physDr, charDr[part].enrg = equippedApparel.outfit.enrgDr, charDr[part].rads = equippedApparel.outfit.radsDr;
+        }
+    }
+    if (equippedApparel.hasOwnProperty("clothing") && equippedApparel.clothing != null) {
+        for (const part of bodyParts) {
+            if (apparelCoversMap.get(equippedApparel.clothing.id)?.includes(part)) charDr[part].phys = equippedApparel.clothing.physDr, charDr[part].enrg = equippedApparel.clothing.enrgDr, charDr[part].rads = equippedApparel.clothing.radsDr;
+        }
+    }
+    for (const part of bodyParts) {
+        if (equippedApparel[part] != null) (charDr[part].phys = equippedApparel[part].physDr, charDr[part].enrg = equippedApparel[part].enrgDr, charDr[part].rads = equippedApparel[part].radsDr)
+    }
+    console.log("chardr:",JSON.stringify(charDr));
+}
+
+const apparelMap = new Map<number,Apparel>();
+const apparelCoversMap = new Map<number,string[]>();
+const apparelTypeMap = new Map<number,string>();
+
+$: if (backgroundEquipment) {
+    console.log("doing apparel mapping");
+    for (const apparelEntry of backgroundEquipment.apparel) {
+        const apparel = apparelEntry.apparel;
+        const covers = apparelEntry.covers;
+        const type = apparelEntry.type;
+        console.log("mapping:",JSON.stringify(apparelEntry))
+        if (!apparelCoversMap.has(apparel.id)) {
+            apparelCoversMap.set(apparel.id, []);
+        }
+        if (!apparelTypeMap.has(apparel.id)) {
+            apparelTypeMap.set(apparel.id, type.name);
+        }
+        if (!apparelMap.has(apparel.id)) {
+            apparelMap.set(apparel.id, apparel)
+        }
+        for (const loc of covers) {
+            apparelCoversMap.get(apparel.id)!.push(loc.trim().toLowerCase().replace("left ","l").replace("right ","r").replace("torso","body"))
+        }
+    }
+}
+
+function equipApparelItem() {
+    equippedApparel = {};
+    for (const item of allSelectedApparelIds) {
+        const id = bgApparelIdtoApparelId.get(parseInt(item))!.id
+        const coverage = apparelCoversMap.get(id);
+        const apparelType = apparelTypeMap.get(id);
+        const apparel = apparelMap.get(id);
+        console.log("equipping:", JSON.stringify(apparel));
+
+        switch (apparelType) {
+            case "Clothing":
+                equippedApparel.clothing = apparel;
+                equippedApparel.outfit = null;
+                return;
+            case "Outfit":
+                equippedApparel.outfit = apparel;
+                return;
+            case "Headgear":
+                if (isRobot) {
+                    equippedApparel.hat = apparel;
+                    return;
+                }
+        }
+
+        for (const part of coverage) {
+            if (part in equippedApparel) {
+                equippedApparel[part] = apparel;
+            }
+        }
+    }
+    calculateDr();
+}
+
+$: if (allSelectedApparelIds) {
+    console.log("selected apparel changed:", JSON.stringify(selectedApparel));
+    equipApparelItem();
+}
 /*
 
  .S_sSSs     .S_SSSs     .S    S.   

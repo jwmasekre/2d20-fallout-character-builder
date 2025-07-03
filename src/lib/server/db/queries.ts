@@ -88,11 +88,22 @@ export async function getBackgroundEquipment(backgroundId: number) {
 
 		db.select({
 			apparel: schema.apparelInNewContent,
+            covers: schema.bodyLocationsInNewContent,
+            type: schema.apparelTypesInNewContent,
             ...schema.backgroundApparelInNewContent,
 		})
 			.from(schema.backgroundApparelInNewContent)
 			.innerJoin(
                 schema.apparelInNewContent, eq(schema.backgroundApparelInNewContent.apparelId, schema.apparelInNewContent.id)
+            )
+            .innerJoin(
+                schema.apparelCoversInNewContent, eq(schema.backgroundApparelInNewContent.apparelId, schema.apparelCoversInNewContent.apparelId)
+            )
+            .innerJoin(
+                schema.bodyLocationsInNewContent, eq(schema.apparelCoversInNewContent.locationId, schema.bodyLocationsInNewContent.id)
+            )
+            .innerJoin(
+                schema.apparelTypesInNewContent, eq(schema.apparelTypesInNewContent.id, schema.apparelInNewContent.type)
             )
 			.where(eq(schema.backgroundApparelInNewContent.backgroundId, backgroundId)),
 
@@ -126,6 +137,34 @@ export async function getBackgroundEquipment(backgroundId: number) {
             )
 			.where(eq(schema.backgroundRobotModulesInNewContent.backgroundId, backgroundId)),
 	]);
+
+    const apparelCoverMap = new Map<number,string[]>();
+    const apparelAdded = []
+    const newApparel = []
+    for (const item of apparel) {
+        const currentId = item.apparel.id;
+        const currentCover = item.covers.name;
+        if (!apparelCoverMap.has(currentId)) {
+            apparelCoverMap.set(currentId,[])
+        }
+        if (!apparelCoverMap.get(currentId)?.includes(currentCover)) {
+            apparelCoverMap.get(currentId)?.push(currentCover);
+        }
+    }
+
+    for (const item of apparel) {
+        const currentId = item.apparel.id;
+        if (!apparelAdded.includes(currentId) || apparelCoverMap.get(currentId).length === 1) {
+            let alteredApparel = item;
+            alteredApparel.covers = apparelCoverMap.get(currentId);
+            newApparel.push(alteredApparel);
+            apparelAdded.push(currentId);
+        }
+    }
+    apparel.length = 0;
+    for (const item of newApparel) {
+        apparel.push(item);
+    }
 
 	return {
 		weapons,
