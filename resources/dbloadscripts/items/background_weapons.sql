@@ -171,8 +171,8 @@ INSERT INTO background_weapons (background_id,weapon_id,mod_id) VALUES
 ('43','94',NULL),
 ('4','62',NULL),
 ('16','62',NULL),
-('24','2',''),
-('24','34','');
+('24','2',NULL),
+('24','34',NULL);
 
 UPDATE background_weapons AS b SET alt_id = a.alt_id FROM (VALUES
 (2,3),

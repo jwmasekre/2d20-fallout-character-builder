@@ -6,7 +6,10 @@ DB=2d20fallout
 SCHEMA='new_content'
 SCRIPTS=$(cat $SCRIPTDIR/loadorder)
 
-sudo -u postgres PGOPTIONS="--search_path=$SCHEMA" psql $DB -f $SCHEMALOAD
+echo "building db schema"
+sudo -u postgres PGOPTIONS="--search_path=$SCHEMA" psql -d $DB -f $SCHEMALOAD
 for script in $SCRIPTS
-    do sudo -u postgres PGOPTIONS="--search_path=$SCHEMA" psql $DB -f $script
-done
+    do
+        echo $script
+        sudo -u postgres PGOPTIONS="--search_path=$SCHEMA" psql -d $DB -f $script
+    done

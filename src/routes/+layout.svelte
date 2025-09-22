@@ -2,12 +2,13 @@
 	import { onMount } from 'svelte';
 	import '../app.css';
 	import ThemeSelector from '$lib/ThemeSelector.svelte';
-	import { page } from '$app/state'
-
+	import { page } from '$app/state';
+	
 	let { children } = $props();
-
+	
 	onMount(() => {
 		const savedTheme = localStorage.getItem('theme');
+	
 		if (savedTheme) {
 			document.body.className = `theme-${savedTheme}`;
 		}

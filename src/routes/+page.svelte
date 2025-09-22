@@ -1,15 +1,3 @@
-<script>
-    import { goto } from '$app/navigation';
-
-</script>
-
-<div class="home-page" style="position:absolute;top:5vh;">
-    <h1>Fallout</h1>
-
-    <div class="button-container">
-        <button on:click={() => goto('./builder')}>New</button>
-        <button on:click={() => goto('./loader')}>Load</button>
-        <button on:click={() => goto('./login')}>Login</button>
-        <button on:click={() => goto('./register')}>Register</button>
-    </div>
-</div>
+<h1>Welcome to your library project</h1>
+<p>Create your package using @sveltejs/package and preview/showcase your work with SvelteKit</p>
+<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>

@@ -102,6 +102,33 @@ cd ../2d20-fallout-character-builder
 npm run dev -- --open
 ```
 
+#### setting up a new environment
+
+mostly instructions for myself with what i've had to do to get stuff set up in wsl
+
+```sh
+sudo apt update && sudo apt upgrade
+git config --global core.autocrlf input
+git clone https://github.com/jwmasekre/2d20-fallout-character-builder.git
+cd 2d20-fallout-character-builder
+
+git remote set-url origin https://jwmasekre:<pat>@github.com/jwmasekre/2d20-fallout-character-builder.git
+git config --global user.email <email>
+git config --global user.name "<username>"
+sudo apt install npm
+npm install vite --save-dev
+
+sudo apt install postgresql
+```
+
+do the db setup, then
+
+```sh
+sudo usermod -aG josh postgres
+cd resources/dbloadscripts
+sudo ./load_db.sh
+```
+
 ### db setup
 
 see [db_schema.sql](./db_schema.sql) for the updated schema (i used dbdiagram.io to actually plan it out properly)
@@ -117,7 +144,6 @@ CREATE ROLE svelte WITH LOGIN PASSWORD 'thisisonlyatest';
 CREATE SCHEMA new_content;
 SET search_path TO new_content;
 
-```sql
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA new_content TO svelte;
 ```
 
