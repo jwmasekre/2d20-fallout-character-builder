@@ -1,5 +1,341 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+	import type { PageParentData } from '../$types.js';
+
+    type BodyPart = {
+        active: boolean;
+        stats: {
+            hp: number;
+            inj: number;
+            phDR: number;
+            enDR: number;
+            rdDR: number;
+        } | null;
+    }
+
+    type SpecialStats = {
+        strength: number;
+        perception: number;
+        endurance: number;
+        charisma: number;
+        intelligence: number;
+        agility: number;
+        luck: number;
+    }
+
+    type SkillStatBlock = {
+        ranks: number;
+        tagged: boolean;
+        total: number;
+    }
+
+    type SkillStats = {
+        athletics: SkillStatBlock;
+        barter: SkillStatBlock;
+        bigGuns: SkillStatBlock;
+        energyWeapons: SkillStatBlock;
+        explosives: SkillStatBlock;
+        lockpick: SkillStatBlock;
+        medicine: SkillStatBlock;
+        meleeWeapons: SkillStatBlock;
+        pilot: SkillStatBlock;
+        repair: SkillStatBlock;
+        science: SkillStatBlock;
+        smallGuns: SkillStatBlock;
+        sneak: SkillStatBlock;
+        speech: SkillStatBlock;
+        survival: SkillStatBlock;
+        throwing: SkillStatBlock;
+        unarmed: SkillStatBlock;
+    }
+
+    type CharPerk = {
+        perk: number;
+        perkName: string;
+        perkDescription: [string];
+        ranks: number;
+    }
+
+    type CharTrait = {
+        trait: number;
+        traitName: string;
+        traitDescription: string;
+        ranks: number;
+    }
+
+    type CharRecipe = {
+        item: number;
+        itemName: string;
+        itemType: "apparel" | "chems" | "cooking" | "pArmor" | "rArmor" | "rMods" | "weapon";
+        complexity: number;
+        common: number;
+        uncommon: number;
+        rare: number;
+    }
+
+    type CharBook = {
+        book: number;
+        bookName: string;
+        bookPerk: string;
+    }
+
+    type CharWeaponMod = {
+        available: boolean;
+        installed: {
+            mod: number;
+            modName: string;
+            modEffect: [string];
+            modWeight: number;
+            modCost: number;
+        } | null;
+    }
+
+    type CharWeaponMods = {
+        Receiver: CharWeaponMod;
+        Barrel: CharWeaponMod;
+        Stock: CharWeaponMod;
+        Grip: CharWeaponMod;
+        Magazine: CharWeaponMod;
+        Sights: CharWeaponMod;
+        Muzzle: CharWeaponMod;
+        Capacitors: CharWeaponMod;
+        Dish: CharWeaponMod;
+        Fuel: CharWeaponMod;
+        Tank: CharWeaponMod;
+        Nozzle: CharWeaponMod;
+        Blade: CharWeaponMod;
+        Blunt: CharWeaponMod;
+        Frame: CharWeaponMod;
+    }
+
+    type CharAmmo = {
+        ammo: number;
+        ammoName: string;
+        quantity: number;
+    }
+
+    type Legendary = {
+        isLegendary: boolean;
+        legendary: {
+            name: string;
+            effect: string;
+        } | null;
+    }
+
+    type CharWeapon = {
+        weapon: number;
+        prefix: [string];
+        name: string;
+        skill: string;
+        targetNum: number;
+        tagged: boolean;
+        dmg: number;
+        effects: [string];
+        effectDescriptions: [string];
+        type: "Physical" | "Energy" | "Physical/Energy" | "Radiation";
+        rate: number;
+        range: "R" | "C" | "M" | "L" | "X";
+        qualities: [string];
+        qualityDescriptions: [string];
+        ammo: [CharAmmo];
+        weight: number;
+        cost: number;
+        rarity: number;
+        mods: CharWeaponMods;
+        legendary: Legendary;
+    }
+
+    type CharApparelMod = {
+        available: boolean;
+        installed: {
+            mod: number;
+            modName: string;
+            modPhDR: number;
+            modEnDR: number;
+            modRdDR: number;
+            modEffect: [string];
+            modWeight: number;
+            modCost: number;
+        } | null;
+    }
+
+    type CharApparelMods = {
+        weave: CharApparelMod;
+        material: CharApparelMod;
+        upgrade: CharApparelMod;
+        jumpsuit: CharApparelMod;
+    }
+
+    type CharApparel = {
+        apparel: number;
+        prefix: string | null;
+        name: string;
+        type: "clothing" | "outfit" | "headgear" | "armor" | "robot armor";
+        covers: {
+            head: boolean;
+            lArm: boolean;
+            rArm: boolean;
+            lLeg: boolean;
+            rLeg: boolean;
+            torso: boolean;
+            optics: boolean;
+            arm1: boolean;
+            arm2: boolean;
+            arm3: boolean;
+            thruster: boolean;
+            wheel: boolean;
+        }
+        equipped: boolean;
+        phDR: number;
+        enDR: number;
+        rdDR: number;
+        effect: [string];
+        weight: number;
+        cost: number;
+        rarity: number;
+        mods: CharApparelMods;
+        legendary: Legendary;
+    }
+
+    type CharConsumable = {
+        consumable: number;
+        consumableName: string;
+        type: "Chem" | "Food" | "Beverage" | "Other" | "Publication";
+        heals: number;
+        effect: [string];
+        rads: number;
+        weight: number;
+        cost: number;
+        rarity: number;
+        duration: "I" | "B" | "L";
+        addiction: number;
+        quantity: number;
+    }
+
+    type CharGear = {
+        gear: number;
+        gearName: string;
+        effect: [string];
+        weight: number;
+        cost: number;
+        rarity: number;
+        quantity: number;
+    }
+
+    type CharPAMod = {
+        available: boolean;
+        installed: {
+            mod: number;
+            modName: string;
+            modPhDR: number;
+            modEnDR: number;
+            modRdDR: number;
+            modHP: number;
+            modEffect: [string];
+            modWeight: number;
+            modCost: number;
+        } | null;
+    }
+
+    type CharPAMods = {
+        upgrade: CharPAMod;
+        system: CharPAMod;
+        plating: CharPAMod;
+    }
+
+    type PAPart = {
+        equipped: boolean;
+        part: number;
+        partName: string;
+        phDR: number;
+        enDR: number;
+        rdDR: number;
+        effect: [string];
+        weight: number;
+        cost: number;
+        currHP: number;
+        maxHP: number;
+        mods: CharPAMods;
+    }
+
+    type CharPAFrame = {
+        equipped: boolean;
+        location: string;
+        parts: {
+            head: [PAPart];
+            lArm: [PAPart];
+            rArm: [PAPart];
+            lLeg: [PAPart];
+            rLeg: [PAPart];
+            torso: [PAPart];
+        }
+    }
+
+    type CharRMod = {
+        equipped: boolean;
+        rmod: number;
+        rmodName: string;
+        effect: [string];
+        weight: number;
+        cost: number;
+        rarity: number;
+    }
+
+    type FullCharacter = {
+        player: number;
+        playerName: string;
+        character: number;
+        characterName: string;
+        xp: number;
+        lvl: number;
+        origin: number;
+        originName: string;
+        originDesc: string;
+        luckPts: number;
+        maxLuckPts: number;
+        currHP: number;
+        maxHP: number;
+        radPts: number;
+        maxRadPts: number;
+        body: {
+            head: BodyPart;
+            lArm: BodyPart;
+            rArm: BodyPart;
+            lLeg: BodyPart;
+            rLeg: BodyPart;
+            torso: BodyPart;
+            optics: BodyPart;
+            arm1: BodyPart;
+            arm2: BodyPart;
+            arm3: BodyPart;
+            thruster: BodyPart;
+            wheel: BodyPart;
+        }
+        poisonDR: number;
+        caps: number;
+        hunger: number;
+        thirst: number;
+        sleep: number;
+        exposure: number;
+        party: number;
+        special: SpecialStats;
+        skills: SkillStats;
+        perks: [CharPerk];
+        traits: [CharTrait];
+        addictions: [number];
+        diseases: [number];
+        recipes: [CharRecipe];
+        readBooks: [CharBook];
+        weapons: [CharWeapon];
+        apparel: [CharApparel];
+        ammo: [CharAmmo];
+        consumables: [CharConsumable];
+        gear: [CharGear];
+        powerArmorFrames: [CharPAFrame];
+        robotModules: [CharRMod];
+        miscStuff: [string];
+        notes: [string];
+    }
 
     /*
     let characterId: number | null = null;
@@ -3364,9 +3700,9 @@ Y                               Y
                                 <caption>Optics</caption>
                                 <thead>
                                     <tr>
-                                        <th class="phys-header" scope="col">Phys</th>
-                                        <th class="enrg-header" scope="col">Enrg</th>
-                                        <th class="rads-header" scope="col">Rads</th>
+                                        <th class="phys-header" scope="col">Ph</th>
+                                        <th class="enrg-header" scope="col">En</th>
+                                        <th class="rads-header" scope="col">Rd</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -3382,9 +3718,9 @@ Y                               Y
                                 <caption>Head</caption>
                                 <thead>
                                     <tr>
-                                        <th class="phys-header" scope="col">Phys</th>
-                                        <th class="enrg-header" scope="col">Enrg</th>
-                                        <th class="rads-header" scope="col">Rads</th>
+                                        <th class="phys-header" scope="col">Ph</th>
+                                        <th class="enrg-header" scope="col">En</th>
+                                        <th class="rads-header" scope="col">Rd</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -3403,9 +3739,9 @@ Y                               Y
                                 <caption>Arm 1</caption>
                                 <thead>
                                     <tr>
-                                        <th class="phys-header" scope="col">Phys</th>
-                                        <th class="enrg-header" scope="col">Enrg</th>
-                                        <th class="rads-header" scope="col">Rads</th>
+                                        <th class="phys-header" scope="col">Ph</th>
+                                        <th class="enrg-header" scope="col">En</th>
+                                        <th class="rads-header" scope="col">Rd</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -3420,9 +3756,9 @@ Y                               Y
                                 <caption>Arm 2</caption>
                                 <thead>
                                     <tr>
-                                        <th class="phys-header" scope="col">Phys</th>
-                                        <th class="enrg-header" scope="col">Enrg</th>
-                                        <th class="rads-header" scope="col">Rads</th>
+                                        <th class="phys-header" scope="col">Ph</th>
+                                        <th class="enrg-header" scope="col">En</th>
+                                        <th class="rads-header" scope="col">Rd</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -3437,9 +3773,9 @@ Y                               Y
                                 <caption>Arm 3</caption>
                                 <thead>
                                     <tr>
-                                        <th class="phys-header" scope="col">Phys</th>
-                                        <th class="enrg-header" scope="col">Enrg</th>
-                                        <th class="rads-header" scope="col">Rads</th>
+                                        <th class="phys-header" scope="col">Ph</th>
+                                        <th class="enrg-header" scope="col">En</th>
+                                        <th class="rads-header" scope="col">Rd</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -3455,9 +3791,9 @@ Y                               Y
                                 <caption>Left Arm</caption>
                                 <thead>
                                     <tr>
-                                        <th class="phys-header" scope="col">Phys</th>
-                                        <th class="enrg-header" scope="col">Enrg</th>
-                                        <th class="rads-header" scope="col">Rads</th>
+                                        <th class="phys-header" scope="col">Ph</th>
+                                        <th class="enrg-header" scope="col">En</th>
+                                        <th class="rads-header" scope="col">Rd</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -3472,9 +3808,9 @@ Y                               Y
                                 <caption>Right Arm</caption>
                                 <thead>
                                     <tr>
-                                        <th class="phys-header" scope="col">Phys</th>
-                                        <th class="enrg-header" scope="col">Enrg</th>
-                                        <th class="rads-header" scope="col">Rads</th>
+                                        <th class="phys-header" scope="col">Ph</th>
+                                        <th class="enrg-header" scope="col">En</th>
+                                        <th class="rads-header" scope="col">Rd</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -3492,9 +3828,9 @@ Y                               Y
                             <caption>Body</caption>
                             <thead>
                                 <tr>
-                                    <th class="phys-header" scope="col">Phys</th>
-                                    <th class="enrg-header" scope="col">Enrg</th>
-                                    <th class="rads-header" scope="col">Rads</th>
+                                    <th class="phys-header" scope="col">Ph</th>
+                                    <th class="enrg-header" scope="col">En</th>
+                                    <th class="rads-header" scope="col">Rd</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -3512,9 +3848,9 @@ Y                               Y
                                 <caption>Thruster</caption>
                                 <thead>
                                     <tr>
-                                        <th class="phys-header" scope="col">Phys</th>
-                                        <th class="enrg-header" scope="col">Enrg</th>
-                                        <th class="rads-header" scope="col">Rads</th>
+                                        <th class="phys-header" scope="col">Ph</th>
+                                        <th class="enrg-header" scope="col">En</th>
+                                        <th class="rads-header" scope="col">Rd</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -3530,9 +3866,9 @@ Y                               Y
                                 <caption>Wheel</caption>
                                 <thead>
                                     <tr>
-                                        <th class="phys-header" scope="col">Phys</th>
-                                        <th class="enrg-header" scope="col">Enrg</th>
-                                        <th class="rads-header" scope="col">Rads</th>
+                                        <th class="phys-header" scope="col">Ph</th>
+                                        <th class="enrg-header" scope="col">En</th>
+                                        <th class="rads-header" scope="col">Rd</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -3548,9 +3884,9 @@ Y                               Y
                                 <caption>Left Leg</caption>
                                 <thead>
                                     <tr>
-                                        <th class="phys-header" scope="col">Phys</th>
-                                        <th class="enrg-header" scope="col">Enrg</th>
-                                        <th class="rads-header" scope="col">Rads</th>
+                                        <th class="phys-header" scope="col">Ph</th>
+                                        <th class="enrg-header" scope="col">En</th>
+                                        <th class="rads-header" scope="col">Rd</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -3565,9 +3901,9 @@ Y                               Y
                                 <caption>Right Leg</caption>
                                 <thead>
                                     <tr>
-                                        <th class="phys-header" scope="col">Phys</th>
-                                        <th class="enrg-header" scope="col">Enrg</th>
-                                        <th class="rads-header" scope="col">Rads</th>
+                                        <th class="phys-header" scope="col">Ph</th>
+                                        <th class="enrg-header" scope="col">En</th>
+                                        <th class="rads-header" scope="col">Rd</th>
                                     </tr>
                                 </thead>
                                 <tbody>
