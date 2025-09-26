@@ -119,15 +119,12 @@ sudo apt install npm
 npm install vite --save-dev
 
 sudo apt install postgresql
-```
-
-do the db setup, then
-
-```sh
 sudo usermod -aG josh postgres
 cd resources/dbloadscripts
 sudo ./load_db.sh
 ```
+
+then do the db setup below
 
 ### db setup
 
@@ -144,6 +141,7 @@ CREATE ROLE svelte WITH LOGIN PASSWORD 'thisisonlyatest';
 CREATE SCHEMA new_content;
 SET search_path TO new_content;
 
+GRANT USAGE ON SCHEMA new_content TO svelte;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA new_content TO svelte;
 ```
 
