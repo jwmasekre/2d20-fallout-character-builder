@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { getBackgroundEquipment } from '$lib/server/db/queries';
+import { getBackgroundEquipment } from '$lib/server/db/queries.ts';
 
 export async function GET({ url }) {
 	const backgroundId = parseInt(url.searchParams.get('backgroundId') || '');

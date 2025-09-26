@@ -1,353 +1,27 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-	import type { PageParentData } from '../$types.js';
+    // custom types are all stored in src/lib/server/types.ts
+    // for some reason +page.svelte files do not like src/lib/types.ts
+    import type { FullCharacter, OriginWithTraits, perktype, Background, BackgroundStuff, BackgroundEquipment, GroupWeapons, GroupApparel, BackgroundApparel, GroupConsumables, GroupRobotModules, Apparel, BackgroundWeapon, WeaponMod, BackgroundConsumable, BackgroundRobotModule, stdDr, handyDr, securDr } from '$lib/server/types.ts'
+    // to save on space, constants are stored in src/lib/server/constants.ts and imported
+    import { arrays, skills, pages } from '$lib/constants.ts';
+    // functions that have to be available across all pages
+    import { resetCharacter } from '$lib/funcs.ts';
 
-    type BodyPart = {
-        active: boolean;
-        stats: {
-            hp: number;
-            inj: number;
-            phDR: number;
-            enDR: number;
-            rdDR: number;
-        } | null;
-    }
+    // retrieves data from the db for origins, traits, and perks
+    export let data: {
+        groupedOrigins: Record<string, OriginWithTraits[]>;
+        sourcebookMap: Record<string, string>;
+        allPerks: perktype;
+    };
 
-    type SpecialStats = {
-        strength: number;
-        perception: number;
-        endurance: number;
-        charisma: number;
-        intelligence: number;
-        agility: number;
-        luck: number;
-    }
+    // create a new character object to build off of
+    let newCharacter: FullCharacter;
 
-    type SkillStatBlock = {
-        ranks: number;
-        tagged: boolean;
-        total: number;
-    }
+    let selectedTraits: string[] = $state([]);
 
-    type SkillStats = {
-        athletics: SkillStatBlock;
-        barter: SkillStatBlock;
-        bigGuns: SkillStatBlock;
-        energyWeapons: SkillStatBlock;
-        explosives: SkillStatBlock;
-        lockpick: SkillStatBlock;
-        medicine: SkillStatBlock;
-        meleeWeapons: SkillStatBlock;
-        pilot: SkillStatBlock;
-        repair: SkillStatBlock;
-        science: SkillStatBlock;
-        smallGuns: SkillStatBlock;
-        sneak: SkillStatBlock;
-        speech: SkillStatBlock;
-        survival: SkillStatBlock;
-        throwing: SkillStatBlock;
-        unarmed: SkillStatBlock;
-    }
-
-    type CharPerk = {
-        perk: number;
-        perkName: string;
-        perkDescription: [string];
-        ranks: number;
-    }
-
-    type CharTrait = {
-        trait: number;
-        traitName: string;
-        traitDescription: string;
-    }
-
-    type CharRecipe = {
-        item: number;
-        itemName: string;
-        itemType: "apparel" | "chems" | "cooking" | "pArmor" | "rArmor" | "rMods" | "weapon";
-        complexity: number;
-        common: number;
-        uncommon: number;
-        rare: number;
-    }
-
-    type CharBook = {
-        book: number;
-        bookName: string;
-        bookPerk: string;
-    }
-
-    type CharWeaponMod = {
-        available: boolean;
-        installed: {
-            mod: number;
-            modName: string;
-            modEffect: [string];
-            modWeight: number;
-            modCost: number;
-        } | null;
-    }
-
-    type CharWeaponMods = {
-        Receiver: CharWeaponMod;
-        Barrel: CharWeaponMod;
-        Stock: CharWeaponMod;
-        Grip: CharWeaponMod;
-        Magazine: CharWeaponMod;
-        Sights: CharWeaponMod;
-        Muzzle: CharWeaponMod;
-        Capacitors: CharWeaponMod;
-        Dish: CharWeaponMod;
-        Fuel: CharWeaponMod;
-        Tank: CharWeaponMod;
-        Nozzle: CharWeaponMod;
-        Blade: CharWeaponMod;
-        Blunt: CharWeaponMod;
-        Frame: CharWeaponMod;
-    }
-
-    type CharAmmo = {
-        ammo: number;
-        ammoName: string;
-        quantity: number;
-    }
-
-    type Legendary = {
-        isLegendary: boolean;
-        legendary: {
-            name: string;
-            effect: string;
-        } | null;
-    }
-
-    type CharWeapon = {
-        weapon: number;
-        prefix: [string];
-        name: string;
-        skill: string;
-        targetNum: number;
-        tagged: boolean;
-        dmg: number;
-        effects: [string];
-        effectDescriptions: [string];
-        type: "Physical" | "Energy" | "Physical/Energy" | "Radiation";
-        rate: number;
-        range: "R" | "C" | "M" | "L" | "X";
-        qualities: [string];
-        qualityDescriptions: [string];
-        ammo: [CharAmmo];
-        weight: number;
-        cost: number;
-        rarity: number;
-        mods: CharWeaponMods;
-        legendary: Legendary;
-    }
-
-    type CharApparelMod = {
-        available: boolean;
-        installed: {
-            mod: number;
-            modName: string;
-            modPhDR: number;
-            modEnDR: number;
-            modRdDR: number;
-            modEffect: [string];
-            modWeight: number;
-            modCost: number;
-        } | null;
-    }
-
-    type CharApparelMods = {
-        weave: CharApparelMod;
-        material: CharApparelMod;
-        upgrade: CharApparelMod;
-        jumpsuit: CharApparelMod;
-    }
-
-    type CharApparel = {
-        apparel: number;
-        prefix: string | null;
-        name: string;
-        type: "clothing" | "outfit" | "headgear" | "armor" | "robot armor";
-        covers: {
-            head: boolean;
-            lArm: boolean;
-            rArm: boolean;
-            lLeg: boolean;
-            rLeg: boolean;
-            torso: boolean;
-            optics: boolean;
-            arm1: boolean;
-            arm2: boolean;
-            arm3: boolean;
-            thruster: boolean;
-            wheel: boolean;
-        }
-        equipped: boolean;
-        phDR: number;
-        enDR: number;
-        rdDR: number;
-        effect: [string];
-        weight: number;
-        cost: number;
-        rarity: number;
-        mods: CharApparelMods;
-        legendary: Legendary;
-    }
-
-    type CharConsumable = {
-        consumable: number;
-        consumableName: string;
-        type: "Chem" | "Food" | "Beverage" | "Other" | "Publication";
-        heals: number;
-        effect: [string];
-        rads: number;
-        weight: number;
-        cost: number;
-        rarity: number;
-        duration: "I" | "B" | "L";
-        addiction: number;
-        quantity: number;
-    }
-
-    type CharGear = {
-        gear: number;
-        gearName: string;
-        effect: [string];
-        weight: number;
-        cost: number;
-        rarity: number;
-        quantity: number;
-    }
-
-    type CharPAMod = {
-        available: boolean;
-        installed: {
-            mod: number;
-            modName: string;
-            modPhDR: number;
-            modEnDR: number;
-            modRdDR: number;
-            modHP: number;
-            modEffect: [string];
-            modWeight: number;
-            modCost: number;
-        } | null;
-    }
-
-    type CharPAMods = {
-        upgrade: CharPAMod;
-        system: CharPAMod;
-        plating: CharPAMod;
-    }
-
-    type PAPart = {
-        equipped: boolean;
-        part: number;
-        partName: string;
-        phDR: number;
-        enDR: number;
-        rdDR: number;
-        effect: [string];
-        weight: number;
-        cost: number;
-        currHP: number;
-        maxHP: number;
-        mods: CharPAMods;
-    }
-
-    type CharPAFrame = {
-        equipped: boolean;
-        location: string;
-        parts: {
-            head: [PAPart];
-            lArm: [PAPart];
-            rArm: [PAPart];
-            lLeg: [PAPart];
-            rLeg: [PAPart];
-            torso: [PAPart];
-        }
-    }
-
-    type CharRMod = {
-        equipped: boolean;
-        rmod: number;
-        rmodName: string;
-        effect: [string];
-        weight: number;
-        cost: number;
-        rarity: number;
-    }
-
-    type Addiction = {
-        consumable: number;
-        consumableName: string;
-    }
-    type Disease = {
-        disease: number;
-        diseaseName: string;
-        effect: [string];
-    }
-
-    type FullCharacter = {
-        player: number;
-        playerName: string;
-        character: number;
-        characterName: string;
-        xp: number;
-        lvl: number;
-        origin: number;
-        originName: string;
-        originDesc: string;
-        ghoul: boolean;
-        superMutant: boolean;
-        robot: boolean;
-        luckPts: number;
-        maxLuckPts: number;
-        currHP: number;
-        maxHP: number;
-        radPts: number;
-        maxRadPts: number;
-        body: {
-            head: BodyPart;
-            lArm: BodyPart;
-            rArm: BodyPart;
-            lLeg: BodyPart;
-            rLeg: BodyPart;
-            torso: BodyPart;
-            optics: BodyPart;
-            arm1: BodyPart;
-            arm2: BodyPart;
-            arm3: BodyPart;
-            thruster: BodyPart;
-            wheel: BodyPart;
-        }
-        poisonDR: number;
-        caps: number;
-        hunger: number;
-        thirst: number;
-        sleep: number;
-        exposure: number;
-        party: number;
-        special: SpecialStats;
-        skills: SkillStats;
-        perks: [CharPerk] | [];
-        traits: [CharTrait] | [];
-        addictions: [Addiction] | [];
-        diseases: [Disease] | [];
-        recipes: [CharRecipe] | [];
-        readBooks: [CharBook] | [];
-        weapons: [CharWeapon] | [];
-        apparel: [CharApparel] | [];
-        ammo: [CharAmmo] | [];
-        consumables: [CharConsumable] | [];
-        gear: [CharGear] | [];
-        powerArmorFrames: [CharPAFrame] | [];
-        robotModules: [CharRMod] | [];
-        miscStuff: [string];
-        notes: [string];
-    }
+    //set the initial character object to default
+    newCharacter = resetCharacter();
 
     /*
     let characterId: number | null = null;
@@ -358,390 +32,7 @@
     }
     */
 
-    type Trait = {
-        id: number;
-        name: string;
-        description: string;
-    };
-    type OriginWithTraits = {
-        id: number;
-        name: string;
-        description: string;
-        canGhoul: boolean;
-        sourcebookId: number;
-        traits: Trait[];
-    };
-    type perktype = {
-        id: number;
-        name: string;
-        description: string;
-        ranks: number;
-        rankRange: number;
-        levelReq: number;
-        reqs: string[];
-        limits: string[];
-        sourcebookId: number;
-    }
-
-    export let data: {
-        groupedOrigins: Record<string, OriginWithTraits[]>;
-        sourcebookMap: Record<string, string>;
-        allPerks: perktype;
-        //backgrounds;
-    };
-
-/*
-
-"font": https://patorjk.com/software/taag/#p=display&h=0&f=AMC%20AAA01&t=ORIGIN
-
-  sSSs_sSSs     .S_sSSs     .S    sSSSSs   .S   .S_sSSs    
- d%%SP~YS%%b   .SS~YS%%b   .SS   d%%%%SP  .SS  .SS~YS%%b   
-d%S'     `S%b  S%S   `S%b  S%S  d%S'      S%S  S%S   `S%b  
-S%S       S%S  S%S    S%S  S%S  S%S       S%S  S%S    S%S  
-S&S       S&S  S%S    d*S  S&S  S&S       S&S  S%S    S&S  
-S&S       S&S  S&S   .S*S  S&S  S&S       S&S  S&S    S&S  
-S&S       S&S  S&S_sdSSS   S&S  S&S       S&S  S&S    S&S  
-S&S       S&S  S&S~YSY%b   S&S  S&S sSSs  S&S  S&S    S&S  
-S*b       d*S  S*S   `S%b  S*S  S*b `S%%  S*S  S*S    S*S  
-S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S  
- SSSbs_sdSSS   S*S    S&S  S*S   SS_sSSS  S*S  S*S    S*S  
-  YSSP~YSSY    S*S    SSS  S*S    Y~YSSY  S*S  S*S    SSS  
-               SP          SP             SP   SP          
-               Y           Y              Y    Y           
-                                                           
-*/
-
-    let blankCharacter: FullCharacter = {
-        player: 0,
-        playerName: '',
-        character: 0,
-        characterName: '',
-        xp: 0,
-        lvl: 1,
-        origin: 0,
-        originName: '',
-        originDesc: '',
-        ghoul: false,
-        superMutant: false,
-        robot: false,
-        luckPts: 0,
-        maxLuckPts: 0,
-        currHP: 0,
-        maxHP: 0,
-        radPts: 0,
-        maxRadPts: 0,
-        body: {
-            head: {
-                active: false,
-                stats: {
-                    hp: 0,
-                    inj: 0,
-                    phDR: 0,
-                    enDR: 0,
-                    rdDR: 0,
-                },
-            },
-            lArm: {
-                active: false,
-                stats: {
-                    hp: 0,
-                    inj: 0,
-                    phDR: 0,
-                    enDR: 0,
-                    rdDR: 0,
-                },
-            },
-            rArm: {
-                active: false,
-                stats: {
-                    hp: 0,
-                    inj: 0,
-                    phDR: 0,
-                    enDR: 0,
-                    rdDR: 0,
-                },
-            },
-            lLeg: {
-                active: false,
-                stats: {
-                    hp: 0,
-                    inj: 0,
-                    phDR: 0,
-                    enDR: 0,
-                    rdDR: 0,
-                },
-            },
-            rLeg: {
-                active: false,
-                stats: {
-                    hp: 0,
-                    inj: 0,
-                    phDR: 0,
-                    enDR: 0,
-                    rdDR: 0,
-                },
-            },
-            torso: {
-                active: false,
-                stats: {
-                    hp: 0,
-                    inj: 0,
-                    phDR: 0,
-                    enDR: 0,
-                    rdDR: 0,
-                },
-            },
-            optics: {
-                active: false,
-                stats: {
-                    hp: 0,
-                    inj: 0,
-                    phDR: 0,
-                    enDR: 0,
-                    rdDR: 0,
-                },
-            },
-            arm1: {
-                active: false,
-                stats: {
-                    hp: 0,
-                    inj: 0,
-                    phDR: 0,
-                    enDR: 0,
-                    rdDR: 0,
-                },
-            },
-            arm2: {
-                active: false,
-                stats: {
-                    hp: 0,
-                    inj: 0,
-                    phDR: 0,
-                    enDR: 0,
-                    rdDR: 0,
-                },
-            },
-            arm3: {
-                active: false,
-                stats: {
-                    hp: 0,
-                    inj: 0,
-                    phDR: 0,
-                    enDR: 0,
-                    rdDR: 0,
-                },
-            },
-            thruster: {
-                active: false,
-                stats: {
-                    hp: 0,
-                    inj: 0,
-                    phDR: 0,
-                    enDR: 0,
-                    rdDR: 0,
-                },
-            },
-            wheel: {
-                active: false,
-                stats: {
-                    hp: 0,
-                    inj: 0,
-                    phDR: 0,
-                    enDR: 0,
-                    rdDR: 0,
-                },
-            },
-        },
-        poisonDR: 0,
-        caps: 0,
-        hunger: 0,
-        thirst: 0,
-        sleep: 0,
-        exposure: 0,
-        party: 0,
-        special: {
-            strength: 5,
-            perception: 5,
-            endurance: 5,
-            charisma: 5,
-            intelligence: 5,
-            agility: 5,
-            luck: 5,
-        },
-        skills: {
-            athletics: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            barter: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            bigGuns: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            energyWeapons: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            explosives: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            lockpick: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            medicine: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            meleeWeapons: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            pilot: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            repair: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            science: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            smallGuns: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            sneak: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            speech: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            survival: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            throwing: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-            unarmed: {
-                ranks: 0,
-                tagged: false,
-                total: 0,
-            },
-        },
-        perks: [],
-        traits: [],
-        addictions: [],
-        diseases: [],
-        recipes: [],
-        readBooks: [],
-        weapons: [],
-        apparel: [],
-        ammo: [],
-        consumables: [],
-        gear: [],
-        powerArmorFrames: [],
-        robotModules: [],
-        miscStuff: [''],
-        notes: [''],
-    }
-
-    let newCharacter: FullCharacter;
-
-    function resetCharacter() {
-        newCharacter = blankCharacter;
-    }
-
-    resetCharacter();
-    $: if (newCharacter.lvl > 0) newCharacter.xp = !isNaN(newCharacter.lvl) && newCharacter.lvl >= 1 ? newCharacter.lvl * (newCharacter.lvl - 1) * 50 : 0;
-
-    $: if (selectedOriginData != undefined) newCharacter.origin = selectedOriginData.id, newCharacter.originName = selectedOriginData.name, newCharacter.originDesc = selectedOriginData?.description;
-    $: if (selectedOriginData && !(selectedOriginData.canGhoul)) {
-        newCharacter.ghoul = false;
-    }
-    $: selectedTraits = handleGhouls(newCharacter.ghoul);
-    
-
-    let charName = '';
-    let level = 1;
-    let xp = 0;
-    $: if (level > 0) xp = !isNaN(level) && level >= 1 ? level * (level - 1) * 50 : 0;
-
-    let selectedOrigin: string = '';
-    let isGhoul = false;
-    let selectedTraits: string[] = [];
-    let traitDescriptions: string[] = [];
-
-    $: allOrigins = Object.values(data.groupedOrigins).flat();
-    $: selectedOriginData = allOrigins.find(o => o.id.toString() === selectedOrigin.toString());
-    $: ghoulOrigin = allOrigins.find(o => o.name?.toLowerCase() === 'ghoul');
-    $: traitCount = selectedOriginData?.traits?.length ?? 0;
-
-    $: traitDescriptions = selectedTraits.map(id => {
-        const trait = selectedOriginData?.traits.find(t => t.id.toString() === id.toString());
-        return trait?.description ?? '';
-    })
-    $: if (selectedOriginData && !(selectedOriginData.canGhoul)) {
-        isGhoul = false;
-    }
-    $: selectedTraits = handleGhouls(isGhoul);
-
-    function handleGhouls(ghoul:boolean):string[] {
-        if (selectedOriginData) {
-            return ghoul ? [ghoulOrigin!.traits[0].id.toString()] : [selectedOriginData.traits[0].id.toString()];
-        } else return [];
-    }
-
-    let isHandy = false;
-    let isSecuritron = false;
-    function handleOriginSelect(origin: string) {
-        currentPage = "origin";
-        resetCharacter
-        selectedBackgroundIndex = null;
-        backgroundEquipment = undefined;
-        fetchBackgrounds(origin);
-        selectedTraits = [];
-        if (selectedOriginData && traitCount == 1) {
-            selectedTraits = [selectedOriginData.traits[0].id.toString()];
-            newCharacter.traits = [{
-                trait: selectedOriginData.traits[0].id,
-                traitName: selectedOriginData.traits[0].name,
-                traitDescription: selectedOriginData.traits[0].description,
-            }]
-        }
-        if (selectedTraits.includes('4')) isHandy = true; else isHandy = false;
-        if (selectedTraits.includes('20')) isSecuritron = true; else isSecuritron = false;
-        setBodyParts();
-        visitedPages = [];
-        currentPage = "";
-        currentPage = "origin";
-    }
+    import Origin from '../../components/origin.svelte';
 
 /*
 
@@ -842,11 +133,6 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
         agility: 5,
         luck: 5
     };
-    const arrays = {
-        Balanced: [6,6,6,6,6,5,5],
-        Focused: [8,7,6,6,5,4,4],
-        Specialized: [9,8,5,5,5,4,4]
-    };
 
     function updateArray() {
         if (selectedArray === 'Custom') {
@@ -896,10 +182,7 @@ YSS'    S*S     SS  S*S    YSSP    YSSP  YSS'
         Y           Y                            
 
 */
-        
-    const skills = [
-        'Athletics', 'Barter', 'Big Guns', 'Energy Weapons', 'Explosives', 'Lockpick', 'Medicine', 'Melee Weapons', 'Pilot', 'Repair', 'Science', 'Small Guns', 'Sneak', 'Speech', 'Survival', 'Throwing', 'Unarmed'
-    ];
+    
     let skillPoints = {};
     skills.forEach(skill => {
         skillPoints[skill] = 0;
@@ -910,7 +193,7 @@ YSS'    S*S     SS  S*S    YSSP    YSSP  YSS'
     let forcedTagSkills = '';
     let forbiddenTagSkills = '';
     let extraTagSkillOptions = skills;
-    let maxSkillCap = (level > 3 ? (level < 7 ? level : 6) : 3);
+    let maxSkillCap = (newCharacter.lvl > 3 ? (newCharacter.lvl < 7 ? newCharacter.lvl : 6) : 3);
     let limitedSkills = [];
     let limitedSkillCap = 4;
     let baseTagSkills = 3;
@@ -1021,7 +304,7 @@ Y                   Y           Y
     let allPerks = data.allPerks;
     let selectedPerks: string[] = [];
     let showEligibleOnly = false;
-    $: maxPerks = level + (selectedTraits.includes('10') ? 1 : 0)
+    $: maxPerks = newCharacter.lvl + (selectedTraits.includes('10') ? 1 : 0)
     $: perkPointsRemaining = maxPerks - selectedPerks.length;
     let specialFilters = {
         X: true,
@@ -1070,12 +353,12 @@ Y                   Y           Y
             if (ranks === perk.ranks) {
                 return false;
             //doesn't meet lvl req for next rank
-            } else if (level <= perk.levelReq + (ranks*perk.rankRange)) {
+            } else if (newCharacter.lvl <= perk.levelReq + (ranks*perk.rankRange)) {
                 return false;
             }
         }
         //level requirement
-        if (level < perk.levelReq) {
+        if (newCharacter.lvl < perk.levelReq) {
             return false;
         }
         //special requirement
@@ -1377,208 +660,8 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
 */
 
     let backgrounds: Background[] = [];
-    async function fetchBackgrounds(originId:string) {
-        backgrounds = [];
-        const res = await fetch(`/builder/api/backgrounds?originId=${originId}`, { method: 'GET' });
-        if (!res.ok) {
-            console.error('Failed to fetch backgrounds:', await res.text());
-        }
-        backgrounds = await res.json();
-    }
 
-    let backgroundStuff: {
-        caps: number;
-        misc: string;
-        trinket: number;
-        food: number;
-        forage: number;
-        bev: number;
-        chem: number;
-        ammo: number;
-        aid: number;
-        odd: number;
-        outcast: number;
-        junk: number;
-    } | {};
-
-    type Weapon = {
-        ammo: number;
-        cost: number;
-        dam: string;
-        dtype: string;
-        id: number;
-        name: string;
-        range: string;
-        rarity: number;
-        rate: number;
-        sourcebookId: number;
-        type: number;
-        wgt: number;
-    }
-
-    type WeaponMod = {
-        id: number;
-        name: string;
-        prefix: string;
-        effects: string[];
-        slot: number;
-        wgt: number;
-        cost: number;
-    }
-
-    type BackgroundWeapon = {
-        id: number;
-        backgroundId: number;
-        weaponId: number;
-        modId: number | number[];
-        altId: number;
-        weapon: Weapon;
-        mod: WeaponMod | WeaponMod[];
-    }
-
-    type Ammo = {
-        id: number;
-        name: string;
-        rarity: number;
-        rollQuantity: string;
-        wgt: number;
-        sourcebookId: number;
-    }
-
-    type BackgroundAmmo = {
-        id: number;
-        bgWeaponId: number;
-        ammoId: number;
-        quantity: string;
-        ammo: Ammo;
-    }
-
-    type Apparel = {
-        id: number;
-        name: string;
-        type: number;
-        dog: boolean;
-        physDr: number;
-        enrgDr: number;
-        radsDr: number;
-        eff: string[];
-        wgt: number;
-        cost: number;
-        rarity: number;
-        base_health: number;
-        sourcebookId: number;
-    }
-
-    type ApparelType = {
-        id: number;
-        name: string;
-    }
-
-    type BackgroundApparel = {
-        id: number;
-        backgroundId: number;
-        apparelId: number;
-        altId: number;
-        apparel: Apparel;
-        covers: string[];
-        type: ApparelType;
-    }
-
-    type Consumable = {
-        id: number;
-        name: string;
-        type: number;
-        heals: number;
-        eff: string[];
-        rads: number;
-        wgt: number;
-        cost: number;
-        rarity: number;
-        duration: string;
-        addiction: string;
-        sourcebookId: number;
-    }
-
-    type BackgroundConsumable = {
-        id: number;
-        backgroundId: number;
-        consumableId: number;
-        altId: number;
-        consumable: Consumable;
-    }
-
-    type Gear = {
-        id: number;
-        name: string;
-        eff: string[];
-        cost: number;
-        rarity: number;
-        wgt: number;
-        sourcebookId: number;
-    }
-
-    type BackgroundGear = {
-        id: number;
-        backgroundId: number;
-        gearId: number;
-        gear: Gear;
-    }
-
-    type RobotModule = {
-        id: number;
-        name: string;
-        eff: string[];
-        wgt: number;
-        cost: number;
-        rarity: number;
-        sourcebookId: number;
-    }
-
-    type BackgroundRobotModule = {
-        id: number;
-        backgroundId: number;
-        robotModuleId: number;
-        altId: number;
-        robotModule: RobotModule;
-    }
-
-
-    type BackgroundEquipment = {
-        weapons: BackgroundWeapon[];
-        ammo: BackgroundAmmo[];
-        apparel: BackgroundApparel[];
-        consumables: BackgroundConsumable[];
-        gear: BackgroundGear[];
-        robotModules: BackgroundRobotModule[];
-        groupWeapons: GroupWeapons;
-        groupApparel: GroupApparel;
-        groupConsumables: GroupConsumables;
-        groupRobotModules: GroupRobotModules;
-    } | undefined
-
-    type Background = {
-        id: number;
-        name: string;
-        originId: number;
-        caps: number;
-        misc: string;
-        trinket: number;
-        food: number;
-        forage: number;
-        bev: number;
-        chem: number;
-        ammo: number;
-        aid: number;
-        odd: number;
-        outcast: number;
-        junk: number;
-        sourcebookId: number;
-    }
-
-    type GroupWeapons = (BackgroundWeapon | BackgroundWeapon[])[][];
-    type GroupApparel = (boolean | BackgroundApparel | BackgroundApparel[] | (BackgroundApparel | BackgroundApparel[])[][])[];
-    type GroupConsumables = (BackgroundConsumable | BackgroundConsumable[])[][];
-    type GroupRobotModules = (BackgroundRobotModule | BackgroundRobotModule[])[][];
+    let backgroundStuff:BackgroundStuff;
 
     let selectedBackgroundId: string = "";
     let selectedBackgroundIndex: number | null;
@@ -2297,8 +1380,8 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
     let selectWeaponKey: string[] = [];
     let selectedWeaponKey: string[] = [];
     let selectedWeapons: BackgroundWeapon[][] = [];
-    $: if (backgroundEquipment?.groupWeapons?.length > 0) {
-        backgroundEquipment.groupWeapons.forEach((group, index) => {
+    $: if (backgroundEquipment!.groupWeapons.length > 0) {
+        backgroundEquipment!.groupWeapons.forEach((group, index) => {
             if (group.length === 1) {
                 const key = getWeaponOptionKey(group[0]);
                 selectWeaponKey[index] = key;
@@ -2312,7 +1395,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         const ids = key.split("-").map(Number);
         selectedWeapons[index] = [];
 
-        for (const group of backgroundEquipment.groupWeapons) {
+        for (const group of backgroundEquipment!.groupWeapons) {
             for (const item of group) {
                 if (Array.isArray(item)) {
                     if (item.every(w => ids.includes(w.id))) {
@@ -2341,20 +1424,20 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
     let selectApparelKey: string[] = [];
     let selectedApparelKey: string[] = [];
     let selectedApparel: BackgroundApparel[][] = [];
-    $: if ((singleDouble === "single" || singlePack === "single") && backgroundEquipment.groupApparel) {
-        selectSingle = backgroundEquipment.groupApparel[1].id;
+    $: if ((singleDouble === "single" || singlePack === "single") && backgroundEquipment!.groupApparel) {
+        selectSingle = backgroundEquipment!.groupApparel[1].id;
     }
     $: if (singleDouble === "double") {
         singleKey = "";
     }
     $: if (singlePack === "pack") {
         selectPack = [];
-        for (const pack of backgroundEquipment.groupApparel[2]) {
+        for (const pack of backgroundEquipment!.groupApparel[2]) {
             selectPack.push(pack.id);
         }
     }
-    $: if (backgroundEquipment?.groupApparel?.length > 0) {
-        backgroundEquipment.groupApparel[0].forEach((group, index) => {
+    $: if (backgroundEquipment!.groupApparel?.length > 0) {
+        backgroundEquipment!.groupApparel[0].forEach((group, index) => {
             if (group.length === 1) {
                 const key = getApparelOptionKey(group[0]);
                 selectApparelKey[index] = key;
@@ -2368,7 +1451,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         const ids = key.split("-").map(Number);
         selectedApparel[index] = [];
 
-        for (const group of backgroundEquipment.groupApparel) {
+        for (const group of backgroundEquipment!.groupApparel) {
             for (const item of group) {
                 if (Array.isArray(item)) {
                     if (item.every(w => ids.includes(w.id))) {
@@ -2396,7 +1479,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         const ids = key.split("-").map(Number);
         doubleApparel[index] = [];
 
-        for (const group of backgroundEquipment.groupApparel) {
+        for (const group of backgroundEquipment!.groupApparel) {
             if (Array.isArray(group)) {
                 for (const item of group) {
                     if (Array.isArray(item)) {
@@ -2428,14 +1511,14 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             packKey = [];
             packApparel = [];
             singleKey = selectSingle;
-            singleApparel = backgroundEquipment.groupApparel[1];
+            singleApparel = backgroundEquipment!.groupApparel[1];
         }
         else if (state === "pack") {
             selectSingle = ""
             singleKey = ""
             singleApparel = undefined;
             packKey = selectPack;
-            packApparel = backgroundEquipment.groupApparel[2];
+            packApparel = backgroundEquipment!.groupApparel[2];
         } else {
             console.error("what did you do")
         }
@@ -2450,15 +1533,15 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             selectPack = [];
             packApparel = [];
             singleKey = selectSingle;
-            singleApparel = backgroundEquipment.groupApparel[1];
+            singleApparel = backgroundEquipment!.groupApparel[1];
         }
     }
 
     let selectConsumableKey: string[] = [];
     let selectedConsumableKey: string[] = [];
     let selectedConsumables: BackgroundConsumable[][] = [];
-    $: if (backgroundEquipment?.groupConsumables?.length > 0) {
-        backgroundEquipment.groupConsumables.forEach((group, index) => {
+    $: if (backgroundEquipment!.groupConsumables.length > 0) {
+        backgroundEquipment!.groupConsumables.forEach((group, index) => {
             if (group.length === 1) {
                 const key = getConsumableOptionKey(group[0]);
                 selectConsumableKey[index] = key;
@@ -2472,7 +1555,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         const ids = key.split("-").map(Number);
         selectedConsumables[index] = [];
 
-        for (const group of backgroundEquipment.groupConsumables) {
+        for (const group of backgroundEquipment!.groupConsumables) {
             for (const item of group) {
                 if (Array.isArray(item)) {
                     if (item.every(w => ids.includes(w.id))) {
@@ -2492,8 +1575,8 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
     let selectRobotModuleKey: string[] = [];
     let selectedRobotModuleKey: string[] = [];
     let selectedRobotModules: BackgroundRobotModule[][] = [];
-    $: if (backgroundEquipment?.groupRobotModules?.length > 0) {
-        backgroundEquipment.groupRobotModules.forEach((group, index) => {
+    $: if (backgroundEquipment!.groupRobotModules.length > 0) {
+        backgroundEquipment!.groupRobotModules.forEach((group, index) => {
             if (group.length === 1) {
                 const key = getRobotModuleOptionKey(group[0]);
                 selectRobotModuleKey[index] = key;
@@ -2507,7 +1590,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         const ids = key.split("-").map(Number);
         selectedRobotModules[index] = [];
 
-        for (const group of backgroundEquipment.groupRobotModules) {
+        for (const group of backgroundEquipment!.groupRobotModules) {
             for (const item of group) {
                 if (Array.isArray(item)) {
                     if (item.every(w => ids.includes(w.id))) {
@@ -2557,7 +1640,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
 
     function formatDoubleText() {
         doubleText = ""
-        for (const group of backgroundEquipment.groupApparel[2]) {
+        for (const group of backgroundEquipment!.groupApparel[2]) {
             if (doubleText !== "") {
                 doubleText += " and "
             }
@@ -2571,7 +1654,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
 
     function formatPackText() {
         packText = ""
-        for (const group of backgroundEquipment.groupApparel[2]) {
+        for (const group of backgroundEquipment!.groupApparel[2]) {
             if (packText !== "") {
                 packText += " and "
             }
@@ -2789,279 +1872,107 @@ Y                               Y
 
 */
 
-type limbDr = {
-    phys: number;
-    enrg: number;
-    rads: number;
-}
-
-type stdDr = {
-    head: limbDr;
-    larm: limbDr;
-    rarm: limbDr;
-    body: limbDr;
-    lleg: limbDr;
-    rleg: limbDr;
-}
-type handyDr = {
-    optics: limbDr;
-    arm1: limbDr;
-    arm2: limbDr;
-    arm3: limbDr;
-    body: limbDr;
-    thruster: limbDr;
-}
-type securDr = {
-    head: limbDr;
-    larm: limbDr;
-    rarm: limbDr;
-    body: limbDr;
-    wheel: limbDr;
-}
-
-let charDr: stdDr | handyDr | securDr;
-let bodyParts:string[] = [];
 
 
+    let charDr: stdDr | handyDr | securDr;
+    let bodyParts:string[] = [];
 
-function setBodyParts() {
-    if (isHandy) {
-        newCharacter.body.head.active = false;
-        newCharacter.body.lArm.active = false;
-        newCharacter.body.rArm.active = false;
-        newCharacter.body.lLeg.active = false;
-        newCharacter.body.rLeg.active = false;
-        newCharacter.body.torso.active = true;
-        newCharacter.body.optics.active = true;
-        newCharacter.body.arm1.active = true;
-        newCharacter.body.arm2.active = true;
-        newCharacter.body.arm3.active = true;
-        newCharacter.body.thruster.active = true;
-        newCharacter.body.wheel.active = false;
-        charDr = {
-            optics: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-            arm1: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-            arm2: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-            arm3: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-            body: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-            thruster: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-        }
-    } else if (isSecuritron) {
-        newCharacter.body.head.active = true;
-        newCharacter.body.lArm.active = true;
-        newCharacter.body.rArm.active = true;
-        newCharacter.body.lLeg.active = false;
-        newCharacter.body.rLeg.active = false;
-        newCharacter.body.torso.active = true;
-        newCharacter.body.optics.active = false;
-        newCharacter.body.arm1.active = false;
-        newCharacter.body.arm2.active = false;
-        newCharacter.body.arm3.active = false;
-        newCharacter.body.thruster.active = false;
-        newCharacter.body.wheel.active = true;
-        charDr = {
-            head: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-            larm: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-            rarm: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-            body: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-            wheel: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-        }
-    } else charDr = {
-        newCharacter.body.head.active = true;
-        newCharacter.body.lArm.active = true;
-        newCharacter.body.rArm.active = true;
-        newCharacter.body.lLeg.active = true;
-        newCharacter.body.rLeg.active = true;
-        newCharacter.body.torso.active = true;
-        newCharacter.body.optics.active = false;
-        newCharacter.body.arm1.active = false;
-        newCharacter.body.arm2.active = false;
-        newCharacter.body.arm3.active = false;
-        newCharacter.body.thruster.active = false;
-        newCharacter.body.wheel.active = false;
-        head: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-        larm: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-        rarm: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-        body: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-        lleg: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-        rleg: {
-				phys: 0,
-				enrg: 0,
-				rads: 0,
-			},
-    }
-    bodyParts = Object.keys(charDr);
-    console.log("bodyParts set:",JSON.stringify(bodyParts));
-    equippedApparel = {};
-    bodyParts.forEach(part => {
-        equippedApparel[part] = null;
-    });
-    newCharacter.apparel = [];
-    if (isRobot) equippedApparel.hat = null;
-    else equippedApparel.clothing = null,equippedApparel.outfit = null;
-}
 
-$: if (['4','18','19','20','23'].some(robotId => selectedTraits.includes(robotId))) newCharacter.robot = true;
+    let isRobot = false;
+    $: if (['4','18','19','20','23'].some(robotId => selectedTraits.includes(robotId))) isRobot = true;
 
-let isRobot = false;
-$: if (['4','18','19','20','23'].some(robotId => selectedTraits.includes(robotId))) isRobot = true;
-
-//max(clothing(arms,legs,torso),armor)
-//outfit replaces clothing and armor
-//robots have standard unless otherwise stated
-let equippedApparel = {};
-function calculateDr() {
-    console.log("equipped apparel changed:",JSON.stringify(equippedApparel));
-    for (const part of bodyParts) {
-        isRobot ? charDr[part].phys = 2 : charDr[part].phys = 0, charDr[part].enrg = 0, charDr[part].rads = 0;
-    }
-    if (equippedApparel.hasOwnProperty("outfit") && equippedApparel.outfit != null) {
-        equippedApparel.larm = null, equippedApparel.rarm = null, equippedApparel.lleg = null, equippedApparel.rleg = null, equippedApparel.clothing = null;
+    //max(clothing(arms,legs,torso),armor)
+    //outfit replaces clothing and armor
+    //robots have standard unless otherwise stated
+    let equippedApparel = {};
+    function calculateDr() {
+        console.log("equipped apparel changed:",JSON.stringify(equippedApparel));
         for (const part of bodyParts) {
-            console.log("part:",part)
-            console.log("apparel cover:", JSON.stringify(apparelCoversMap.get(equippedApparel.outfit.id)))
-            console.log("equipped return:", JSON.stringify(equippedApparel[part]))
-            if (apparelCoversMap.get(equippedApparel.outfit.id)?.includes(part)) charDr[part].phys = equippedApparel.outfit.physDr, charDr[part].enrg = equippedApparel.outfit.enrgDr, charDr[part].rads = equippedApparel.outfit.radsDr;
+            isRobot ? charDr[part].phys = 2 : charDr[part].phys = 0, charDr[part].enrg = 0, charDr[part].rads = 0;
         }
-    }
-    if (equippedApparel.hasOwnProperty("clothing") && equippedApparel.clothing != null) {
+        if (equippedApparel.hasOwnProperty("outfit") && equippedApparel.outfit != null) {
+            equippedApparel.larm = null, equippedApparel.rarm = null, equippedApparel.lleg = null, equippedApparel.rleg = null, equippedApparel.clothing = null;
+            for (const part of bodyParts) {
+                console.log("part:",part)
+                console.log("apparel cover:", JSON.stringify(apparelCoversMap.get(equippedApparel.outfit.id)))
+                console.log("equipped return:", JSON.stringify(equippedApparel[part]))
+                if (apparelCoversMap.get(equippedApparel.outfit.id)?.includes(part)) charDr[part].phys = equippedApparel.outfit.physDr, charDr[part].enrg = equippedApparel.outfit.enrgDr, charDr[part].rads = equippedApparel.outfit.radsDr;
+            }
+        }
+        if (equippedApparel.hasOwnProperty("clothing") && equippedApparel.clothing != null) {
+            for (const part of bodyParts) {
+                if (apparelCoversMap.get(equippedApparel.clothing.id)?.includes(part)) charDr[part].phys = equippedApparel.clothing.physDr, charDr[part].enrg = equippedApparel.clothing.enrgDr, charDr[part].rads = equippedApparel.clothing.radsDr;
+            }
+        }
         for (const part of bodyParts) {
-            if (apparelCoversMap.get(equippedApparel.clothing.id)?.includes(part)) charDr[part].phys = equippedApparel.clothing.physDr, charDr[part].enrg = equippedApparel.clothing.enrgDr, charDr[part].rads = equippedApparel.clothing.radsDr;
+            if (equippedApparel[part] != null) (charDr[part].phys = equippedApparel[part].physDr, charDr[part].enrg = equippedApparel[part].enrgDr, charDr[part].rads = equippedApparel[part].radsDr)
         }
+        console.log("chardr:",JSON.stringify(charDr));
     }
-    for (const part of bodyParts) {
-        if (equippedApparel[part] != null) (charDr[part].phys = equippedApparel[part].physDr, charDr[part].enrg = equippedApparel[part].enrgDr, charDr[part].rads = equippedApparel[part].radsDr)
-    }
-    console.log("chardr:",JSON.stringify(charDr));
-}
 
-const apparelMap = new Map<number,Apparel>();
-const apparelCoversMap = new Map<number,string[]>();
-const apparelTypeMap = new Map<number,string>();
+    const apparelMap = new Map<number,Apparel>();
+    const apparelCoversMap = new Map<number,string[]>();
+    const apparelTypeMap = new Map<number,string>();
 
-$: if (backgroundEquipment) {
-    console.log("doing apparel mapping");
-    for (const apparelEntry of backgroundEquipment.apparel) {
-        const apparel = apparelEntry.apparel;
-        const covers = apparelEntry.covers;
-        const type = apparelEntry.type;
-        console.log("mapping:",JSON.stringify(apparelEntry))
-        if (!apparelCoversMap.has(apparel.id)) {
-            apparelCoversMap.set(apparel.id, []);
-        }
-        if (!apparelTypeMap.has(apparel.id)) {
-            apparelTypeMap.set(apparel.id, type.name);
-        }
-        if (!apparelMap.has(apparel.id)) {
-            apparelMap.set(apparel.id, apparel)
-        }
-        for (const loc of covers) {
-            apparelCoversMap.get(apparel.id)!.push(loc.trim().toLowerCase().replace("left ","l").replace("right ","r").replace("torso","body"))
-        }
-    }
-}
-
-function equipApparelItem() {
-    equippedApparel = {};
-    for (const item of allSelectedApparelIds) {
-        const id = bgApparelIdtoApparelId.get(parseInt(item))!.id
-        const coverage = apparelCoversMap.get(id);
-        const apparelType = apparelTypeMap.get(id);
-        const apparel = apparelMap.get(id);
-        console.log("equipping:", JSON.stringify(apparel));
-
-        switch (apparelType) {
-            case "Clothing":
-                equippedApparel.clothing = apparel;
-                equippedApparel.outfit = null;
-                return;
-            case "Outfit":
-                equippedApparel.outfit = apparel;
-                return;
-            case "Headgear":
-                if (isRobot) {
-                    equippedApparel.hat = apparel;
-                    return;
-                }
-        }
-
-        for (const part of coverage) {
-            if (part in equippedApparel) {
-                equippedApparel[part] = apparel;
+    $: if (backgroundEquipment) {
+        console.log("doing apparel mapping");
+        for (const apparelEntry of backgroundEquipment.apparel) {
+            const apparel = apparelEntry.apparel;
+            const covers = apparelEntry.covers;
+            const type = apparelEntry.type;
+            console.log("mapping:",JSON.stringify(apparelEntry))
+            if (!apparelCoversMap.has(apparel.id)) {
+                apparelCoversMap.set(apparel.id, []);
+            }
+            if (!apparelTypeMap.has(apparel.id)) {
+                apparelTypeMap.set(apparel.id, type.name);
+            }
+            if (!apparelMap.has(apparel.id)) {
+                apparelMap.set(apparel.id, apparel)
+            }
+            for (const loc of covers) {
+                apparelCoversMap.get(apparel.id)!.push(loc.trim().toLowerCase().replace("left ","l").replace("right ","r").replace("torso","body"))
             }
         }
     }
-    calculateDr();
-}
 
-$: if (allSelectedApparelIds) {
-    console.log("selected apparel changed:", JSON.stringify(selectedApparel));
-    equipApparelItem();
-}
+    function equipApparelItem() {
+        equippedApparel = {};
+        for (const item of allSelectedApparelIds) {
+            const id = bgApparelIdtoApparelId.get(parseInt(item))!.id
+            const coverage = apparelCoversMap.get(id);
+            const apparelType = apparelTypeMap.get(id);
+            const apparel = apparelMap.get(id);
+            console.log("equipping:", JSON.stringify(apparel));
+
+            switch (apparelType) {
+                case "Clothing":
+                    equippedApparel.clothing = apparel;
+                    equippedApparel.outfit = null;
+                    return;
+                case "Outfit":
+                    equippedApparel.outfit = apparel;
+                    return;
+                case "Headgear":
+                    if (isRobot) {
+                        equippedApparel.hat = apparel;
+                        return;
+                    }
+            }
+
+            for (const part of coverage) {
+                if (part in equippedApparel) {
+                    equippedApparel[part] = apparel;
+                }
+            }
+        }
+        calculateDr();
+    }
+
+    $: if (allSelectedApparelIds) {
+        console.log("selected apparel changed:", JSON.stringify(selectedApparel));
+        equipApparelItem();
+    }
 /*
 
  .S_sSSs     .S_SSSs     .S    S.   
@@ -3082,8 +1993,7 @@ Y                  Y
 */
 
     let currentPage = "";
-    const pages = ['origin','special','skills','perks','stats','equipment','review','character'];
-    onMount(() => {
+        onMount(() => {
         navigateTo("origin");
     })
     let nextPage = "";
@@ -3110,7 +2020,7 @@ Y                  Y
     function isPageValid(page:string):boolean {
         switch (page) {
             case "origin":
-                return charName.trim().length > 0 && level > 0 && selectedOrigin != '' && (traitCount <= 1 || selectedTraits.length == 2 || isGhoul);
+                return charName.trim().length > 0 && newCharacter.lvl > 0 && selectedOrigin != '' && (traitCount <= 1 || selectedTraits.length == 2 || isGhoul);
             case "special":
                 return Object.entries(selectedArray === 'Custom' ? customStats : specialStats).every(([key, val]) => val >= 4 && (isGifted && giftedSelected[key] ? val < getStatMax(key) : val <= getStatMax(key))) && remainingSpecialPoints === 0 && (!isGifted || giftedCount === 2);
             case "skills":
@@ -3133,7 +2043,7 @@ Y                  Y
     $: {
         switch (currentPage) {
             case "origin":
-                pageValid = charName.trim().length > 0 && level > 0 && selectedOrigin != '' && (traitCount <= 1 || selectedTraits.length == 2 || isGhoul);
+                pageValid = charName.trim().length > 0 && newCharacter.lvl > 0 && selectedOrigin != '' && (traitCount <= 1 || selectedTraits.length == 2 || isGhoul);
                 break;
             case "special":
                 pageValid = Object.entries(selectedArray === 'Custom' ? customStats : specialStats).every(([key, val]) => val >= 4 && (isGifted && giftedSelected[key] ? val < getStatMax(key) : val <= getStatMax(key))) && remainingSpecialPoints === 0 && (!isGifted || giftedCount === 2);
@@ -3220,7 +2130,7 @@ YSS'    SSS    S*S    YSSP~SSS    YSSP
     <input type="hidden" name="originId" value={selectedOriginData?.id} />
     <input type="hidden" name="isGhoul" value={isGhoul ? 'on' : ''} />
     <input type="hidden" name="charName" value={charName} />
-    <input type="hidden" name="level" value={level} />
+    <input type="hidden" name="level" value={newCharacter.lvl} />
     <input type="hidden" name="characterId" value={characterId ?? ''} />
     {#each selectedTraits as trait}
         <input type="hidden" name="selectedTraits" value={trait} />
@@ -3263,86 +2173,7 @@ YSS'    SSS    S*S    YSSP~SSS    YSSP
 {/if}
 -->
 
-
-
-<!--
-
-  sSSs_sSSs     .S_sSSs     .S    sSSSSs   .S   .S_sSSs    
- d%%SP~YS%%b   .SS~YS%%b   .SS   d%%%%SP  .SS  .SS~YS%%b   
-d%S'     `S%b  S%S   `S%b  S%S  d%S'      S%S  S%S   `S%b  
-S%S       S%S  S%S    S%S  S%S  S%S       S%S  S%S    S%S  
-S&S       S&S  S%S    d*S  S&S  S&S       S&S  S%S    S&S  
-S&S       S&S  S&S   .S*S  S&S  S&S       S&S  S&S    S&S  
-S&S       S&S  S&S_sdSSS   S&S  S&S       S&S  S&S    S&S  
-S&S       S&S  S&S~YSY%b   S&S  S&S sSSs  S&S  S&S    S&S  
-S*b       d*S  S*S   `S%b  S*S  S*b `S%%  S*S  S*S    S*S  
-S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S  
- SSSbs_sdSSS   S*S    S&S  S*S   SS_sSSS  S*S  S*S    S*S  
-  YSSP~YSSY    S*S    SSS  S*S    Y~YSSY  S*S  S*S    SSS  
-               SP          SP             SP   SP          
-               Y           Y              Y    Y           
-
--->
-
-<div class={`page ${currentPage === 'origin' ? 'page-active' : 'page-leave'}`}>
-    <h1>Origin</h1>
-    <label for="char-name">Name: </label>
-    <input type="text" id="char-name" bind:value={charName} title="char-name">
-    <label for="level-select">Level: </label>
-    <input type="number" min="1" bind:value={level} id="level-select" title="level-select">
-    <label for="origin-select">Origin: </label>
-    <select name="origin-select" id="origin-select" bind:value={selectedOrigin} on:change={() => handleOriginSelect(selectedOrigin)} class="origin-select">
-        {#each Object.entries(data.groupedOrigins) as [sourcebookId, origins]}
-            <optgroup label={data.sourcebookMap[sourcebookId]}>
-                {#each origins as origin}
-                    <option value={origin.id}>{origin.name}</option>
-                {/each}
-            </optgroup>
-        {/each}
-    </select>
-
-    {#if selectedOriginData}
-        <pre>{selectedOriginData.description.replace(/\\n/g, "\n")}</pre>
-        {#if selectedOriginData.canGhoul}
-            <label for="is-ghoul">Ghoul: </label>
-            <input type="checkbox" id="is-ghoul" name="is-ghoul" bind:checked={isGhoul}>
-        {/if}
-
-        <h3>Trait:</h3>
-    {/if}
-
-    {#if isGhoul === true && ghoulOrigin}
-        <h4>{ghoulOrigin.traits[0]?.name}</h4>
-        <pre>{ghoulOrigin.traits[0]?.description}</pre>
-    {:else if selectedOriginData}
-        {#if traitCount > 1}
-            <div class="multi-trait">
-                <select multiple bind:value={selectedTraits} class="multi-trait-select">
-                    {#each selectedOriginData.traits as trait}
-                        <option value={trait.id.toString()}>{trait.name}</option>
-                    {/each}
-                </select>
-            </div>
-        {/if}
-    {/if}
-
-    {#if traitDescriptions.length > 0 && !isGhoul}
-        <div class="trait-display">
-            {#each selectedTraits as traitId}
-                {#if selectedOriginData}
-                    {#each selectedOriginData.traits as trait}
-                        {#if trait.id.toString() === traitId.toString()}
-                            <div>
-                                <h4>{trait.name}</h4>
-                                <pre>{trait.description.replace(/\\n/g, "\n")}</pre>
-                            </div>
-                        {/if}
-                    {/each}
-                {/if}
-            {/each}
-        </div>
-    {/if}
-</div>
+<Origin newCharacter={newCharacter} groupedOrigins={data.groupedOrigins} sourcebookMap={data.sourcebookMap} currentPage={currentPage} selectedBackgroundIndex={selectedBackgroundIndex} backgroundEquipment={backgroundEquipment} visitedPages={visitedPages} selectedTraits={selectedTraits}/>
 
 <!--
 
@@ -3956,7 +2787,7 @@ Y                               Y
                 <p>Origin: {selectedOriginData.name}</p>
             </div>
             <div class="char-lvl">
-                <p>{level}</p>
+                <p>{newCharacter.lvl}</p>
             </div>
         </div>
         <div class="special-bar">

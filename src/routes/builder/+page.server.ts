@@ -2,7 +2,7 @@ import * as queries from '$lib/server/db/queries';
 import { db } from '$lib/server/db/index';
 import { eq } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
-import { SPECIAL_FIELDS } from '$lib/server/constants';
+import { SPECIAL_FIELDS } from '$lib/constants';
 import { backgroundsInNewContent } from '$lib/server/db/schema.js';
 
 export const actions = {
