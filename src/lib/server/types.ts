@@ -9,6 +9,8 @@ export type BodyPart = {
     } | null;
 }
 
+export type SpecialStat = 'strength' | 'perception' | 'endurance' | 'charisma' | 'intelligence' | 'agility' | 'luck'
+
 export type SpecialStats = {
     strength: number;
     perception: number;
@@ -19,11 +21,23 @@ export type SpecialStats = {
     luck: number;
 }
 
+export type SpecialGifted = {
+    strength: boolean;
+    perception: boolean;
+    endurance: boolean;
+    charisma: boolean;
+    intelligence: boolean;
+    agility: boolean;
+    luck: boolean;
+}
+
 export type SkillStatBlock = {
     ranks: number;
     tagged: boolean;
     total: number;
 }
+
+export type SkillStat = 'Athletics' | 'Barter' | 'Big Guns' | 'Energy Weapons' | 'Explosives' | 'Lockpick' | 'Medicine' | 'Melee Weapons' | 'Pilot' | 'Repair' | 'Science' | 'Small Guns' | 'Sneak' | 'Speech' | 'Survival' | 'Throwing' | 'Unarmed'
 
 export type SkillStats = {
     athletics: SkillStatBlock;
@@ -287,6 +301,7 @@ export type Disease = {
 }
 
 export type FullCharacter = {
+	[x: string]: {};
     player: number;
     playerName: string;
     character: number;

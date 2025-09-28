@@ -1,7 +1,11 @@
-import { blankCharacter } from './constants.js'
+import { blankCharacter, blankSpecialGifted } from './constants.js'
 
 export function resetCharacter() {
     return blankCharacter;
+}
+
+export function resetSpecial() {
+    return { selectedArray: "", giftedSelected: blankSpecialGifted, special: blankCharacter.special };
 }
 
 export async function fetchBackgrounds(originId:string) {

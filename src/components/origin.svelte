@@ -1,8 +1,9 @@
 <script lang="ts">
 
     import { resetCharacter, fetchBackgrounds} from '$lib/funcs.ts'
+	import type { BackgroundEquipment, FullCharacter, OriginWithTraits } from '$lib/server/types.ts';
 
-    let newCharacter, groupedOrigins, sourcebookMap, currentPage, selectedBackgroundIndex, backgroundEquipment, visitedPages, selectedTraits = $props();
+    let newCharacter:FullCharacter, groupedOrigins:Record<string, OriginWithTraits[]>, sourcebookMap:Record<string, string>, currentPage:string, selectedBackgroundIndex:number | null, backgroundEquipment: BackgroundEquipment, visitedPages:string[], selectedTraits:string[] = $props();
 
 /*
 
@@ -35,7 +36,7 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
     });
     //set the character to not be a ghoul if the origin cannot be a ghoul
     $effect(() => {
-		if (selectedOriginData && !(selectedOriginData.canGhoul))        newCharacter.ghoul = false;
+		if (selectedOriginData && !(selectedOriginData.canGhoul)) newCharacter.ghoul = false;
     });
     
     let selectedOrigin: string = $state('');
@@ -50,7 +51,7 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
     const allOrigins = Object.values(groupedOrigins).flat();
     //store all the information for the origin selected in the select element
     $effect(() => {
-        selectedOriginData = allOrigins.find(o => o.id.toString() === selectedOrigin.toString());
+        let selectedOriginData = allOrigins.find(o => o.id.toString() === selectedOrigin.toString());
     });
     //pretty sure this doesn't need to be reactive either
     //$: ghoulOrigin = allOrigins.find(o => o.name?.toLowerCase() === 'ghoul');

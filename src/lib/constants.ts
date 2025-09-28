@@ -1,4 +1,4 @@
-import type { FullCharacter } from './server/types.js'
+import type { FullCharacter, SpecialGifted } from './server/types.js'
 
 export const arrays = {
     Balanced: [6,6,6,6,6,5,5],
@@ -8,6 +8,18 @@ export const arrays = {
 export const skills = [
     'Athletics', 'Barter', 'Big Guns', 'Energy Weapons', 'Explosives', 'Lockpick', 'Medicine', 'Melee Weapons', 'Pilot', 'Repair', 'Science', 'Small Guns', 'Sneak', 'Speech', 'Survival', 'Throwing', 'Unarmed'
 ];
+export const special = [
+    'strength', 'perception', 'endurance', 'charisma', 'intelligence', 'agility', 'luck'
+]
+export const blankSpecialGifted:SpecialGifted = {
+    strength: false,
+    perception: false,
+    endurance: false,
+    charisma: false,
+    intelligence: false,
+    agility: false,
+    luck: false
+}
 export const pages = ['origin','special','skills','perks','stats','equipment','review','character'];
 /* not sure why this one is here...
 export const SPECIAL_FIELDS = ['strength', 'perception', 'endurance', 'charisma', 'intelligence', 'agility', 'luck'] as const;
