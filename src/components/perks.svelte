@@ -2,7 +2,9 @@
 
 	import type { FullCharacter, perktype } from '$lib/server/types.ts';
 
-    let newCharacter:FullCharacter, currentPage:string, selectedTraits:string[], allPerks:perktype[] = $props();
+    let newCharacter:FullCharacter, currentPage:string, selectedTraits:string[], allPerks:perktype[], selectedPerks:string[] = $props();
+
+    //TODO: should probably be writing these to the character, would probably clean up a lot
 
 /*
 
@@ -23,7 +25,6 @@ Y                   Y           Y
 
 */
 
-    let selectedPerks: string[] = [];
     let showEligibleOnly = false;
     let maxPerks = $derived(newCharacter.lvl + (selectedTraits.includes('10') ? 1 : 0));
     let perkPointsRemaining = $derived(maxPerks - selectedPerks.length);
@@ -59,7 +60,6 @@ Y                   Y           Y
     }
 
     let hasReadRequiredBook = false; //once more character tables are built i'll work this one out
-    let hasCompanion = $derived((selectedPerks.includes('28') || selectedPerks.includes('105')));
 
     function isEligibleForPerk(perk:perktype) {
         //has perk already
