@@ -12,6 +12,10 @@ export function resetSkills() {
     return { skillPoints: blankCharacter.skills, extraTagSkillSelections: {}, baseTagSkillSelections: {}};
 }
 
+export function resetPerks() {
+        return { selectedPerks: [], showEligibleOnly: false};
+    }
+
 export async function fetchBackgrounds(originId:string) {
     let backgrounds = [];
     const res = await fetch(`/builder/api/backgrounds?originId=${originId}`, { method: 'GET' });
