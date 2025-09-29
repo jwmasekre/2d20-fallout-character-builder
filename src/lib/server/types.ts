@@ -1,3 +1,5 @@
+export type Pages = 'origin' | 'special' | 'skills' | 'perks' | 'stats' | 'equipment' | 'review' | 'character';
+
 export type BodyPart = {
     active: boolean;
     stats: {

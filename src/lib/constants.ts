@@ -1,4 +1,4 @@
-import type { FullCharacter, SkillPrettyMap, SkillStat, SpecialGifted, SpecialStat } from './server/types.js'
+import type { FullCharacter, Pages, SkillPrettyMap, SkillStat, SpecialGifted, SpecialStat } from './server/types.js'
 
 export const arrays = {
     Balanced: [6,6,6,6,6,5,5],
@@ -41,7 +41,7 @@ export const blankSpecialGifted:SpecialGifted = {
     agility: false,
     luck: false
 }
-export const pages = ['origin','special','skills','perks','stats','equipment','review','character'];
+export const pages:Pages[] = ['origin','special','skills','perks','stats','equipment','review','character'];
 /* not sure why this one is here...
 export const SPECIAL_FIELDS = ['strength', 'perception', 'endurance', 'charisma', 'intelligence', 'agility', 'luck'] as const;
 */

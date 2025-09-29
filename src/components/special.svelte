@@ -3,7 +3,7 @@
     import { arrays, blankCharacter, blankSpecialGifted } from '$lib/constants.ts';
 	import type { FullCharacter, SpecialStat } from '$lib/server/types.ts';
 
-    let newCharacter:FullCharacter, currentPage:string = $props();
+    let newCharacter:FullCharacter, currentPage:string, selectedArray = $props();
 
 /*
 
@@ -56,7 +56,6 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
     let balancedArray = blankCharacter.special;
     let focusedArray = blankCharacter.special;
     let specializedArray = blankCharacter.special;
-    let selectedArray: '' | 'Custom' | 'Balanced' | 'Focused' | 'Specialized' = '';
     $effect(() => {
         switch (selectedArray) {
             case 'Custom':
