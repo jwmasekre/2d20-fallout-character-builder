@@ -1,14 +1,35 @@
-import type { FullCharacter, SpecialGifted } from './server/types.js'
+import type { FullCharacter, SkillPrettyMap, SkillStat, SpecialGifted, SpecialStat } from './server/types.js'
 
 export const arrays = {
     Balanced: [6,6,6,6,6,5,5],
     Focused: [8,7,6,6,5,4,4],
     Specialized: [9,8,5,5,5,4,4]
 };
-export const skills = [
+export const skills:SkillStat[] = [
     'Athletics', 'Barter', 'Big Guns', 'Energy Weapons', 'Explosives', 'Lockpick', 'Medicine', 'Melee Weapons', 'Pilot', 'Repair', 'Science', 'Small Guns', 'Sneak', 'Speech', 'Survival', 'Throwing', 'Unarmed'
 ];
-export const special = [
+
+export const skillPrettyMap:SkillPrettyMap = {
+    'Athletics': 'athletics',
+    'Barter': 'barter',
+	'Big Guns': 'bigGuns',
+	'Energy Weapons': 'energyWeapons',
+	'Explosives': 'explosives',
+	'Lockpick': 'lockpick',
+	'Medicine': 'medicine',
+	'Melee Weapons': 'meleeWeapons',
+	'Pilot': 'pilot',
+	'Repair': 'repair',
+	'Science': 'science',
+	'Small Guns': 'smallGuns',
+	'Sneak': 'sneak',
+	'Speech': 'speech',
+	'Survival': 'survival',
+	'Throwing': 'throwing',
+	'Unarmed': 'unarmed'
+}
+
+export const special:SpecialStat[] = [
     'strength', 'perception', 'endurance', 'charisma', 'intelligence', 'agility', 'luck'
 ]
 export const blankSpecialGifted:SpecialGifted = {

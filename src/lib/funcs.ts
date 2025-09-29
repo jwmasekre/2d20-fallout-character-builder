@@ -8,6 +8,10 @@ export function resetSpecial() {
     return { selectedArray: "", giftedSelected: blankSpecialGifted, special: blankCharacter.special };
 }
 
+export function resetSkills() {
+    return { skillPoints: blankCharacter.skills, extraTagSkillSelections: {}, baseTagSkillSelections: {}};
+}
+
 export async function fetchBackgrounds(originId:string) {
     let backgrounds = [];
     const res = await fetch(`/builder/api/backgrounds?originId=${originId}`, { method: 'GET' });

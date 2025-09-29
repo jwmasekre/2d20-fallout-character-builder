@@ -39,6 +39,26 @@ export type SkillStatBlock = {
 
 export type SkillStat = 'Athletics' | 'Barter' | 'Big Guns' | 'Energy Weapons' | 'Explosives' | 'Lockpick' | 'Medicine' | 'Melee Weapons' | 'Pilot' | 'Repair' | 'Science' | 'Small Guns' | 'Sneak' | 'Speech' | 'Survival' | 'Throwing' | 'Unarmed'
 
+export type SkillPrettyMap = {
+    'Athletics': 'athletics',
+    'Barter': 'barter',
+	'Big Guns': 'bigGuns',
+	'Energy Weapons': 'energyWeapons',
+	'Explosives': 'explosives',
+	'Lockpick': 'lockpick',
+	'Medicine': 'medicine',
+	'Melee Weapons': 'meleeWeapons',
+	'Pilot': 'pilot',
+	'Repair': 'repair',
+	'Science': 'science',
+	'Small Guns': 'smallGuns',
+	'Sneak': 'sneak',
+	'Speech': 'speech',
+	'Survival': 'survival',
+	'Throwing': 'throwing',
+	'Unarmed': 'unarmed'
+}
+
 export type SkillStats = {
     athletics: SkillStatBlock;
     barter: SkillStatBlock;
