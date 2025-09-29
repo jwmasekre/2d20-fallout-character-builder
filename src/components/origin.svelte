@@ -1,6 +1,6 @@
 <script lang="ts">
 
-    import { resetCharacter, fetchBackgrounds} from '$lib/funcs.ts'
+    import { resetCharacter, fetchBackgrounds } from '$lib/funcs.ts'
 	import type { BackgroundEquipment, FullCharacter, OriginWithTraits } from '$lib/server/types.ts';
 
     let newCharacter:FullCharacter, groupedOrigins:Record<string, OriginWithTraits[]>, sourcebookMap:Record<string, string>, currentPage:string, selectedBackgroundIndex:number | null, backgroundEquipment: BackgroundEquipment, visitedPages:string[], selectedTraits:string[] = $props();

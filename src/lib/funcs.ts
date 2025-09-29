@@ -32,3 +32,4 @@ export async function fetchBackgrounds(originId:string) {
     backgrounds = await res.json();
     return backgrounds;
 }
+
