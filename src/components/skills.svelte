@@ -1,12 +1,11 @@
 <script lang="ts">
 
 	import { skills, skillPrettyMap } from '$lib/constants.ts';
-    import { resetCharacter, fetchBackgrounds} from '$lib/funcs.ts'
-	import type { BackgroundEquipment, FullCharacter, OriginWithTraits, SkillStat } from '$lib/server/types.ts';
+	import type { FullCharacter, SkillStat } from '$lib/server/types.ts';
 
-    let newCharacter:FullCharacter, groupedOrigins:Record<string, OriginWithTraits[]>, sourcebookMap:Record<string, string>, currentPage:string, selectedBackgroundIndex:number | null, backgroundEquipment: BackgroundEquipment, visitedPages:string[], selectedTraits:string[] = $props();
+    let newCharacter:FullCharacter, currentPage:string, selectedTraits:string[] = $props();
 
-
+// TODO: switch up tagging to just set the tagged flag to true and calculate each total accordingly
 
 /*
 
