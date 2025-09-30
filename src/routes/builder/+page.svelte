@@ -2,8 +2,6 @@
     // custom types are all stored in src/lib/server/types.ts
     // for some reason +page.svelte files do not like src/lib/types.ts
     import type { FullCharacter, OriginWithTraits, perktype, BackgroundEquipment, Pages } from '$lib/server/types.ts'
-    // to save on space, constants are stored in src/lib/server/constants.ts and imported
-    import { pages } from '$lib/constants.ts';
     // functions that have to be available across all pages
     import { resetCharacter } from '$lib/funcs.ts';
 
@@ -14,9 +12,8 @@
         allPerks: perktype[];
     };
 
-    // create a new character object to build off of
-    let newCharacter: FullCharacter | undefined = $state();
-
+    // build all the stateful variables to be available to all the components
+    let newCharacter: FullCharacter = $state(resetCharacter());
     let currentPage = $state("");
     let visitedPages: Pages[] = $state([]);
     let selectedOrigin: string = $state('');
@@ -27,9 +24,7 @@
     let backgroundEquipment: BackgroundEquipment = $state(undefined);
     let selectedBackgroundIndex: number | null = $state(null);
 
-    //set the initial character object to default
-    newCharacter = resetCharacter();
-
+    // import all the components
     import Nav from '../../components/nav.svelte';
     import Save from '../../components/save.svelte';
     import Origin from '../../components/origin.svelte';

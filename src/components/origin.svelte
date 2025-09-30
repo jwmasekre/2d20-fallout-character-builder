@@ -27,18 +27,31 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
 */
 
     //dynamically updates xp to match the minimum xp for the level that's set on the page
+    /* the below derived is probably sufficient
     $effect(() => {
         if (newCharacter.lvl > 0) newCharacter.xp = !isNaN(newCharacter.lvl) && newCharacter.lvl >= 1 ? newCharacter.lvl * (newCharacter.lvl - 1) * 50 : 0;
     });
+    */
+    newCharacter.xp = $derived(newCharacter.lvl * (newCharacter.lvl -1)*50);
     //set all the origin data once an origin is selected
+    /* probably not needed either
     $effect(() => {
 		if (selectedOriginData != undefined) newCharacter.origin = selectedOriginData.id, newCharacter.originName = selectedOriginData.name, newCharacter.originDesc = selectedOriginData?.description;
     });
+    */
+    newCharacter.origin = $derived(selectedOriginData.id);
+    newCharacter.originName = $derived(selectedOriginData.name);
+    newCharacter.originDesk = $derived(selectedOriginData.description);
+
     //set the character to not be a ghoul if the origin cannot be a ghoul
+    /* the below derived is probably better than this
     $effect(() => {
 		if (selectedOriginData && !(selectedOriginData.canGhoul)) newCharacter.ghoul = false;
     });
+    */
+    newCharacter.ghoul = $derived(selectedOriginData && !(selectedOriginData.canGhoul));
     
+    //why is this a state?
     let traitDescriptions: string[] = $state([]);
     //when the ghoul flag is changed in the character, check if the ghoul trait needs to be set/unset
     $effect(() => {
@@ -49,9 +62,12 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
     //$: allOrigins = Object.values(groupedOrigins).flat();
     const allOrigins = Object.values(groupedOrigins).flat();
     //store all the information for the origin selected in the select element
+    /* i think this can be a derived?
     $effect(() => {
         selectedOriginData = allOrigins.find(o => o.id.toString() === selectedOrigin.toString());
     });
+    */
+    selectedOriginData = $derived(allOrigins.find(o => o.id.toString() === selectedOrigin.toString()));
     //pretty sure this doesn't need to be reactive either
     //$: ghoulOrigin = allOrigins.find(o => o.name?.toLowerCase() === 'ghoul');
     const ghoulOrigin = allOrigins.find(o => o.name?.toLowerCase() === 'ghoul');
@@ -66,7 +82,7 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
         })
     });
 
-    //if an origin is selected and the character is a ghoul, set the selected trait to the ghoul trait, otherwise set it to the first trait of the origin (or empty if there's no trait selected)
+    //if an origin is selected and the character is a ghoul, set the selected trait to the ghoul trait, otherwise set it to the first trait of the origin (or empty if there's no origin selected)
     function handleGhouls(ghoul:boolean):string[] {
         if (selectedOriginData) {
             return ghoul ? [ghoulOrigin!.traits[0].id.toString()] : [selectedOriginData.traits[0].id.toString()];
@@ -89,8 +105,7 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
     });
 
     //there are three basic body shapes: mr handy, securitron, and everything else
-    let isHandy = false;
-    let isSecuritron = false;
+    let bodyType: 'standard' | 'handy' | 'securitron' = 'standard';
     //every time an origin is selected, we need to clear a bunch of data
     function handleOriginSelect(origin: string) {
         //the current page needs to be set to origin, which triggers a reactive element in the nav bar
@@ -114,8 +129,8 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
             }]
         }
         //check the body type of the origin/trait
-        if (selectedTraits.includes('4')) isHandy = true; else isHandy = false;
-        if (selectedTraits.includes('20')) isSecuritron = true; else isSecuritron = false;
+        if (selectedTraits.includes('4')) bodyType = 'handy';
+        if (selectedTraits.includes('20')) bodyType = 'securitron';
         //set the correct body parts as active
         setBodyParts();
         //clear out visited pages
@@ -127,78 +142,67 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
 
     //disable and enable the appropriate body parts based on body type
     function setBodyParts() {
-        if (isHandy) {
-            newCharacter.body.head.active = false;
-            newCharacter.body.lArm.active = false;
-            newCharacter.body.rArm.active = false;
-            newCharacter.body.lLeg.active = false;
-            newCharacter.body.rLeg.active = false;
-            newCharacter.body.torso.active = true;
-            newCharacter.body.optics.active = true;
-            newCharacter.body.arm1.active = true;
-            newCharacter.body.arm2.active = true;
-            newCharacter.body.arm3.active = true;
-            newCharacter.body.thruster.active = true;
-            newCharacter.body.wheel.active = false;
-        } else if (isSecuritron) {
-            newCharacter.body.head.active = true;
-            newCharacter.body.lArm.active = true;
-            newCharacter.body.rArm.active = true;
-            newCharacter.body.lLeg.active = false;
-            newCharacter.body.rLeg.active = false;
-            newCharacter.body.torso.active = true;
-            newCharacter.body.optics.active = false;
-            newCharacter.body.arm1.active = false;
-            newCharacter.body.arm2.active = false;
-            newCharacter.body.arm3.active = false;
-            newCharacter.body.thruster.active = false;
-            newCharacter.body.wheel.active = true;
-        } else {
-            newCharacter.body.head.active = true;
-            newCharacter.body.lArm.active = true;
-            newCharacter.body.rArm.active = true;
-            newCharacter.body.lLeg.active = true;
-            newCharacter.body.rLeg.active = true;
-            newCharacter.body.torso.active = true;
-            newCharacter.body.optics.active = false;
-            newCharacter.body.arm1.active = false;
-            newCharacter.body.arm2.active = false;
-            newCharacter.body.arm3.active = false;
-            newCharacter.body.thruster.active = false;
-            newCharacter.body.wheel.active = false;
-        }
+        newCharacter.body.torso.active = true;
+        switch (bodyType) {
+            case 'handy':
+                newCharacter.body.head.active = false;
+                newCharacter.body.lArm.active = false;
+                newCharacter.body.rArm.active = false;
+                newCharacter.body.lLeg.active = false;
+                newCharacter.body.rLeg.active = false;
+                newCharacter.body.optics.active = true;
+                newCharacter.body.arm1.active = true;
+                newCharacter.body.arm2.active = true;
+                newCharacter.body.arm3.active = true;
+                newCharacter.body.thruster.active = true;
+                newCharacter.body.wheel.active = false;
+                break;
+            case 'securitron':
+                newCharacter.body.head.active = true;
+                newCharacter.body.lArm.active = true;
+                newCharacter.body.rArm.active = true;
+                newCharacter.body.lLeg.active = false;
+                newCharacter.body.rLeg.active = false;
+                newCharacter.body.optics.active = false;
+                newCharacter.body.arm1.active = false;
+                newCharacter.body.arm2.active = false;
+                newCharacter.body.arm3.active = false;
+                newCharacter.body.thruster.active = false;
+                newCharacter.body.wheel.active = true;
+                break;
+            case 'standard':
+                newCharacter.body.head.active = true;
+                newCharacter.body.lArm.active = true;
+                newCharacter.body.rArm.active = true;
+                newCharacter.body.lLeg.active = true;
+                newCharacter.body.rLeg.active = true;
+                newCharacter.body.optics.active = false;
+                newCharacter.body.arm1.active = false;
+                newCharacter.body.arm2.active = false;
+                newCharacter.body.arm3.active = false;
+                newCharacter.body.thruster.active = false;
+                newCharacter.body.wheel.active = false;
+                break;
+            }
         newCharacter.apparel = [];
     }
     
     //if the origin/trait is one of the robot traits, set the robot flag to true
+    /* another case of "i think this can be derived"
     $effect(() => {
 		if (['4','18','19','20','23'].some(robotId => selectedTraits.includes(robotId))) newCharacter.robot = true;
     });
+    */
+    newCharacter.robot = $derived(['4','18','19','20','23'].some(robotId => selectedTraits.includes(robotId)));
     //if the origin/trait is one of the super mutant traits, set the super mutant flag to the appropriate setting
+    /* this one i'm less confident on
     $effect(() => {
 		if (['3','25'].some(superMutantId => selectedTraits.includes(superMutantId))) selectedTraits[0] === '3' ? newCharacter.superMutant = 'super mutant' : newCharacter.superMutant = 'nightkin';
     });
+    */
+    newCharacter.superMutant = $derived(selectedTraits[0] === '3' ? 'super mutant' : (selectedTraits[0] === '25' ? 'nightkin' : false));
 
 </script>
-
-<!--
-
-  sSSs_sSSs     .S_sSSs     .S    sSSSSs   .S   .S_sSSs    
- d%%SP~YS%%b   .SS~YS%%b   .SS   d%%%%SP  .SS  .SS~YS%%b   
-d%S'     `S%b  S%S   `S%b  S%S  d%S'      S%S  S%S   `S%b  
-S%S       S%S  S%S    S%S  S%S  S%S       S%S  S%S    S%S  
-S&S       S&S  S%S    d*S  S&S  S&S       S&S  S%S    S&S  
-S&S       S&S  S&S   .S*S  S&S  S&S       S&S  S&S    S&S  
-S&S       S&S  S&S_sdSSS   S&S  S&S       S&S  S&S    S&S  
-S&S       S&S  S&S~YSY%b   S&S  S&S sSSs  S&S  S&S    S&S  
-S*b       d*S  S*S   `S%b  S*S  S*b `S%%  S*S  S*S    S*S  
-S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S  
- SSSbs_sdSSS   S*S    S&S  S*S   SS_sSSS  S*S  S*S    S*S  
-  YSSP~YSSY    S*S    SSS  S*S    Y~YSSY  S*S  S*S    SSS  
-               SP          SP             SP   SP          
-               Y           Y              Y    Y           
-
--->
 
 <div class={`page ${currentPage === 'origin' ? 'page-active' : 'page-leave'}`}>
     <h1>Origin</h1>
