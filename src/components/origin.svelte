@@ -32,16 +32,16 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
         if (newCharacter.lvl > 0) newCharacter.xp = !isNaN(newCharacter.lvl) && newCharacter.lvl >= 1 ? newCharacter.lvl * (newCharacter.lvl - 1) * 50 : 0;
     });
     */
-    newCharacter.xp = $derived(newCharacter.lvl * (newCharacter.lvl -1)*50);
+    newCharacter!.xp = $derived(newCharacter!.lvl * (newCharacter!.lvl -1)*50);
     //set all the origin data once an origin is selected
     /* probably not needed either
     $effect(() => {
 		if (selectedOriginData != undefined) newCharacter.origin = selectedOriginData.id, newCharacter.originName = selectedOriginData.name, newCharacter.originDesc = selectedOriginData?.description;
     });
     */
-    newCharacter.origin = $derived(selectedOriginData.id);
-    newCharacter.originName = $derived(selectedOriginData.name);
-    newCharacter.originDesk = $derived(selectedOriginData.description);
+    newCharacter!.origin = $derived(selectedOriginData.id);
+    newCharacter!.originName = $derived(selectedOriginData.name);
+    newCharacter!.originDesk = $derived(selectedOriginData.description);
 
     //set the character to not be a ghoul if the origin cannot be a ghoul
     /* the below derived is probably better than this
@@ -49,7 +49,7 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
 		if (selectedOriginData && !(selectedOriginData.canGhoul)) newCharacter.ghoul = false;
     });
     */
-    newCharacter.ghoul = $derived(selectedOriginData && !(selectedOriginData.canGhoul));
+    newCharacter!.ghoul = $derived(selectedOriginData && !(selectedOriginData.canGhoul));
     
     //why is this a state?
     let traitDescriptions: string[] = $state([]);
@@ -60,7 +60,7 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
 
     //I don't think this needs to be reactive
     //$: allOrigins = Object.values(groupedOrigins).flat();
-    const allOrigins = Object.values(groupedOrigins).flat();
+    const allOrigins = Object.values(groupedOrigins!).flat();
     //store all the information for the origin selected in the select element
     /* i think this can be a derived?
     $effect(() => {
@@ -193,14 +193,14 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
 		if (['4','18','19','20','23'].some(robotId => selectedTraits.includes(robotId))) newCharacter.robot = true;
     });
     */
-    newCharacter.robot = $derived(['4','18','19','20','23'].some(robotId => selectedTraits.includes(robotId)));
+    newCharacter!.robot = $derived(['4','18','19','20','23'].some(robotId => selectedTraits.includes(robotId)));
     //if the origin/trait is one of the super mutant traits, set the super mutant flag to the appropriate setting
     /* this one i'm less confident on
     $effect(() => {
 		if (['3','25'].some(superMutantId => selectedTraits.includes(superMutantId))) selectedTraits[0] === '3' ? newCharacter.superMutant = 'super mutant' : newCharacter.superMutant = 'nightkin';
     });
     */
-    newCharacter.superMutant = $derived(selectedTraits[0] === '3' ? 'super mutant' : (selectedTraits[0] === '25' ? 'nightkin' : false));
+    newCharacter!.superMutant = $derived(selectedTraits![0] === '3' ? 'super mutant' : (selectedTraits![0] === '25' ? 'nightkin' : false));
 
 </script>
 
@@ -212,8 +212,8 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
     <input type="number" min="1" bind:value={newCharacter.lvl} id="level-select" title="level-select">
     <label for="origin-select">Origin: </label>
     <select name="origin-select" id="origin-select" bind:value={selectedOrigin} on:change={() => handleOriginSelect(selectedOrigin)} class="origin-select">
-        {#each Object.entries(groupedOrigins) as [sourcebookId, origins]}
-            <optgroup label={sourcebookMap[sourcebookId]}>
+        {#each Object.entries(groupedOrigins!) as [sourcebookId, origins]}
+            <optgroup label={sourcebookMap![sourcebookId]}>
                 {#each origins as origin}
                     <option value={origin.id}>{origin.name}</option>
                 {/each}
