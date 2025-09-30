@@ -30,19 +30,23 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
     //carry weight calculation
     let carryWeight: number;
     //checking all four of these to trigger recalc on a change of any of them
-    $effect(() => {
-        if (selectedTraits.length !== 0 || selectedPerks.length !== 0 || newCharacter.special) {
-        //mister handy, robobrain, securitron, and assaultron have flat carry weights
-        if (selectedTraits.includes('4') || selectedTraits.includes('19') || selectedTraits.includes('20') || selectedTraits.includes('23')) carryWeight = 150;
-        //protectrons are even bulkier
-        else if (selectedTraits.includes('18')) carryWeight = 225;
-        //small frame halves str bonus to carry weight
-        else if (selectedTraits.includes('9')) carryWeight = 150 + 5 * newCharacter.special.strength
-        //default calculation
-        else carryWeight = 150 + 10 * newCharacter.special.strength;
-        //strong back adds 25 per rank to non-robots
-        carryWeight += newCharacter.robot ? 0 : selectedPerks.filter(p => p === '91').length * 25;
-        }
+    newCharacter!.maxCarryWeight = $derived.by(() => {
+        if (selectedTraits!.length !== 0 || selectedPerks!.length !== 0) {
+            let strongBack = 0;
+            if (newCharacter!.perks.filter(cperk => cperk.perk === 91).length > 0) {
+                strongBack = newCharacter!.perks.find(cperk => cperk.perk === 91).ranks * 25;
+            }
+            switch (true) {
+                case [4,19,20,23].some(trait => newCharacter!.traits.find(ctrait => ctrait.trait === trait)):
+                    return 150;
+                case newCharacter!.traits.filter(ctrait => ctrait.trait === 18).length >= 1:
+                    return 225;
+                case newCharacter!.traits.filter(ctrait => ctrait.trait === 9).length >= 1:
+                    return 150 + (5 * newCharacter!.special.strength) + strongBack;
+                default:
+                    return 150 + (10 * newCharacter!.special.strength) + strongBack;
+            }
+        } else return 0;
     });
 
     //damage resistance calculation

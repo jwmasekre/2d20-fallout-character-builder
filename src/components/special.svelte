@@ -26,8 +26,7 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
 
 */
 
-    let traitIds = $derived(newCharacter!.traits.map(obj => obj[trait]));
-    let isGifted = $derived(traitIds.includes('7'));
+    let isGifted = $derived(newCharacter!.traits.filter(ctrait => ctrait.trait === 7).length >0);
 
     let giftedSelected = blankSpecialGifted;
     let giftedCount = $derived(Object.values(giftedSelected).filter(Boolean).length);

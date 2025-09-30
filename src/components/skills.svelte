@@ -3,7 +3,7 @@
 	import { skills, skillPrettyMap } from '$lib/constants.ts';
 	import type { FullCharacter, SkillStat } from '$lib/server/types.ts';
 
-    let newCharacter:FullCharacter, currentPage:string, selectedTraits:string[] = $props();
+    let newCharacter:FullCharacter, currentPage:string = $props();
 
 /*
 
@@ -23,18 +23,13 @@ YSS'    S*S     SS  S*S    YSSP    YSSP  YSS'
 
 */
 
-/*
-Testing a new way to handle this page
-This includes doing more direct read/write to the newCharacter object, rather than having proxy objects to read/write to
-W̶e̶ ̶l̶o̶s̶e̶ ̶s̶o̶m̶e̶ ̶v̶i̶s̶i̶b̶i̶l̶i̶t̶y̶ ̶o̶n̶ ̶e̶x̶t̶r̶a̶ ̶t̶a̶g̶s̶ ̶v̶s̶ ̶s̶t̶a̶n̶d̶a̶r̶d̶,̶ ̶b̶u̶t̶ ̶I̶ ̶d̶o̶n̶'̶t̶ ̶t̶h̶i̶n̶k̶ ̶t̶h̶a̶t̶'̶l̶l̶ ̶b̶e̶ ̶s̶u̶p̶e̶r̶ ̶v̶a̶l̶u̶a̶b̶l̶e̶
-We'll need some way to track it but it'll be more straightforward
-*/
+
 
     let extraTagCount = $derived.by(() => {
         switch (true) {
-            case (['1', '2', '5', '11', '12', '21', '24'].some(trait => selectedTraits.includes(trait))):
+            case [1,2,5,11,12,21,24].some(trait => newCharacter!.traits.filter(ctrait => ctrait.trait === trait)):
                 return 1;
-            case (selectedTraits.includes('13')):
+            case newCharacter!.traits.filter(ctrait => ctrait.trait === 13).length > 0:
                 return 2;
             default:
                 return 0;
@@ -42,31 +37,31 @@ We'll need some way to track it but it'll be more straightforward
     });
     let extraTagOptions:SkillStat[] = $derived.by(() => {
         switch (true) {
-            case (['1', '24'].some(trait => selectedTraits.includes(trait))):
+            case [1,24].some(trait => newCharacter!.traits.filter(ctrait => ctrait.trait === trait)):
                 return ["Energy Weapons", "Repair", "Science"];
-            case (selectedTraits.includes('12')):
+            case newCharacter!.traits.filter(ctrait => ctrait.trait === 12).length > 0:
                 return ['Small Guns', 'Energy Weapons'];
-            case (selectedTraits.includes('13')):
+            case newCharacter!.traits.filter(ctrait => ctrait.trait === 13).length > 0:
                 return ['Speech', 'Medicine', 'Repair', 'Science', 'Barter'];
-            case (['5', '11', '21'].some(trait => selectedTraits.includes(trait))):
+            case [5,11,21].some(trait => newCharacter!.traits.filter(ctrait => ctrait.trait === trait)):
                 return skills;
-            case (selectedTraits.includes('2')):
+            case newCharacter!.ghoul:
                 return ['Survival'];
             default:
                 return [];
         }
     });
     let extraTags:SkillStat[] = [];
-    let forcedTags:SkillStat | '' = $derived(selectedTraits.includes('2') ? 'Survival' : '');
+    let forcedTags:SkillStat | '' = $derived(newCharacter!.ghoul ? 'Survival' : '');
     $effect(() => {
         if (forcedTags !== '') newCharacter!.skills[skillPrettyMap[forcedTags]].tagged = true;
     });
-    let forbiddenTags = $derived(selectedTraits.includes('27') ? 'Science' : '');
+    let forbiddenTags = $derived(newCharacter!.traits.filter(ctrait => ctrait.trait === 27).length > 0 ? 'Science' : '');
     let limitedSkill = $derived.by(() => {
         switch (true) {
-            case (selectedTraits.includes('13')):
+            case newCharacter!.traits.filter(ctrait => ctrait.trait === 13).length > 0:
                 return ['Athletics', 'Big Guns', 'Energy Weapons', 'Explosives', 'Lockpick', 'Melee Weapons', 'Pilot', 'Small Guns', 'Sneak', 'Survival', 'Throwing', 'Unarmed'];
-            case (['3', '25'].some(trait => selectedTraits.includes(trait))):
+            case [3,25].some(trait => newCharacter!.traits.filter(ctrait => ctrait.trait === trait)):
                 return skills;
             default:
                 return [];

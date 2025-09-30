@@ -18,7 +18,6 @@
     let visitedPages: Pages[] = $state([]);
     let selectedOrigin: string = $state('');
     let selectedOriginData: OriginWithTraits | undefined = $state();
-    let selectedTraits: string[] = $state([]);
     let selectedArray: '' | 'Custom' | 'Balanced' | 'Focused' | 'Specialized' = $state('');
     let hasCompanion: boolean = $state(false);
     let companion = $state({
@@ -56,20 +55,20 @@
     
 </script>
 
-<Nav newCharacter={newCharacter} currentPage={currentPage} selectedOrigin={selectedOrigin}, selectedTraits={selectedTraits} visitedPages={visitedPages} selectedOriginData={selectedOriginData} selectedArray={selectedArray}/>
+<Nav newCharacter={newCharacter} currentPage={currentPage} selectedOrigin={selectedOrigin}, visitedPages={visitedPages} selectedOriginData={selectedOriginData} selectedArray={selectedArray}/>
 
 <Save newCharacter={newCharacter}/>
 
-<Origin newCharacter={newCharacter} groupedOrigins={data.groupedOrigins} sourcebookMap={data.sourcebookMap} currentPage={currentPage} selectedBackgroundIndex={selectedBackgroundIndex} backgroundEquipment={backgroundEquipment} visitedPages={visitedPages} selectedTraits={selectedTraits} selectedOrigin={selectedOrigin} selectedOriginData={selectedOriginData}/>
+<Origin newCharacter={newCharacter} groupedOrigins={data.groupedOrigins} sourcebookMap={data.sourcebookMap} currentPage={currentPage} selectedBackgroundIndex={selectedBackgroundIndex} backgroundEquipment={backgroundEquipment} visitedPages={visitedPages} selectedOrigin={selectedOrigin} selectedOriginData={selectedOriginData}/>
 
 <Special newCharacter={newCharacter} currentPage={currentPage} selectedArray={selectedArray}/>
 
-<Skills newCharacter={newCharacter} currentPage={currentPage} selectedTraits={selectedTraits}/>
+<Skills newCharacter={newCharacter} currentPage={currentPage}/>
 
-<Perks newCharacter={newCharacter} currentPage={currentPage} selectedTraits={selectedTraits} allPerks={data.allPerks} hasCompanion={hasCompanion}/>
+<Perks newCharacter={newCharacter} currentPage={currentPage} allPerks={data.allPerks} hasCompanion={hasCompanion}/>
 
-<Stats newCharacter={newCharacter} currentPage={currentPage} selectedTraits={selectedTraits} hasCompanion={hasCompanion} companion={companion}/>
+<Stats newCharacter={newCharacter} currentPage={currentPage} hasCompanion={hasCompanion} companion={companion}/>
 
 <Equipment newCharacter={newCharacter} currentPage={currentPage}/>
 
-<Review newCharacter={newCharacter} currentPage={currentPage} selectedTraits={selectedTraits} backgroundEquipment={backgroundEquipment}/>
+<Review newCharacter={newCharacter} currentPage={currentPage} backgroundEquipment={backgroundEquipment}/>

@@ -328,6 +328,8 @@ export type FullCharacter = {
     playerName: string;
     character: number;
     characterName: string;
+    //height: number;
+    //weight: number;
     xp: number;
     lvl: number;
     origin: number;
@@ -342,6 +344,8 @@ export type FullCharacter = {
     maxHP: number;
     radPts: number;
     maxRadPts: number;
+    carryWeight: number;
+    maxCarryWeight: number;
     body: {
         head: BodyPart;
         lArm: BodyPart;

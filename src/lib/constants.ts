@@ -50,6 +50,8 @@ export const blankCharacter: FullCharacter = {
     playerName: '',
     character: 0,
     characterName: '',
+    //height: 0,
+    //weight: 0,
     xp: 0,
     lvl: 1,
     origin: 0,
@@ -64,6 +66,8 @@ export const blankCharacter: FullCharacter = {
     maxHP: 0,
     radPts: 0,
     maxRadPts: 0,
+    carryWeight: 0,
+    maxCarryWeight: 0,
     body: {
         head: {
             active: false,

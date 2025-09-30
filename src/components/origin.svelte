@@ -3,7 +3,7 @@
     import { resetCharacter, fetchBackgrounds } from '$lib/funcs.ts'
 	import type { BackgroundEquipment, FullCharacter, OriginWithTraits } from '$lib/server/types.ts';
 
-    let newCharacter:FullCharacter, groupedOrigins:Record<string, OriginWithTraits[]>, sourcebookMap:Record<string, string>, currentPage:string, selectedBackgroundIndex:number | null, backgroundEquipment: BackgroundEquipment, visitedPages:string[], selectedTraits:string[], selectedOrigin:string, selectedOriginData:OriginWithTraits = $props();
+    let newCharacter:FullCharacter, groupedOrigins:Record<string, OriginWithTraits[]>, sourcebookMap:Record<string, string>, currentPage:string, selectedBackgroundIndex:number | null, backgroundEquipment: BackgroundEquipment, visitedPages:string[], selectedOrigin:string, selectedOriginData:OriginWithTraits = $props();
 
 /*
 
@@ -54,6 +54,7 @@ S*S.     .S*S  S*S    S%S  S*S  S*S   S%  S*S  S*S    S*S
     //why is this a state?
     let traitDescriptions: string[] = $state([]);
     //when the ghoul flag is changed in the character, check if the ghoul trait needs to be set/unset
+    let selectedTraits:string[] = [];
     $effect(() => {
         selectedTraits = handleGhouls(newCharacter.ghoul);
     });
