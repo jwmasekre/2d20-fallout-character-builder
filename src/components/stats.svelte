@@ -1,10 +1,11 @@
 <script lang="ts">
+	import { skills, special, skillPrettyMap } from '$lib/constants.ts';
 	import { getStaggeredBonus } from '$lib/funcs.ts';
 
 
-	import type { FullCharacter, perktype } from '$lib/server/types.ts';
+	import type { FullCharacter } from '$lib/server/types.ts';
 
-    let newCharacter:FullCharacter, currentPage:string, selectedTraits:string[], allPerks:perktype[], selectedPerks:string[], hasCompanion:boolean, companion = $props();
+    let newCharacter:FullCharacter, currentPage:string, hasCompanion:boolean, companion = $props();
 
     //TODO: write to newCharacter
 
@@ -27,11 +28,9 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
 
 */
 
-    //carry weight calculation
-    let carryWeight: number;
     //checking all four of these to trigger recalc on a change of any of them
     newCharacter!.maxCarryWeight = $derived.by(() => {
-        if (selectedTraits!.length !== 0 || selectedPerks!.length !== 0) {
+        if (newCharacter!.traits.length !== 0 || newCharacter!.perks.length !== 0) {
             let strongBack = 0;
             if (newCharacter!.perks.filter(cperk => cperk.perk === 91).length > 0) {
                 strongBack = newCharacter!.perks.find(cperk => cperk.perk === 91).ranks * 25;
@@ -50,84 +49,71 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
     });
 
     //damage resistance calculation
-    let baseDr = {
-        phys: 0,
-        enrg: 0,
-        rads: 0,
-        pois: 0
-    }
-    //checking all four of these to trigger recalc on a change of any of them
-    $effect(() => {
-        if (selectedTraits.length !== 0 || selectedPerks.length !== 0 || newCharacter.special) {
-            //rads
-            //immune to rads
-            if (['2','3','4','18','19','20','21','23','25'].some(t => selectedTraits.includes(t))) baseDr.rads = 99;
-            //add dr for child of atom trait and rad resistance perk
-            else baseDr.rads += selectedTraits.filter(t => t === '22').length + selectedPerks.filter(p => p === '73').length;
-            
-            //poison
-            //immune to poison
-            if (['3','4','18','19','20','21','23','25'].some(t => selectedTraits.includes(t))) baseDr.rads = 99;
-            //add dr for snakeeater perk
-            else baseDr.pois += selectedPerks.filter(p => p === '87').length * 2;
-
-            //physical
-            //add dr like melee damage for barbarian perk
-            if (selectedPerks.includes('8')) {
-                baseDr.phys += getStaggeredBonus(newCharacter.special.strength);
-            }
-            //add dr for toughness perk
-            baseDr.phys += selectedPerks.filter(p => p === '94').length;
-
-            //energy
-            //add dr for refractor perk
-            baseDr.enrg += selectedPerks.filter(p => p === '74').length;
-
-            //evasive adding to physical and energy like melee damage
-            if (selectedPerks.includes('167')) {
-                const bonus = getStaggeredBonus(newCharacter.special.agility);
-                baseDr.phys += bonus;
-                baseDr.enrg += bonus;
-            }
+    //poison
+    newCharacter!.poisonDR = $derived.by(() => {
+        switch (true) {
+            //immune
+            case [3,4,18,19,20,21,23,25].some(trait => newCharacter!.traits.filter(ctrait => ctrait.trait === trait)):
+                return 99;
+            //snakeeater perk
+            case newCharacter!.perks.filter(cperk => cperk.perk === 87).length > 0:
+                return newCharacter!.perks.find(cperk => cperk.perk === 87).ranks * 2;
+            default:
+                return 0;
         }
     });
-    
+    newCharacter!.baseDR.rdDR = $derived.by(() => {
+        switch (true) {
+            //immune
+            case [2,3,4,18,19,20,21,23,25].some(trait => newCharacter!.traits.filter(ctrait => ctrait.trait === trait)):
+                return 99;
+            //child of atom trait and rad resistance perk
+            case newCharacter!.traits.filter(ctrait => ctrait.trait === 22).length > 0 || newCharacter!.perks.filter(cperk => cperk.perk === 73).length > 0:
+                return newCharacter!.traits.filter(ctrait => ctrait.trait === 22).length + (newCharacter!.perks.filter(cperk => cperk.perk === 73).length === 1 ? newCharacter!.perks.find(cperk => cperk.perk === 73).ranks : 0)
+            default:
+                return 0;
+        }
+    });
+    //physical (based on perks)
+    newCharacter!.baseDR.phDR = $derived.by(() => {
+        const barbarian = newCharacter!.perks.filter(cperk => cperk.perk === 8).length > 0 ? getStaggeredBonus(newCharacter!.special.strength) : 0;
+        const toughness = newCharacter!.perks.filter(cperk => cperk.perk === 94).length > 0 ? newCharacter!.perks.find(cperk => cperk.perk === 94).ranks : 0;
+        const evasive = newCharacter!.perks.filter(cperk => cperk.perk === 167).length > 0 ? getStaggeredBonus(newCharacter!.special.agility) : 0;
+        return barbarian + toughness + evasive;
+    });
+    //energy (based on perks)
+    newCharacter!.baseDR.enDR = $derived.by(() => {
+        const refractor = newCharacter!.perks.filter(cperk => cperk.perk === 74).length > 0 ? newCharacter!.perks.find(cperk => cperk.perk === 74).ranks : 0;
+        const evasive = newCharacter!.perks.filter(cperk => cperk.perk === 167).length > 0 ? getStaggeredBonus(newCharacter!.special.agility) : 0;
+        return refractor + evasive;
+    });
+
     //defense
-    let defense = $derived(newCharacter.special.agility >= 9 ? 2 : 1);
+    newCharacter!.defense = $derived(newCharacter!.special.agility >= 9 ? 2 : 1);
 
     //initiative
-    let initiative = $derived(newCharacter.special.perception + newCharacter.special.agility);
+    newCharacter!.initiative = $derived(newCharacter!.special.perception + newCharacter!.special.agility);
 
     //max health adjustments
     //calculate and add health for life giver perk
-    let maxHealth = $derived(newCharacter.special.endurance + newCharacter.special.luck + selectedPerks.filter(p => p === '51').length * newCharacter.special.endurance);
+    newCharacter!.maxHP = $derived(newCharacter!.special.endurance + newCharacter!.special.luck + (newCharacter!.perks.filter(cperk => cperk.perk === 51).length > 0 ? newCharacter!.perks.find(cperk => cperk.perk === 51).ranks : 0) * newCharacter!.special.endurance);
     //will help us determine if we need to report different health at night for nocturnal fortitude perk
-    let isNocturnal = $derived(selectedPerks.includes('111'));
+    let isNocturnal = $derived(newCharacter!.perks.filter(cperk => cperk.perk === 111).length > 0);
 
     //melee damage modifier calculation
-    let meleeDamage = 0;
-    let unarmedBonus = false;
-    let sneakBonus = false;
-    //checking all four of these to trigger recalc on a change of any of them
-    $effect(() => {
-        if (selectedTraits.length > 0 || selectedPerks.length > 0 || newCharacter.special) {
-            //base calculation
-            meleeDamage = getStaggeredBonus(newCharacter.special.strength)
-            //heavy handed and assaultron traits
-            if (selectedTraits.includes('8') || selectedTraits.includes('23')) meleeDamage += 1;
-            //will help us determine if we need to report different modifier for unarmed via iron fist perk
-            unarmedBonus = selectedPerks.includes('46');
-            //will help us determine if we need to report different modifier for sneak attacks via ninja
-            sneakBonus = selectedPerks.includes('61');
-        }
-    });
+    newCharacter!.meleeModifiers.base = $derived(getStaggeredBonus(newCharacter!.special.strength) + newCharacter!.traits.filter(ctrait => ctrait.trait === 8 || ctrait.trait === 23).length);
+    //will help us determine if we need to report different modifier for unarmed via iron fist perk
+    newCharacter!.meleeModifiers.unarmed = $derived(newCharacter!.perks.filter(cperk => cperk.perk === 46).length > 0 ? {active: true, modifier: 1} : {active: false, modifier: 0})
+    //will help us determine if we need to report different modifier for sneak attacks via ninja
+    newCharacter!.meleeModifiers.sneak = $derived(newCharacter!.perks.filter(cperk => cperk.perk === 61).length > 0 ? {active: true, modifier: 2} : {active: false, modifier: 0})
 
     //luck points
     //max luck points are luck or minus one for gifted trait
-    let maxLuckPoints = $derived(newCharacter.special.luck - selectedTraits.filter(t => t === '7').length);
+    newCharacter!.maxLuckPts = $derived(newCharacter!.special.luck - (newCharacter!.traits.filter(ctrait => ctrait.trait === 7).length > 0 ? 1 : 0));
     
-    hasCompanion = $derived((selectedPerks.includes('28') || selectedPerks.includes('105')));
+    hasCompanion = $derived(newCharacter!.perks.filter(cperk => cperk.perk === 28 || cperk.perk === 105).length > 0);
 
+    /* not messing with companions yet
     let isDog = false;
     $: if (selectedPerks.length > 0 && hasCompanion) {
         isDog = selectedPerks.includes('28');
@@ -181,17 +167,18 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
         companion.abilities = isDog ? ["Keen Senses","Attack Dog","Companion"] : [];
         companion.wealth = 0;
     }
+    */
 
 </script>
 
 
-<div class={`page ${currentPage === 'stats' ? 'page-active' : 'page-leave'}`}>
+<div class={`page ${currentPage! === 'stats' ? 'page-active' : 'page-leave'}`}>
 
     <h1>Stats</h1>
     <div class="character" style={hasCompanion ? "display:inline-block;margin-right:1rem" : "display:block"}>
-        {#if hasCompanion}<h3>{newCharacter.characterName}</h3>{/if}
+        {#if hasCompanion}<h3>{newCharacter!.characterName}</h3>{/if}
         <div class="character-stats">
-            <p><strong>Carry Weight</strong>: {carryWeight}</p>
+            <p><strong>Carry Weight</strong>: {newCharacter!.maxCarryWeight}</p>
             <p><strong>Base Damage Resistance</strong>:</p>
             <table>
                 <thead>
@@ -204,45 +191,46 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
                 </thead>
                 <tbody>
                     <tr>
-                        <td>{baseDr.phys}</td>
-                        <td>{baseDr.enrg}</td>
-                        <td>{baseDr.rads === 99 ? "immune" : baseDr.rads}</td>
-                        <td>{baseDr.pois === 99 ? "immune" : baseDr.pois}</td>
+                        <td>{newCharacter!.baseDR.phDR}</td>
+                        <td>{newCharacter!.baseDR.enDR}</td>
+                        <td>{newCharacter!.baseDR.rdDR === 99 ? "immune" : newCharacter!.baseDR.rdDR}</td>
+                        <td>{newCharacter!.poisonDR === 99 ? "immune" : newCharacter!.poisonDR}</td>
                     </tr>
                 </tbody>
             </table>
-            <p><strong>Defense</strong>: {defense}</p>
-            <p><strong>Initiative</strong>: {initiative}</p>
-            <p><strong>Health</strong>: {maxHealth}{#if isNocturnal} ({maxHealth + newCharacter.special.endurance} at night){/if}</p>
-            <p><strong>Melee Damage</strong>: +{meleeDamage}CD{#if unarmedBonus} (+{meleeDamage + 1}CD unarmed) {/if}{#if sneakBonus} (+{meleeDamage + 2}CD sneak attacks){/if}{#if unarmedBonus && sneakBonus} (+{meleeDamage + 3}CD unarmed sneak attacks){/if}</p>
-            <p><strong>Luck Points</strong>: {maxLuckPoints}</p>
+            <p><strong>Defense</strong>: {newCharacter!.defense}</p>
+            <p><strong>Initiative</strong>: {newCharacter!.initiative}</p>
+            <p><strong>Health</strong>: {newCharacter!.maxHP}{#if isNocturnal} ({newCharacter!.maxHP + newCharacter!.special.endurance} at night){/if}</p>
+            <p><strong>Melee Damage</strong>: +{newCharacter!.meleeModifiers.base}CD{#if newCharacter!.meleeModifiers.unarmed.active} (+{newCharacter!.meleeModifiers.unarmed.modifier}CD unarmed) {/if}{#if newCharacter!.meleeModifiers.sneak.active} (+{newCharacter!.meleeModifiers.sneak.modifier}CD sneak attacks){/if}{#if newCharacter!.meleeModifiers.unarmed.active && newCharacter!.meleeModifiers.sneak.active} (+{newCharacter!.meleeModifiers.unarmed.modifier + newCharacter!.meleeModifiers.sneak.modifier}CD unarmed sneak attacks){/if}</p>
+            <p><strong>Luck Points</strong>: {newCharacter!.maxLuckPts}</p>
         </div>
         <div class="character-special" style={!hasCompanion ? "display:inline-block;margin-right:1rem" : "display:block"}>
             <h2>SPECIAL</h2>
-            {#each ['strength', 'perception', 'endurance', 'charisma', 'intelligence', 'agility', 'luck'] as stat}
+            {#each special as stat}
                 <div>
-                    <strong>{stat.toUpperCase()}</strong>: {newCharacter.special[stat]}
+                    <strong>{stat.toUpperCase()}</strong>: {newCharacter!.special[stat]}
                 </div>
             {/each}
         </div>
         <div class="character-skills">
             <h2>Skills</h2>
             <ul>
-                {#each Object.keys(skillPoints) as skill}
-                    {#if skillPoints[skill] > 0}
+                {#each skills as skill}
+                    {#if newCharacter!.skills[skillPrettyMap[skill]].total > 0}
                         <li>
-                            {skillPoints[skill]} {skill} {tagSkills[skill] ? '(Tag)' : ''}
+                            {newCharacter!.skills[skillPrettyMap[skill]].total} {skill} {newCharacter!.skills[skillPrettyMap[skill]].tagged ? '(Tag)' : ''}
                         </li>
                     {/if}
                 {/each}
             </ul>
             <ul>
-                {#each Object.values(selectedPerks) as perkId}
-                    <li>{(allPerks.find(perk => perk.id.toString() === perkId)).name}</li>
+                {#each newCharacter!.perks as perk}
+                    <li>{perk.perkName}</li>
                 {/each}
             </ul>
         </div>
     </div>
+    <!--
     {#if hasCompanion}
         <div class="companion">
             <h2>Companion</h2>
@@ -306,4 +294,5 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
             </div>
         </div>
     {/if}
+    -->
 </div>

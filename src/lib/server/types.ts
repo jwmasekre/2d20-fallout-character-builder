@@ -346,6 +346,22 @@ export type FullCharacter = {
     maxRadPts: number;
     carryWeight: number;
     maxCarryWeight: number;
+    meleeModifiers: {
+        base: number;
+        unarmed: {
+            active: boolean;
+            modifier: number;
+        }
+        sneak: {
+            active: boolean;
+            modifier: number;
+        }
+    }
+    baseDR: {
+        phDR: number;
+        enDR: number;
+        rdDR: number;
+    }
     body: {
         head: BodyPart;
         lArm: BodyPart;
@@ -361,6 +377,8 @@ export type FullCharacter = {
         wheel: BodyPart;
     }
     poisonDR: number;
+    defense: number;
+    initiative: number;
     caps: number;
     hunger: number;
     thirst: number;

@@ -1,3 +1,4 @@
+import { untrack } from 'svelte';
 import type { FullCharacter, Pages, SkillPrettyMap, SkillStat, SpecialGifted, SpecialStat } from './server/types.js'
 
 export const arrays = {
@@ -68,6 +69,22 @@ export const blankCharacter: FullCharacter = {
     maxRadPts: 0,
     carryWeight: 0,
     maxCarryWeight: 0,
+    meleeModifiers: {
+        base: 0,
+        unarmed: {
+            active: false,
+            modifier: 0,
+        },
+        sneak: {
+            active: false,
+            modifier: 0
+        }
+    },
+    baseDR: {
+        phDR: 0,
+        enDR: 0,
+        rdDR: 0
+    },
     body: {
         head: {
             active: false,
@@ -191,6 +208,8 @@ export const blankCharacter: FullCharacter = {
         },
     },
     poisonDR: 0,
+    defense: 1,
+    initiative: 0,
     caps: 0,
     hunger: 0,
     thirst: 0,
