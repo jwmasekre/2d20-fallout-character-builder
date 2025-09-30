@@ -1,8 +1,10 @@
 <script lang="ts">
 
-	import type { CharPerk, FullCharacter, perktype } from '$lib/server/types.ts';
+	import type { FullCharacter, perktype } from '$lib/server/types.ts';
 
-    let newCharacter:FullCharacter, currentPage:string, selectedTraits:string[], allPerks:perktype[], hasCompanion:boolean = $props();
+    let newCharacter:FullCharacter, currentPage:string, selectedTraits:string[], allPerks:perktype[], selectedPerks:string[] = $props();
+
+    //TODO: should probably be writing these to the character, would probably clean up a lot
 
 /*
 
@@ -24,8 +26,8 @@ Y                   Y           Y
 */
 
     let showEligibleOnly = false;
-    let maxPerks = $derived(newCharacter!.lvl + (selectedTraits!.includes('10') ? 1 : 0));
-    let perkPointsRemaining = $derived(maxPerks - newCharacter!.perks.length);
+    let maxPerks = $derived(newCharacter.lvl + (selectedTraits.includes('10') ? 1 : 0));
+    let perkPointsRemaining = $derived(maxPerks - selectedPerks.length);
     let specialFilters = {
         X: true,
         S: true,
@@ -36,6 +38,7 @@ Y                   Y           Y
         A: true,
         L: true
     };
+    //let special = Object.keys(specialStats)
 
     function getSpecialRequirementTypes(perk:perktype) {
         const statReqs = (perk.reqs || []).filter(r => r.includes(':'));
@@ -56,54 +59,53 @@ Y                   Y           Y
         });
     }
 
+    let hasReadRequiredBook = false; //once more character tables are built i'll work this one out
+
     function isEligibleForPerk(perk:perktype) {
         //has perk already
-        if (newCharacter!.perks.find(cperk => cperk.perk === perk.id)) {
-            let ranks = getRanks(perk.id)
+        if (selectedPerks.includes(perk.id.toString())) {
+            let ranks = getRanks(perk.id.toString())
             if (ranks === perk.ranks) {
                 return false;
             //doesn't meet lvl req for next rank
-            } else if (newCharacter!.lvl <= perk.levelReq + (ranks*perk.rankRange)) {
+            } else if (newCharacter.lvl <= perk.levelReq + (ranks*perk.rankRange)) {
                 return false;
             }
         }
         //level requirement
-        if (newCharacter!.lvl < perk.levelReq) {
+        if (newCharacter.lvl < perk.levelReq) {
             return false;
         }
         //special requirement
         for (const req of perk.reqs || []) {
             if (req.includes(':')) {
                 const [stat, value] = req.split(':').map(s => s.trim());
-                const statValue = newCharacter!.special[stat];
+                const statValue = newCharacter.special[stat];
                 if (statValue === undefined || statValue < parseInt(value)) {
                     return false;
                 }
             }
         }
         //book requirement
-        if ((perk.reqs || []).includes("book")) {
-        const hasReadRequiredBook = newCharacter!.readBooks.find(book => book.bookPerk === perk.name);
-            if (!hasReadRequiredBook) {
-                return false;
-            }
+        if ((perk.reqs || []).includes("book") && !hasReadRequiredBook) {
+            return false;
         }
         //other limiters
         for (const limit of perk.limits || []) {
             const lower = limit.toLowerCase();
-            if (lower.includes("daring nature") && newCharacter!.perks.find(cperk => cperk.perk === 25)) {
+            if (lower.includes("daring nature") && selectedPerks.includes('25')) {
                 return false;
             }
-            if (lower.includes("cautious nature") && newCharacter!.perks.find(cperk => cperk.perk === 18)) {
+            if (lower.includes("cautious nature") && selectedPerks.includes('18')) {
                 return false;
             }
-            if (lower.includes("robot") && newCharacter!.robot) {
+            if (lower.includes("robot") && ['4','18','19','20','21','23'].some(robotId => selectedTraits.includes(robotId))) {
                 return false;
             }
-            if (lower.includes("ghoul") && newCharacter!.ghoul) {
+            if (lower.includes("ghoul") && selectedTraits.includes('2')) {
                 return false;
             }
-            if (lower.includes("rads") && (newCharacter!.robot || newCharacter!.ghoul || newCharacter!.supermutant)) {
+            if (lower.includes("rads") && ['2','3','4','18','19','20','21','23','25'].some(robotId => selectedTraits.includes(robotId))) {
                 return false;
             }
             if (lower.includes("companion") && hasCompanion) {
@@ -113,10 +115,16 @@ Y                   Y           Y
         return true;
     }
 
-    let filteredPerks = $derived(allPerks!.filter(perk => getSpecialRequirementTypes(perk).some(req => specialFilters[req]) && (!showEligibleOnly || isEligibleForPerk(perk))));
+    $: filteredPerks = allPerks.filter(perk => {
+        const specialReq = getSpecialRequirementTypes(perk);
+        if (!specialReq.some(req => specialFilters[req])) return false;
+        if (showEligibleOnly && !isEligibleForPerk(perk)) return false;
+
+        return true;
+    })
 
     function getPerkStatus(perk: perktype): string {
-        const ranksTaken = getRanks(perk.id);
+        const ranksTaken = getRanks(perk.id.toString());
         const maxRanks = perk.ranks;
         const available = isEligibleForPerk(perk);
 
@@ -132,32 +140,22 @@ Y                   Y           Y
         return "perk-unavailable";
     }
 
-    function addPerk(perk: perktype) {
-        if (newCharacter!.perks.filter(cperk => cperk.perk === perk.id)) {
-            const cperkIndex = newCharacter!.perks.findIndex(cperk => cperk.perk === perk.id);
-            newCharacter!.perks[cperkIndex].ranks += 1;
-        } else {
-            const cperk:CharPerk = {
-                perk: perk.id,
-                perkName: perk.name,
-                perkDescription: [perk.description],
-                ranks: 1
-            }
-            newCharacter!.perks.push(cperk);
+    function addPerk(perkId: string) {
+        selectedPerks = [...selectedPerks, perkId];
+    }
+
+    function removePerk(perkId: string) {
+        const index = selectedPerks.indexOf(perkId);
+        if (index !== -1) {
+            selectedPerks = [
+                ...selectedPerks.slice(0, index),
+                ...selectedPerks.slice(index + 1)
+            ];
         }
     }
 
-    function removePerk(perk: perktype) {
-        const cperkIndex = newCharacter!.perks.findIndex(cperk => cperk.perk === perk.id);
-        if (newCharacter!.perks[cperkIndex].ranks > 1) {
-            newCharacter!.perks[cperkIndex].ranks -= 1;
-        } else {
-            newCharacter!.perks.splice(cperkIndex,1);
-        }
-    }
-
-    function getRanks(perkId: number) {
-        return newCharacter!.perks.find(cperk => cperk.perk === perkId).ranks;
+    function getRanks(perkId: string) {
+        return selectedPerks.filter(id => id === perkId).length;
     }
 
     let isPerksValid = false;
@@ -166,7 +164,7 @@ Y                   Y           Y
 
 
 
-<div class={`page ${currentPage! === 'perks' ? 'page-active' : 'page-leave'}`}>
+<div class={`page ${currentPage === 'perks' ? 'page-active' : 'page-leave'}`}>
 
     <h1>Perks</h1>
     <p>Perks: {maxPerks - perkPointsRemaining}/{maxPerks}</p>
@@ -176,7 +174,7 @@ Y                   Y           Y
             type="checkbox"
             bind:checked={showEligibleOnly}
         />
-        Show only perks {newCharacter!.characterName} can take
+        Show only perks {newCharacter.characterName} can take
     </label>
 
     <div>
@@ -194,55 +192,37 @@ Y                   Y           Y
     <div class="perk-list">
         {#each filteredPerks as perk (perk.id)}
             <div class={` ${getPerkStatus(perk)}`}>
-                <h4>{perk.name} {"✭".repeat(getRanks(perk.id)) + "✩".repeat(perk.ranks-getRanks(perk.id))}</h4>
+                <h4>{perk.name} {"✭".repeat(getRanks(perk.id.toString())) + "✩".repeat(perk.ranks-getRanks(perk.id.toString()))}</h4>
                 <p><b>Lvl:</b> {perk.levelReq} | <b>Ranks:</b> {perk.ranks}</p>
                 <pre>{perk.description.replace(/\\n/g, "\n")}</pre>
                 <p><b>Requires:</b> {#if perk.reqs.length > 0}{#each perk.reqs as req}/{req}/{/each}{:else} None{/if} | <b>Limits:</b> {#if perk.limits.length > 0}{perk.limits}{:else} None{/if}</p>
                 <div class="perk-buttons">
                     <button
-                        disabled={
-                            (newCharacter!.perks.length >= maxPerks) ||
-                            (newCharacter!.perks.filter(cperk => cperk.perk === perk.id).length > 0)
-                        }
-                        on:click={() => addPerk(perk)}
+                        disabled={(selectedPerks.length >= maxPerks) || selectedPerks.includes(perk.id.toString())}
+                        on:click={() => addPerk(perk.id.toString())}
                     >
                         Take Perk
                     </button>
                     <button
-                        disabled={
-                            newCharacter!.perks.filter(cperk => cperk.perk === perk.id).length === 0 ||
-                            (newCharacter!.perks.filter(cperk => 
-                                cperk.perk === perk.id &&
-                                cperk.ranks > 1
-                            ).length >= 1)
-                        }
-                        on:click={() => removePerk(perk)}
+                        disabled={!selectedPerks.includes(perk.id.toString()) || (selectedPerks.filter(id => id === perk.id.toString()).length > 1)}
+                        on:click={() => removePerk(perk.id.toString())}
                         >
                         Drop Perk
                     </button>
                 </div>
                 <div class="perk-buttons">
                     <button
-                        disabled={
-                            (newCharacter!.perks.length >= maxPerks) ||
-                            (newCharacter!.perks.filter(cperk => cperk.perk === perk.id).length === 0) ||
-                            (newCharacter!.perks.filter(cperk => 
-                                cperk.perk === perk.id &&
-                                cperk.ranks === perk.ranks
-                            ).length >= 1)
-                        }
-                        on:click={() => addPerk(perk)}
+                        disabled={(selectedPerks.length >= maxPerks) || (selectedPerks.filter(id => id === perk.id.toString()).length === 0) || (selectedPerks.filter(id => id === perk.id.toString()).length === perk.ranks)}
+                        on:click={() => selectedPerks = [...selectedPerks, perk.id.toString()]}
                     >
                         Add Rank
                     </button>
                     <button
-                        disabled={
-                            (newCharacter!.perks.filter(cperk =>
-                                cperk.perk === perk.id &&
-                                cperk.ranks >= 1
-                            ).length === 0)
-                        }
-                        on:click={() => removePerk(perk)}
+                        disabled={!(selectedPerks.filter(id => id === perk.id.toString()).length > 1)}
+                        on:click={() => selectedPerks = [
+                            ...selectedPerks.slice(0, selectedPerks.indexOf(perk.id.toString())),
+                            ...selectedPerks.slice(selectedPerks.indexOf(perk.id.toString()) + 1)
+                        ]}
                     >
                         Drop Rank
                     </button>

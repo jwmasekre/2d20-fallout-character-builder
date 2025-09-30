@@ -84,7 +84,7 @@ export type SkillStats = {
 export type CharPerk = {
     perk: number;
     perkName: string;
-    perkDescription: [string];
+    perkDescription: string[];
     ranks: number;
 }
 
@@ -115,7 +115,7 @@ export type CharWeaponMod = {
     installed: {
         mod: number;
         modName: string;
-        modEffect: [string];
+        modEffect: string[];
         modWeight: number;
         modCost: number;
     } | null;
@@ -155,19 +155,19 @@ export type Legendary = {
 
 export type CharWeapon = {
     weapon: number;
-    prefix: [string];
+    prefix: string[];
     name: string;
     skill: string;
     targetNum: number;
     tagged: boolean;
     dmg: number;
-    effects: [string];
-    effectDescriptions: [string];
+    effects: string[];
+    effectDescriptions: string[];
     type: "Physical" | "Energy" | "Physical/Energy" | "Radiation";
     rate: number;
     range: "R" | "C" | "M" | "L" | "X";
-    qualities: [string];
-    qualityDescriptions: [string];
+    qualities: string[];
+    qualityDescriptions: string[];
     ammo: [CharAmmo];
     weight: number;
     cost: number;
@@ -184,7 +184,7 @@ export type CharApparelMod = {
         modPhDR: number;
         modEnDR: number;
         modRdDR: number;
-        modEffect: [string];
+        modEffect: string[];
         modWeight: number;
         modCost: number;
     } | null;
@@ -220,7 +220,7 @@ export type CharApparel = {
     phDR: number;
     enDR: number;
     rdDR: number;
-    effect: [string];
+    effect: string[];
     weight: number;
     cost: number;
     rarity: number;
@@ -233,7 +233,7 @@ export type CharConsumable = {
     consumableName: string;
     type: "Chem" | "Food" | "Beverage" | "Other" | "Publication";
     heals: number;
-    effect: [string];
+    effect: string[];
     rads: number;
     weight: number;
     cost: number;
@@ -246,7 +246,7 @@ export type CharConsumable = {
 export type CharGear = {
     gear: number;
     gearName: string;
-    effect: [string];
+    effect: string[];
     weight: number;
     cost: number;
     rarity: number;
@@ -262,7 +262,7 @@ export type CharPAMod = {
         modEnDR: number;
         modRdDR: number;
         modHP: number;
-        modEffect: [string];
+        modEffect: string[];
         modWeight: number;
         modCost: number;
     } | null;
@@ -281,7 +281,7 @@ export type PAPart = {
     phDR: number;
     enDR: number;
     rdDR: number;
-    effect: [string];
+    effect: string[];
     weight: number;
     cost: number;
     currHP: number;
@@ -293,12 +293,12 @@ export type CharPAFrame = {
     equipped: boolean;
     location: string;
     parts: {
-        head: [PAPart];
-        lArm: [PAPart];
-        rArm: [PAPart];
-        lLeg: [PAPart];
-        rLeg: [PAPart];
-        torso: [PAPart];
+        head: PAPart[];
+        lArm: PAPart[];
+        rArm: PAPart[];
+        lLeg: PAPart[];
+        rLeg: PAPart[];
+        torso: PAPart[];
     }
 }
 
@@ -306,7 +306,7 @@ export type CharRMod = {
     equipped: boolean;
     rmod: number;
     rmodName: string;
-    effect: [string];
+    effect: string[];
     weight: number;
     cost: number;
     rarity: number;
@@ -319,7 +319,7 @@ export type Addiction = {
 export type Disease = {
     disease: number;
     diseaseName: string;
-    effect: [string];
+    effect: string[];
 }
 
 export type FullCharacter = {
@@ -365,21 +365,21 @@ export type FullCharacter = {
     party: number;
     special: SpecialStats;
     skills: SkillStats;
-    perks: [CharPerk] | [];
-    traits: [CharTrait] | [];
-    addictions: [Addiction] | [];
-    diseases: [Disease] | [];
-    recipes: [CharRecipe] | [];
-    readBooks: [CharBook] | [];
-    weapons: [CharWeapon] | [];
-    apparel: [CharApparel] | [];
-    ammo: [CharAmmo] | [];
-    consumables: [CharConsumable] | [];
-    gear: [CharGear] | [];
-    powerArmorFrames: [CharPAFrame] | [];
-    robotModules: [CharRMod] | [];
-    miscStuff: [string];
-    notes: [string];
+    perks: CharPerk[];
+    traits: CharTrait[];
+    addictions: Addiction[];
+    diseases: Disease[];
+    recipes: CharRecipe[];
+    readBooks: CharBook[];
+    weapons: CharWeapon[];
+    apparel: CharApparel[];
+    ammo: CharAmmo[];
+    consumables: CharConsumable[];
+    gear: CharGear[];
+    powerArmorFrames: CharPAFrame[];
+    robotModules: CharRMod[];
+    miscStuff: string[];
+    notes: string[];
 }
 
 export type Trait = {

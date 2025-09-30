@@ -19,8 +19,27 @@
     let selectedOrigin: string = $state('');
     let selectedOriginData: OriginWithTraits | undefined = $state();
     let selectedTraits: string[] = $state([]);
-    let selectedArray: '' | 'Custom' | 'Balanced' | 'Focused' | 'Specialized' = $state('')
-    let selectedPerks: string[] = $state([]);
+    let selectedArray: '' | 'Custom' | 'Balanced' | 'Focused' | 'Specialized' = $state('');
+    let hasCompanion: boolean = $state(false);
+    let companion = $state({
+        name: "",
+        special: {} = {},
+        skills: {} = {},
+        hp: 0,
+        def: 0,
+        cw: 0,
+        meleeDamage: 0,
+        dr: {
+            phys: 0,
+            enrg: 0,
+            rads: 0,
+            pois: 0
+        },
+        weapons: [] = [],
+        abilities: [] = [],
+        apparel: [] = [],
+        wealth: 0
+    });
     let backgroundEquipment: BackgroundEquipment = $state(undefined);
     let selectedBackgroundIndex: number | null = $state(null);
 
@@ -47,9 +66,9 @@
 
 <Skills newCharacter={newCharacter} currentPage={currentPage} selectedTraits={selectedTraits}/>
 
-<Perks newCharacter={newCharacter} currentPage={currentPage} selectedTraits={selectedTraits} allPerks={data.allPerks} selectedPerks={selectedPerks}/>
+<Perks newCharacter={newCharacter} currentPage={currentPage} selectedTraits={selectedTraits} allPerks={data.allPerks} hasCompanion={hasCompanion}/>
 
-<Stats newCharacter={newCharacter} currentPage={currentPage} selectedTraits={selectedTraits} selectedPerks={selectedPerks}/>
+<Stats newCharacter={newCharacter} currentPage={currentPage} selectedTraits={selectedTraits} hasCompanion={hasCompanion} companion={companion}/>
 
 <Equipment newCharacter={newCharacter} currentPage={currentPage}/>
 

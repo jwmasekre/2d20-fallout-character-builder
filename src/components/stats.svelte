@@ -4,7 +4,7 @@
 
 	import type { FullCharacter, perktype } from '$lib/server/types.ts';
 
-    let newCharacter:FullCharacter, currentPage:string, selectedTraits:string[], allPerks:perktype[], selectedPerks:string[] = $props();
+    let newCharacter:FullCharacter, currentPage:string, selectedTraits:string[], allPerks:perktype[], selectedPerks:string[], hasCompanion:boolean, companion = $props();
 
     //TODO: write to newCharacter
 
@@ -122,28 +122,8 @@ YSS'         S*S       SSS    S*S       S*S       YSS'
     //max luck points are luck or minus one for gifted trait
     let maxLuckPoints = $derived(newCharacter.special.luck - selectedTraits.filter(t => t === '7').length);
     
-    let hasCompanion = $derived((selectedPerks.includes('28') || selectedPerks.includes('105')));
+    hasCompanion = $derived((selectedPerks.includes('28') || selectedPerks.includes('105')));
 
-    //companion statblock
-    let companion = {
-        name: "",
-        special: {} = {},
-        skills: {} = {},
-        hp: 0,
-        def: 0,
-        cw: 0,
-        meleeDamage: 0,
-        dr: {
-            phys: 0,
-            enrg: 0,
-            rads: 0,
-            pois: 0
-        },
-        weapons: [] = [],
-        abilities: [] = [],
-        apparel: [] = [],
-        wealth: 0
-    };
     let isDog = false;
     $: if (selectedPerks.length > 0 && hasCompanion) {
         isDog = selectedPerks.includes('28');
