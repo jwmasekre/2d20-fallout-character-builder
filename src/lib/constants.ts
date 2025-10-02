@@ -227,89 +227,106 @@ export const blankCharacter: FullCharacter = {
     },
     skills: {
         athletics: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         barter: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         bigGuns: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         energyWeapons: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         explosives: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         lockpick: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         medicine: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         meleeWeapons: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         pilot: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         repair: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         science: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         smallGuns: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         sneak: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         speech: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         survival: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         throwing: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
         unarmed: {
-            ranks: 0,
-            tagged: false,
-            total: 0,
+			ranks: 0,
+			tagged: false,
+			total: 0,
+			max: 0
         },
     },
     perks: [],

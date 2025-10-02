@@ -5,7 +5,7 @@
     import { groupBackgroundApparel, groupBackgroundConsumables, groupBackgroundRobotModules, groupBackgroundWeapons } from '$lib/equipmentGroupingFuncs.ts';
     import { getWeaponOptionLabel, getWeaponOptionKey, formatDoubleText, formatPackText, getApparelOptionLabel, getApparelOptionKey, getConsumableOptionLabel, getConsumableOptionKey, getRobotModuleOptionLabel, getRobotModuleOptionKey } from '$lib/equipmentLabelFuncs.ts'
 
-    let newCharacter:FullCharacter, currentPage:string = $props();
+    let newCharacter:FullCharacter, currentPage:string, equipmentValidity = $props();
 
     //TODO: write to newCharacter, clean up a lot of the functions (and probably effects)
 
@@ -468,6 +468,12 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
     let isApparelSelectValid = false;
     let isConsumableSelectValid = false;
     let isRobotModuleSelectValid = false;
+    equipmentValidity = $derived({
+        weapons: isWeaponSelectValid,
+        apparel: isApparelSelectValid,
+        consume: isConsumableSelectValid,
+        robot: isRobotModuleSelectValid
+    })
     $effect(() => {
         if (selectedWeapons.length > 0) {
             let valid = true;

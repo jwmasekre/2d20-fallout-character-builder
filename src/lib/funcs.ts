@@ -1,4 +1,5 @@
 import { blankCharacter, blankSpecialGifted } from './constants.js'
+import type { FullCharacter, SpecialStat } from './server/types.js';
 
 export function resetCharacter() {
     return blankCharacter;
@@ -6,6 +7,15 @@ export function resetCharacter() {
 
 export function resetSpecial() {
     return { selectedArray: "", giftedSelected: blankSpecialGifted, special: blankCharacter.special };
+}
+
+export function getStatMax(stat:SpecialStat, character:FullCharacter) {
+    if (character!.superMutant) {
+        if (['intelligence','charisma'].includes(stat)) {
+            return 6 + (character!.superMutant === 'super mutant' ? 0 : 2);
+        }
+    }
+    return 10;
 }
 
 export function resetSkills() {

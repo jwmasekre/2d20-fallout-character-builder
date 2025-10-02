@@ -1,12 +1,13 @@
 <script lang="ts">
 
 	import { pages } from '$lib/constants.ts';
-	import type { BackgroundEquipment, FullCharacter, OriginWithTraits, Pages } from '$lib/server/types.ts';
+	import type { BackgroundEquipment, FullCharacter, OriginWithTraits, Pages, SpecialArray, SpecialGifted } from '$lib/server/types.ts';
+    import { getStatMax } from '$lib/funcs.ts';
 	import { onMount } from 'svelte';
 
-    let newCharacter:FullCharacter, selectedOrigin:string, selectedTraits:string[], currentPage:Pages, visitedPages:Pages[], selectedOriginData:OriginWithTraits, selectedArray = $props();
+    let newCharacter:FullCharacter, currentPage:Pages, visitedPages:Pages[], selectedOriginData:OriginWithTraits, giftedSelected:SpecialGifted, remainingSpecialPoints:number, remainingSkillRanks:number, equipmentValidity = $props();
 
-    let traitCount = $derived(selectedOriginData?.traits?.length ?? 0);
+    let traitCount = $derived(selectedOriginData!.traits.length);
 
 /*
 
@@ -32,7 +33,7 @@ Y                  Y
     })
     $effect(() => {
         if (pages.includes(currentPage)) {
-            if (!visitedPages.includes(currentPage)) visitedPages.push(currentPage);
+            if (!visitedPages!.includes(currentPage)) visitedPages!.push(currentPage);
         }
     });
 
@@ -43,7 +44,7 @@ Y                  Y
             pastPages = []
             let previousPage = ""
             for (const page of pages) {
-                if ((isPageValid(page) || page === currentPage || isPageValid(previousPage)) && visitedPages.includes(page)) {
+                if ((isPageValid(page) || page === currentPage || isPageValid(previousPage)) && visitedPages!.includes(page)) {
                     pastPages = [...pastPages,page];
                     previousPage = page;
                 } else break;
@@ -51,22 +52,37 @@ Y                  Y
         }
     });
 
-    let nextPage = $derived((pages.indexOf(currentPage) < pages.length - 1) ? pages[pages.indexOf(currentPage)+1] : "");
+    let nextPage:Pages | '' = $derived((pages.indexOf(currentPage!) < pages.length - 1) ? pages[pages.indexOf(currentPage!)+1] : '');
 
     function isPageValid(page:string):boolean {
         switch (page) {
             case "origin":
-                return newCharacter.characterName.trim().length > 0 && newCharacter.lvl > 0 && selectedOrigin != '' && (traitCount <= 1 || selectedTraits.length == 2 || newCharacter.ghoul);
+                return newCharacter!.characterName.trim().length > 0 && newCharacter!.lvl > 0 && newCharacter!.origin != 0 && (traitCount <= 1 || newCharacter!.traits.length === 2 || newCharacter!.ghoul);
             case "special":
-                return Object.entries(selectedArray === 'Custom' ? customStats : specialStats).every(([key, val]) => val >= 4 && (isGifted && giftedSelected[key] ? val < getStatMax(key) : val <= getStatMax(key))) && remainingSpecialPoints === 0 && (!isGifted || giftedCount === 2);
+                return Object.entries(newCharacter!.special).every(([key, val]) => val >= 4 && (newCharacter!.traits.filter(ctrait => ctrait.trait === 7).length > 0 && giftedSelected![key] ? val < getStatMax(key, newCharacter!) : val <= getStatMax(key, newCharacter!))) && remainingSpecialPoints! === 0 && (newCharacter!.traits.filter(ctrait => ctrait.trait === 7).length === 0 || Object.values(giftedSelected!).reduce((a, item) => a + (item ? 1 : 0), 0) === 2);
             case "skills":
-                return (skillPointsRemaining === 0 && Object.entries(skillPoints).every(([skill, points]) => points <= maxSkillCap) && Object.values(extraTagSkillSelections).filter(Boolean).length === extraTagSkills && Object.values(baseTagSkillSelections).filter(Boolean).length === baseTagSkills && (!forbiddenTagSkills || !tagSkills[forbiddenTagSkills]));
+                let skillsValid = true;
+                let tagCount = $derived.by(() => {
+                    switch (true) {
+                        case [1,2,5,11,12,21,24].some(trait => newCharacter!.traits.filter(ctrait => ctrait.trait === trait)):
+                            return 4;
+                        case newCharacter!.traits.filter(ctrait => ctrait.trait === 13).length > 0:
+                            return 5;
+                        default:
+                            return 3;
+                    }
+                });
+                for (const skill of Object.values(newCharacter!.skills)) {
+                    if (skill.total > Math.min(skill.max, (newCharacter!.lvl < 3 ? 3 : (newCharacter!.lvl > 6 ? 6 : newCharacter!.lvl)))) skillsValid = false;
+                }
+                if (remainingSkillRanks! !== 0 || Object.values(newCharacter!.skills). reduce((total, item) => total + (item.tagged ? 1 : 0), 0) !== tagCount || (newCharacter!.traits.filter(ctrait => ctrait.trait === 27).length > 0 && newCharacter!.skills.science.tagged)) skillsValid = false;
+                return skillsValid;
             case "perks":
-                return perkPointsRemaining === 0;
+                return (newCharacter!.lvl + (newCharacter!.traits.filter(ctrait => ctrait.trait === 10).length > 0 ? 1 : 0)) - newCharacter!.perks.length === 0;
             case "stats":
                 return ['stats','equipment','review'].includes(currentPage) || isPageValid("perks");
             case "equipment":
-                return isWeaponSelectValid && isApparelSelectValid && isConsumableSelectValid && isRobotModuleSelectValid && selectedBackgroundId !== "";
+                return Object.values(equipmentValidity).reduce((a, item) => a + (item ? 1 : 0), 0) === 4;
             case "review":
                 return isPageValid("equipment");
             default:
@@ -75,36 +91,9 @@ Y                  Y
         }
     }
 
-    let pageValid = false;
-    $: {
-        switch (currentPage) {
-            case "origin":
-                pageValid = newCharacter.characterName.trim().length > 0 && newCharacter.lvl > 0 && selectedOrigin != '' && (traitCount <= 1 || selectedTraits.length == 2 || newCharacter.ghoul);
-                break;
-            case "special":
-                pageValid = Object.entries(selectedArray === 'Custom' ? customStats : specialStats).every(([key, val]) => val >= 4 && (isGifted && giftedSelected[key] ? val < getStatMax(key) : val <= getStatMax(key))) && remainingSpecialPoints === 0 && (!isGifted || giftedCount === 2);
-                break;
-            case "skills":
-                pageValid = skillPointsRemaining === 0 && Object.entries(skillPoints).every(([skill, points]) => points <= maxSkillCap) && Object.values(extraTagSkillSelections).filter(Boolean).length === extraTagSkills && Object.values(baseTagSkillSelections).filter(Boolean).length === baseTagSkills && (!forbiddenTagSkills || !tagSkills[forbiddenTagSkills]);
-				break;
-            case "perks":
-                pageValid = perkPointsRemaining === 0;
-				break;
-            case "stats":
-                pageValid = ['stats','equipment','review'].includes(currentPage) || isPageValid("perks");
-				break;
-            case "equipment":
-                pageValid = isWeaponSelectValid && isApparelSelectValid && isConsumableSelectValid && isRobotModuleSelectValid && selectedBackgroundId !== "";
-				break;
-            case "review":
-                pageValid = isPageValid("equipment");
-				break;
-            default:
-                pageValid = false;
-        }
-    }
+    let pageValid = $derived(isPageValid(currentPage!))
 
-    function navigateTo(page:string) {
+    function navigateTo(page:Pages) {
         if (pages.includes(page)) currentPage = page;
     }
 

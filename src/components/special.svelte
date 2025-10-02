@@ -1,9 +1,10 @@
 <script lang="ts">
 
-    import { arrays, blankCharacter, blankSpecialGifted, special } from '$lib/constants.ts';
-	import type { FullCharacter, SpecialStat } from '$lib/server/types.ts';
+    import { arrays, blankCharacter, special } from '$lib/constants.ts';
+	import type { FullCharacter, SpecialArray, SpecialGifted, SpecialStat } from '$lib/server/types.ts';
+    import { getStatMax } from '$lib/funcs.ts';
 
-    let newCharacter:FullCharacter, currentPage:string, selectedArray = $props();
+    let newCharacter:FullCharacter, currentPage:string, giftedSelected:SpecialGifted, remainingSpecialPoints:number = $props();
 
 /*
 
@@ -28,17 +29,7 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
 
     let isGifted = $derived(newCharacter!.traits.filter(ctrait => ctrait.trait === 7).length >0);
 
-    let giftedSelected = blankSpecialGifted;
     let giftedCount = $derived(Object.values(giftedSelected).filter(Boolean).length);
-
-    function getStatMax(stat:SpecialStat) {
-        if (newCharacter!.superMutant) {
-            if (['intelligence','charisma'].includes(stat)) {
-                return 6 + (newCharacter!.superMutant === 'super mutant' ? 0 : 2);
-            }
-        }
-        return 10;
-    }
 
     function getDisplayStat(stat:SpecialStat, value:number) {
         let mod = 0;
@@ -50,7 +41,7 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
     }
 
     let specialPoints = 40;
-    let remainingSpecialPoints:number;
+    let selectedArray:SpecialArray;
     let customArray = blankCharacter.special;
     let balancedArray = blankCharacter.special;
     let focusedArray = blankCharacter.special;
@@ -152,7 +143,7 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
                 id={stat}
                 bind:value={customArray[stat]}
                 min="4"
-                max={(isGifted && giftedSelected[stat] ? getStatMax(stat) - 1 : getStatMax(stat))}
+                max={(isGifted && giftedSelected[stat] ? getStatMax(stat, newCharacter!) - 1 : getStatMax(stat, newCharacter!))}
                 on:input={(e) => handleStatChange(stat, e.target.value)}
             />
             {#if isGifted}
@@ -160,9 +151,6 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
                     type="checkbox"
                     bind:checked={giftedSelected[stat]}
                     disabled={(!giftedSelected[stat] && giftedCount >=2) || customArray[stat] === 10}
-                    on:change={() => {
-                        giftedSelected = { ...giftedSelected };
-                    }}
                 />
             {/if}
             <span class="special-display">→ {getDisplayStat(stat, customArray[stat])}</span>
@@ -176,7 +164,7 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
                     on:change={(e) => handleStatChange(stat, e.target.value)}
                 >
                     {#each arrays[selectedArray] as value, index}
-                        <option disabled={value>getStatMax(stat)} value={value}>{value}</option>
+                        <option disabled={value>getStatMax(stat, newCharacter!)} value={value}>{value}</option>
                     {/each}
 
                 </select>
@@ -202,7 +190,7 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
                     on:change={(e) => handleStatChange(stat, e.target.value)}
                 >
                     {#each arrays[selectedArray] as value, index}
-                        <option disabled={value>getStatMax(stat)} value={value}>{value}</option>
+                        <option disabled={value>getStatMax(stat, newCharacter!)} value={value}>{value}</option>
                     {/each}
 
                 </select>
@@ -228,7 +216,7 @@ YSS'    S*S           YSSP    YSSP  S*S  SSS    S*S    YSSP
                     on:change={(e) => handleStatChange(stat, e.target.value)}
                 >
                     {#each arrays[selectedArray] as value, index}
-                        <option disabled={value>getStatMax(stat)} value={value}>{value}</option>
+                        <option disabled={value>getStatMax(stat, newCharacter!)} value={value}>{value}</option>
                     {/each}
 
                 </select>

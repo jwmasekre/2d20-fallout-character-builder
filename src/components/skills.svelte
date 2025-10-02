@@ -3,7 +3,7 @@
 	import { skills, skillPrettyMap } from '$lib/constants.ts';
 	import type { FullCharacter, SkillStat } from '$lib/server/types.ts';
 
-    let newCharacter:FullCharacter, currentPage:string = $props();
+    let newCharacter:FullCharacter, currentPage:string, remainingSkillRanks:number = $props();
 
 /*
 
@@ -67,8 +67,37 @@ YSS'    S*S     SS  S*S    YSSP    YSSP  YSS'
                 return [];
         }
     });
+    $effect(() => {
+        switch (true) {
+            case newCharacter!.traits.filter(ctrait => ctrait.trait === 13).length > 0:
+                newCharacter!.skills['athletics'].max = 4;
+				newCharacter!.skills['bigGuns'].max = 4;
+				newCharacter!.skills['energyWeapons'].max = 4;
+				newCharacter!.skills['explosives'].max = 4;
+				newCharacter!.skills['lockpick'].max = 4;
+				newCharacter!.skills['meleeWeapons'].max = 4;
+				newCharacter!.skills['pilot'].max = 4;
+				newCharacter!.skills['smallGuns'].max = 4;
+				newCharacter!.skills['sneak'].max = 4;
+				newCharacter!.skills['survival'].max = 4;
+				newCharacter!.skills['throwing'].max = 4;
+				newCharacter!.skills['unarmed'].max = 4;
+                break;
+            case [3,25].some(trait => newCharacter!.traits.filter(ctrait => ctrait.trait === trait)):
+                for(const sstat of Object.keys(newCharacter!.skills)) {
+                    newCharacter!.skills[sstat].max = 4;
+                };
+            break;
+            default:
+                for(const sstat of Object.keys(newCharacter!.skills)) {
+                    newCharacter!.skills[sstat].max = 6;
+                };
+            break;
+        }
+    })
     let maxSkillRanks = $derived(9 + newCharacter!.special.intelligence + newCharacter!.lvl - 1);
     let totalSkillRanks = $derived(Object.values(newCharacter!.skills).reduce((total, item) => total + item.ranks, 0));
+    remainingSkillRanks = $derived(maxSkillRanks - totalSkillRanks);
     $effect(() => {
         for (const skill of skills) {
             newCharacter!.skills[skillPrettyMap[skill]].total = newCharacter!.skills[skillPrettyMap[skill]].ranks + (newCharacter!.skills[skillPrettyMap[skill]].tagged ? 2 : 0);
@@ -107,7 +136,7 @@ YSS'    S*S     SS  S*S    YSSP    YSSP  YSS'
     <div class="skill-list">
         {#each skills as skill, index}
             <div class="skill-item" key={index}>
-                <div>{skill} ({limitedSkill.includes(skill) ? maxSkillRankLimited : maxSkillRank})</div>
+                <div>{skill} ({Math.min(newCharacter!.skills[skillPrettyMap[skill]].max, (newCharacter!.lvl < 3 ? 3 : (newCharacter!.lvl > 6 ? 6 : newCharacter!.lvl)))})</div>
                 <input
                     type="number"
                     class="skill-input"

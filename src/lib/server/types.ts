@@ -11,6 +11,8 @@ export type BodyPart = {
     } | null;
 }
 
+export type SpecialArray = '' | 'Custom' | 'Balanced' | 'Focused' | 'Specialized'
+
 export type SpecialStat = 'strength' | 'perception' | 'endurance' | 'charisma' | 'intelligence' | 'agility' | 'luck'
 
 export type SpecialStats = {
@@ -37,6 +39,7 @@ export type SkillStatBlock = {
     ranks: number;
     tagged: boolean;
     total: number;
+    max: number;
 }
 
 export type SkillStat = 'Athletics' | 'Barter' | 'Big Guns' | 'Energy Weapons' | 'Explosives' | 'Lockpick' | 'Medicine' | 'Melee Weapons' | 'Pilot' | 'Repair' | 'Science' | 'Small Guns' | 'Sneak' | 'Speech' | 'Survival' | 'Throwing' | 'Unarmed'

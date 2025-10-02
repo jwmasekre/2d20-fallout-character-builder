@@ -1,8 +1,8 @@
-import * as queries from '$lib/server/db/queries';
-import { db } from '$lib/server/db/index';
+import * as queries from '$lib/server/db/queries.ts';
+import { db } from '$lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
-import { SPECIAL_FIELDS } from '$lib/constants';
+import { special as SPECIAL_FIELDS } from '$lib/constants.ts';
 import { backgroundsInNewContent } from '$lib/server/db/schema.js';
 
 export const actions = {

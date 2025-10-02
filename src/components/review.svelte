@@ -62,27 +62,29 @@ Y                               Y
     const apparelCoversMap = new Map<number,string[]>();
     const apparelTypeMap = new Map<number,string>();
 
-    $: if (backgroundEquipment) {
-        console.log("doing apparel mapping");
-        for (const apparelEntry of backgroundEquipment.apparel) {
-            const apparel = apparelEntry.apparel;
-            const covers = apparelEntry.covers;
-            const type = apparelEntry.type;
-            console.log("mapping:",JSON.stringify(apparelEntry))
-            if (!apparelCoversMap.has(apparel.id)) {
-                apparelCoversMap.set(apparel.id, []);
-            }
-            if (!apparelTypeMap.has(apparel.id)) {
-                apparelTypeMap.set(apparel.id, type.name);
-            }
-            if (!apparelMap.has(apparel.id)) {
-                apparelMap.set(apparel.id, apparel)
-            }
-            for (const loc of covers) {
-                apparelCoversMap.get(apparel.id)!.push(loc.trim().toLowerCase().replace("left ","l").replace("right ","r").replace("torso","body"))
+    $effect(() => {
+        if (backgroundEquipment) {
+            console.log("doing apparel mapping");
+            for (const apparelEntry of backgroundEquipment.apparel) {
+                const apparel = apparelEntry.apparel;
+                const covers = apparelEntry.covers;
+                const type = apparelEntry.type;
+                console.log("mapping:",JSON.stringify(apparelEntry))
+                if (!apparelCoversMap.has(apparel.id)) {
+                    apparelCoversMap.set(apparel.id, []);
+                }
+                if (!apparelTypeMap.has(apparel.id)) {
+                    apparelTypeMap.set(apparel.id, type.name);
+                }
+                if (!apparelMap.has(apparel.id)) {
+                    apparelMap.set(apparel.id, apparel)
+                }
+                for (const loc of covers) {
+                    apparelCoversMap.get(apparel.id)!.push(loc.trim().toLowerCase().replace("left ","l").replace("right ","r").replace("torso","body"))
+                }
             }
         }
-    }
+    });
 
     function equipApparelItem() {
         equippedApparel = {};
@@ -117,10 +119,12 @@ Y                               Y
         calculateDr();
     }
 
-    $: if (allSelectedApparelIds) {
-        console.log("selected apparel changed:", JSON.stringify(selectedApparel));
-        equipApparelItem();
-    }
+    $effect(() => {
+        if (allSelectedApparelIds) {
+            console.log("selected apparel changed:", JSON.stringify(selectedApparel));
+            equipApparelItem();
+        }
+    });
 
 </script>
 

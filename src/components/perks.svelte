@@ -2,7 +2,7 @@
 
 	import type { CharPerk, FullCharacter, perktype } from '$lib/server/types.ts';
 
-    let newCharacter:FullCharacter, currentPage:string, selectedTraits:string[], allPerks:perktype[], hasCompanion:boolean = $props();
+    let newCharacter:FullCharacter, currentPage:string, allPerks:perktype[], hasCompanion:boolean = $props();
 
 /*
 
@@ -24,7 +24,7 @@ Y                   Y           Y
 */
 
     let showEligibleOnly = false;
-    let maxPerks = $derived(newCharacter!.lvl + (selectedTraits!.includes('10') ? 1 : 0));
+    let maxPerks = $derived(newCharacter!.lvl + (newCharacter!.traits.filter(ctrait => ctrait.trait === 10).length > 0 ? 1 : 0));
     let perkPointsRemaining = $derived(maxPerks - newCharacter!.perks.length);
     let specialFilters = {
         X: true,
