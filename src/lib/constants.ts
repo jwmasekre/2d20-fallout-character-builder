@@ -342,7 +342,19 @@ export const blankCharacter: FullCharacter = {
     gear: [],
     powerArmorFrames: [],
     robotModules: [],
+    junk: {
+        common: 0,
+        uncommon: 0,
+        rare: 0
+    },
     miscStuff: [''],
     notes: [''],
 }
 
+export const weaponSlots: ('Receiver' | 'Barrel' | 'Stock' | 'Grip' | 'Magazine' | 'Sights' | 'Muzzle' | 'Capacitors' | 'Dish' | 'Fuel' | 'Tank' | 'Nozzle' | 'Blade' | 'Blunt' | 'Frame')[] = ['Receiver','Barrel','Stock','Grip','Magazine','Sights','Muzzle','Capacitors','Dish','Fuel','Tank','Nozzle','Blade','Blunt','Frame']
+
+export const apparelSlots: ('weave' | 'material' | 'upgrade' | 'jumpsuit')[] = ['weave','material','upgrade','jumpsuit']
+
+export const apparelTypes: ("clothing" | "outfit" | "headgear" | "armor" | "robot armor")[] = ["clothing","outfit","headgear","armor","robot armor"]
+
+export const consumableTypes: ("Chem" | "Food" | "Beverage" | "Other" | "Publication")[] = ["Chem","Food","Beverage","Other","Publication"]

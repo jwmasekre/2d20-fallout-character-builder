@@ -145,7 +145,7 @@ export type CharWeaponMods = {
 export type CharAmmo = {
     ammo: number;
     ammoName: string;
-    quantity: number;
+    quantity: number | string;
 }
 
 export type Legendary = {
@@ -163,15 +163,15 @@ export type CharWeapon = {
     skill: string;
     targetNum: number;
     tagged: boolean;
-    dmg: number;
+    dmg: string;
     effects: string[];
     effectDescriptions: string[];
-    type: "Physical" | "Energy" | "Physical/Energy" | "Radiation";
+    type: "Physical" | "Energy" | "Physical/Energy" | "Radiation" | "Energy/Radiation" | "Poison" | "All";
     rate: number;
-    range: "R" | "C" | "M" | "L" | "X";
+    range: "R" | "C" | "M" | "L" | "X" | "";
     qualities: string[];
     qualityDescriptions: string[];
-    ammo: [CharAmmo];
+    ammo: CharAmmo[];
     weight: number;
     cost: number;
     rarity: number;
@@ -242,7 +242,7 @@ export type CharConsumable = {
     cost: number;
     rarity: number;
     duration: "I" | "B" | "L";
-    addiction: number;
+    addiction: string;
     quantity: number;
 }
 
@@ -403,6 +403,11 @@ export type FullCharacter = {
     gear: CharGear[];
     powerArmorFrames: CharPAFrame[];
     robotModules: CharRMod[];
+    junk: {
+        common: number;
+        uncommon: number;
+        rare: number
+    }
     miscStuff: string[];
     notes: string[];
 }
