@@ -450,7 +450,7 @@ export type BackgroundStuff = {
     odd: number;
     outcast: number;
     junk: number;
-} | {}
+}
 
 export type Weapon = {
     ammo: number;

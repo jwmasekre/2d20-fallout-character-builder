@@ -25,8 +25,55 @@ Y                               Y
 
 */
 
+    $effect(() => {
+        if (newCharacter!.robot) {
+            for (const part of Object.keys(newCharacter!.body)) {
+                if (newCharacter!.body[part].active) {
+                    newCharacter!.body[part].phDR = 2;
+                    newCharacter!.body[part].enDR = 2;
+                }
+            }
+            for (const rarmor of newCharacter!.apparel) {
+                if (rarmor.type === 'robot armor') {
+                    for (const cover of Object.keys(rarmor.covers)) {
+                        if (newCharacter!.body[cover].active) {
+                            newCharacter!.body[cover].phDR = rarmor.phDR;
+                            newCharacter!.body[cover].enDR = rarmor.enDR;
+                        }
+                    }
+                }
+            }
+        } else {
+            let outfit = {
+                phDR: 0,
+                enDR: 0,
+                rdDR: 0
+            };
+            let clothing = {
+                phDR: 0,
+                enDR: 0,
+                rdDR: 0
+            }
+            //need to not equip stuff right away on the equipment screen
+            for (const apparel of newCharacter!.apparel) {
+                switch (apparel.type) {
+                    case 'outfit':
+                        if (apparel.phDR > outfit.phDR) {
+                            outfit.phDR = apparel.phDR;
+                        } else {
+                            const aIndex = newCharacter!.apparel.findIndex(app => app === apparel)
+                            newCharacter!.apparel[aIndex].equipped = false;
+                        }
+                        break;
+                    case 'clothing'
+                }
+            }
+        }
+    })
+
     let charDr: stdDr | handyDr | securDr;
     let bodyParts:string[] = [];
+
 
 
     //max(clothing(arms,legs,torso),armor)

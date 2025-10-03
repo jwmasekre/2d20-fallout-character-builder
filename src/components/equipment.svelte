@@ -356,7 +356,7 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
             const gr = sgear.gear;
             const gIndex = newCharacter!.gear.findIndex(gea => gea.gear === gr.id);
             if (gIndex > -1) {
-                newCharacter!.gear[cIndex].quantity +=1;
+                newCharacter!.gear[gIndex].quantity +=1;
             } else {
                 let gear:CharGear = {
                     gear: gr.id,
@@ -396,7 +396,17 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
     $effect(() => {
         newCharacter!.miscStuff = []
         newCharacter!.caps = backgroundStuff!.caps;
-        newCharacter!.miscStuff.push
+        if (backgroundStuff.misc !== '') newCharacter!.miscStuff.push(backgroundStuff.misc);
+        if (backgroundStuff.trinket > 0) newCharacter!.miscStuff.push('Trinket: ' + backgroundStuff.trinket.toString());
+        if (backgroundStuff.food > 0) newCharacter!.miscStuff.push('Food: ' + backgroundStuff.food.toString());
+        if (backgroundStuff.forage > 0) newCharacter!.miscStuff.push('Forage: ' + backgroundStuff.forage.toString());
+        if (backgroundStuff.bev > 0) newCharacter!.miscStuff.push('Beverages: ' + backgroundStuff.bev.toString());
+        if (backgroundStuff.chem > 0) newCharacter!.miscStuff.push('Chems: ' + backgroundStuff.chem.toString());
+        if (backgroundStuff.ammo > 0) newCharacter!.miscStuff.push('Ammo: ' + backgroundStuff.ammo.toString());
+        if (backgroundStuff.aid > 0) newCharacter!.miscStuff.push('Aid: ' + backgroundStuff.aid.toString());
+        if (backgroundStuff.odd > 0) newCharacter!.miscStuff.push('Oddities: ' + backgroundStuff.odd.toString());
+        if (backgroundStuff.outcast > 0) newCharacter!.miscStuff.push('Outcast Equipment: ' + backgroundStuff.outcast.toString());
+        if (backgroundStuff.junk > 0) newCharacter!.miscStuff.push('Junk: ' + backgroundStuff.junk.toString());
     })
 
     const bgApparelIdtoApparelId = new Map<number,Apparel>();
@@ -429,7 +439,20 @@ S*S.    S*S.     .S*S  S*S.     .S*S  S*S  S*S
         const background = backgrounds[selectedBackgroundIndex];
         console.log(JSON.stringify(backgrounds));
         console.log(JSON.stringify(background));
-        backgroundStuff = {};
+        backgroundStuff = {
+            caps: 0,
+            misc: '',
+            trinket: 0,
+            food: 0,
+            forage: 0,
+            bev: 0,
+            chem: 0,
+            ammo: 0,
+            aid: 0,
+            odd: 0,
+            outcast: 0,
+            junk: 0
+        };
         backgroundStuff = {
             caps: background.caps,
             misc: background.misc.substring(2,background.misc.length-2).split('”,”').join(', ').replace("\{\}",""),
